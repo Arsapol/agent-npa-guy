@@ -1,0 +1,43 @@
+# LED Government Agencies - Property Scraper
+# One agency name per line
+# Lines starting with # are comments and will be ignored
+# Empty lines are also ignored
+
+# Southern Region
+สงขลา
+ภูเก็ต
+กระบี่
+ตรัง
+พัทลุง
+สุราษฎร์ธานี
+
+# Central Region (Bangkok courts)
+กรุงเทพ กองล้มละลาย 1
+กรุงเทพ กองล้มละลาย 2
+กรุงเทพ กองล้มละลาย 3
+กรุงเทพ กองล้มละลาย 4
+กรุงเทพ กองล้มละลาย 5
+กรุงเทพ กองล้มละลาย 6
+แพ่งกรุงเทพมหานคร 1
+แพ่งกรุงเทพมหานคร 2
+แพ่งกรุงเทพมหานคร 3
+แพ่งกรุงเทพมหานคร 4
+แพ่งกรุงเทพมหานคร 5
+แพ่งกรุงเทพมหานคร 6
+แพ่งกรุงเทพมหานคร 7
+นนทบุรี
+
+# Northern Region
+เชียงใหม่
+แพร่
+
+# Northeastern Region
+# นครราชสีมา
+# ขอนแก่น
+# อุดรธานี
+# อุบลราชธานี
+
+# Eastern Region
+# ชลบุรี
+# ระยอง
+# จันทบุรี

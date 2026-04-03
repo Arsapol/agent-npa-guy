@@ -1,0 +1,11 @@
+# Web scraping dependencies
+curl-cffi>=0.6.0
+selectolax>=0.3.0
+
+# Database dependencies
+sqlalchemy>=2.0.0
+psycopg2-binary>=2.9.0
+
+# Utilities
+python-dotenv>=1.0.0
+nest-asyncio>=1.5.0
