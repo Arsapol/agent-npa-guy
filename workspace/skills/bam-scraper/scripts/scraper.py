@@ -1,8 +1,14 @@
 """
-BAM Production Scraper
+BAM Production Scraper (v2 — interleaved search + detail)
 
 Scrapes all NPA properties from bam.co.th API, upserts into PostgreSQL,
 and tracks price changes + state transitions.
+
+Architecture:
+  - Search producer: sequential with sliding-window rate limiter (~30 req/min)
+  - Detail consumer pool: 20 concurrent workers on separate client
+  - Both run simultaneously via asyncio.Queue
+  - DB saves stream in batches during scrape, not after
 
 Usage:
     python scraper.py                              # full scrape (all provinces)
@@ -14,12 +20,21 @@ Usage:
 
 import argparse
 import asyncio
+import time
 from datetime import datetime, timezone
 
 import httpx
-from database import create_tables, get_engine, upsert_properties
-from models import BamAssetDetail, BamAssetSearch, BamScrapeLog, BamSearchResponse
+from sqlalchemy import select
 from sqlalchemy.orm import Session
+
+from database import create_tables, get_engine, upsert_properties
+from models import (
+    BamAssetDetail,
+    BamAssetSearch,
+    BamProperty,
+    BamScrapeLog,
+    BamSearchResponse,
+)
 
 BASE_HEADERS = {
     "accept": "application/json, text/plain, */*",
@@ -40,8 +55,99 @@ DISTRICT_URL = "https://bam-bo-api-prd.bam.co.th/master/District/Dropdown/find"
 DETAIL_URL = "https://bam-bo-api-prd.bam.co.th/property-detail/getExpiredSubscriptionDateTimeByAssetId"
 
 PAGE_SIZE = 50
-DETAIL_CONCURRENCY = 5
-SEARCH_DELAY = 2.5  # seconds between search requests (BAM rate limit ~30/min)
+DETAIL_CONCURRENCY = 20
+DETAIL_DELAY = 0.05  # 50ms between detail requests (20 concurrent = ~400 req/s peak, but IO-bound)
+MAX_SEARCH_RESULTS = 1600  # BAM API silently caps results
+
+# Sliding window rate limiter for search endpoint
+SEARCH_WINDOW_SIZE = 28  # max requests in window (under ~30 limit)
+SEARCH_WINDOW_SECONDS = 60.0  # window duration
+
+
+# ---------------------------------------------------------------------------
+# Rate limiter
+# ---------------------------------------------------------------------------
+
+
+class SlidingWindowLimiter:
+    """Sliding window rate limiter. Sleeps when window is full."""
+
+    def __init__(self, max_requests: int, window_seconds: float):
+        self._max = max_requests
+        self._window = window_seconds
+        self._timestamps: list[float] = []
+
+    async def acquire(self) -> None:
+        now = time.monotonic()
+        # Purge old timestamps
+        cutoff = now - self._window
+        self._timestamps = [t for t in self._timestamps if t > cutoff]
+
+        if len(self._timestamps) >= self._max:
+            # Wait until oldest entry expires
+            wait = self._timestamps[0] - cutoff
+            if wait > 0:
+                await asyncio.sleep(wait)
+
+        self._timestamps.append(time.monotonic())
+
+    @property
+    def count(self) -> int:
+        now = time.monotonic()
+        cutoff = now - self._window
+        return sum(1 for t in self._timestamps if t > cutoff)
+
+
+# ---------------------------------------------------------------------------
+# HTTP helpers
+# ---------------------------------------------------------------------------
+
+
+async def _do_request(
+    client: httpx.AsyncClient,
+    method: str,
+    url: str,
+    json_body: dict | None = None,
+) -> httpx.Response:
+    if method == "POST":
+        return await client.post(url, json=json_body, headers=BASE_HEADERS)
+    return await client.get(url, headers=BASE_HEADERS)
+
+
+async def fetch_with_retry(
+    client: httpx.AsyncClient,
+    method: str,
+    url: str,
+    json_body: dict | None = None,
+    max_retries: int = 2,
+    base_delay: float = 10.0,
+) -> dict | None:
+    for attempt in range(max_retries):
+        try:
+            resp = await _do_request(client, method, url, json_body)
+            resp.raise_for_status()
+            return resp.json()
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code >= 500:
+                delay = base_delay * (2**attempt)
+                short_url = url.split("/")[-1][:30]
+                print(
+                    f"    Server {e.response.status_code} on {short_url}, "
+                    f"retry {attempt + 1}/{max_retries} in {delay:.0f}s..."
+                )
+                await asyncio.sleep(delay)
+            else:
+                print(f"    HTTP {e.response.status_code} for {url}")
+                return None
+        except (httpx.ReadTimeout, httpx.ConnectTimeout):
+            delay = base_delay * (2**attempt)
+            print(f"    Timeout, retry {attempt + 1}/{max_retries} in {delay:.0f}s...")
+            await asyncio.sleep(delay)
+        except Exception as e:
+            delay = base_delay * (2**attempt)
+            print(f"    Error: {e}, retry {attempt + 1}/{max_retries} in {delay:.0f}s...")
+            await asyncio.sleep(delay)
+    return None
 
 
 def _search_body(province: str = "", district: str = "", page: int = 1) -> dict:
@@ -78,63 +184,12 @@ def _search_body(province: str = "", district: str = "", page: int = 1) -> dict:
     }
 
 
-async def _do_request(
-    client: httpx.AsyncClient,
-    method: str,
-    url: str,
-    json_body: dict | None = None,
-) -> httpx.Response:
-    if method == "POST":
-        return await client.post(url, json=json_body, headers=BASE_HEADERS)
-    return await client.get(url, headers=BASE_HEADERS)
-
-
-async def fetch_with_retry(
-    client: httpx.AsyncClient,
-    method: str,
-    url: str,
-    json_body: dict | None = None,
-    max_retries: int = 2,
-    base_delay: float = 10.0,
-) -> dict | None:
-    for attempt in range(max_retries):
-        try:
-            resp = await _do_request(client, method, url, json_body)
-            resp.raise_for_status()
-            return resp.json()
-        except httpx.HTTPStatusError as e:
-            if e.response.status_code >= 500:
-                delay = base_delay * (2**attempt)
-                short_url = url.split("/")[-1][:30]
-                print(
-                    f"    Server {e.response.status_code} on {short_url}, retry {attempt + 1}/{max_retries} in {delay:.0f}s..."
-                )
-                await asyncio.sleep(delay)
-                # On 500, retry with a fresh client to reset connection
-                if attempt >= 1:
-                    try:
-                        async with httpx.AsyncClient(timeout=60.0) as fresh:
-                            resp = await _do_request(fresh, method, url, json_body)
-                            resp.raise_for_status()
-                            return resp.json()
-                    except Exception:
-                        continue
-            else:
-                print(f"    HTTP {e.response.status_code} for {url}")
-                return None
-        except (httpx.ReadTimeout, httpx.ConnectTimeout):
-            delay = base_delay * (2**attempt)
-            print(f"    Timeout, retry {attempt + 1}/{max_retries} in {delay:.0f}s...")
-            await asyncio.sleep(delay)
-        except Exception as e:
-            delay = base_delay * (2**attempt)
-            print(f"    Error: {e}, retry {attempt + 1}/{max_retries} in {delay:.0f}s...")
-            await asyncio.sleep(delay)
-    return None
+# ---------------------------------------------------------------------------
+# Search producer
+# ---------------------------------------------------------------------------
 
 
 async def fetch_provinces(client: httpx.AsyncClient) -> list[str]:
-    """Fetch all province names."""
     data = await fetch_with_retry(client, "POST", PROVINCE_URL, {"text": ""})
     if not data or not isinstance(data, list):
         return []
@@ -142,53 +197,13 @@ async def fetch_provinces(client: httpx.AsyncClient) -> list[str]:
 
 
 async def fetch_districts(client: httpx.AsyncClient, province: str) -> list[str]:
-    """Fetch district names for a province."""
-    data = await fetch_with_retry(
-        client, "POST", DISTRICT_URL, {"province": province}
-    )
+    data = await fetch_with_retry(client, "POST", DISTRICT_URL, {"province": province})
     if not data or not isinstance(data, list):
         return []
     return [d["value"] for d in data if "value" in d]
 
 
-_search_request_count = 0
-
-
-async def search_page(
-    client: httpx.AsyncClient,
-    province: str,
-    page: int,
-    district: str = "",
-) -> tuple[list[dict], int]:
-    """Search one page. Returns (items, totalData)."""
-    global _search_request_count
-    _search_request_count += 1
-    await asyncio.sleep(SEARCH_DELAY)
-    body = _search_body(province=province, district=district, page=page)
-    data = await fetch_with_retry(client, "POST", SEARCH_URL, body)
-    if not data:
-        return [], 0
-    resp = BamSearchResponse.model_validate(data)
-    return resp.data, resp.total_data
-
-
-async def fetch_detail(
-    client: httpx.AsyncClient,
-    asset_id: int,
-) -> BamAssetDetail | None:
-    """Fetch detail for a single asset."""
-    data = await fetch_with_retry(client, "GET", f"{DETAIL_URL}/{asset_id}")
-    if not data:
-        return None
-    try:
-        return BamAssetDetail.model_validate(data)
-    except Exception as e:
-        print(f"    Detail parse error for {asset_id}: {e}")
-        return None
-
-
 def parse_search_items(items: list[dict]) -> list[BamAssetSearch]:
-    """Parse raw search items into Pydantic models."""
     parsed = []
     for item in items:
         try:
@@ -201,22 +216,38 @@ def parse_search_items(items: list[dict]) -> list[BamAssetSearch]:
     return parsed
 
 
-MAX_SEARCH_RESULTS = 1600  # BAM API silently caps results at ~1600
-
-
-async def _scrape_search_partition(
+async def search_page(
     client: httpx.AsyncClient,
+    limiter: SlidingWindowLimiter,
+    province: str,
+    page: int,
+    district: str = "",
+) -> tuple[list[dict], int]:
+    """Search one page, respecting rate limit. Returns (items, totalData)."""
+    await limiter.acquire()
+    body = _search_body(province=province, district=district, page=page)
+    data = await fetch_with_retry(client, "POST", SEARCH_URL, body)
+    if not data:
+        return [], 0
+    resp = BamSearchResponse.model_validate(data)
+    return resp.data, resp.total_data
+
+
+async def scrape_search_partition(
+    client: httpx.AsyncClient,
+    limiter: SlidingWindowLimiter,
     province: str,
     district: str = "",
     seen_ids: set[int] | None = None,
+    detail_queue: asyncio.Queue | None = None,
 ) -> tuple[list[BamAssetSearch], int]:
-    """Scrape all search pages for a province+district partition. Returns (items, fail_count)."""
+    """Scrape all search pages for a partition. Pushes discovered assets to detail_queue."""
     if seen_ids is None:
         seen_ids = set()
     all_search: list[BamAssetSearch] = []
     fail_count = 0
 
-    items, total = await search_page(client, province, 1, district=district)
+    items, total = await search_page(client, limiter, province, 1, district=district)
     if total == 0:
         return [], 0
 
@@ -224,154 +255,183 @@ async def _scrape_search_partition(
         if p.id not in seen_ids:
             seen_ids.add(p.id)
             all_search.append(p)
+            if detail_queue:
+                await detail_queue.put(p)
 
-    total_pages = min((total + PAGE_SIZE - 1) // PAGE_SIZE, MAX_SEARCH_RESULTS // PAGE_SIZE)
+    total_pages = min(
+        (total + PAGE_SIZE - 1) // PAGE_SIZE, MAX_SEARCH_RESULTS // PAGE_SIZE
+    )
 
     for page in range(2, total_pages + 1):
-        await asyncio.sleep(SEARCH_DELAY)
-        items, _ = await search_page(client, province, page, district=district)
+        items, _ = await search_page(client, limiter, province, page, district=district)
         if items:
             for p in parse_search_items(items):
                 if p.id not in seen_ids:
                     seen_ids.add(p.id)
                     all_search.append(p)
+                    if detail_queue:
+                        await detail_queue.put(p)
         else:
             fail_count += 1
 
     return all_search, fail_count
 
 
-async def scrape_province(
-    client: httpx.AsyncClient,
-    province: str,
+async def search_producer(
+    provinces: list[str],
+    detail_queue: asyncio.Queue,
     skip_detail: bool = False,
-) -> tuple[list[tuple[BamAssetSearch, BamAssetDetail | None]], int, int]:
-    """
-    Scrape all assets for a province.
-    Drills down by district if province has >1600 assets (API cap).
-    Returns (merged_items, page_fail_count, detail_fail_count).
-    """
-    seen_ids: set[int] = set()
-    all_search: list[BamAssetSearch] = []
-    fail_count = 0
-
-    # Check total for this province
-    _, total = await search_page(client, province, 1)
-
-    if total > MAX_SEARCH_RESULTS:
-        # Drill down by district
-        districts = await fetch_districts(client, province)
-        if not districts:
-            print(f"    WARN: no districts for {province}, scraping province-level only")
-            items, fails = await _scrape_search_partition(client, province, seen_ids=seen_ids)
-            all_search.extend(items)
-            fail_count += fails
-        else:
-            for dist in districts:
-                await asyncio.sleep(SEARCH_DELAY)
-                items, fails = await _scrape_search_partition(
-                    client, province, district=dist, seen_ids=seen_ids
-                )
-                all_search.extend(items)
-                fail_count += fails
-                if items:
-                    print(f"    {dist}: {len(items)} assets")
-    else:
-        items, fails = await _scrape_search_partition(client, province, seen_ids=seen_ids)
-        all_search.extend(items)
-        fail_count += fails
-
-    # Fetch details
-    detail_fails = 0
-    if skip_detail:
-        return [(s, None) for s in all_search], fail_count, 0
-
-    detail_sem = asyncio.Semaphore(DETAIL_CONCURRENCY)
-    detail_map: dict[int, BamAssetDetail | None] = {}
-
-    async def fetch_one_detail(asset_id: int) -> None:
-        async with detail_sem:
-            detail_map[asset_id] = await fetch_detail(client, asset_id)
-            await asyncio.sleep(0.2)
-
-    ids = [s.id for s in all_search]
-    for i in range(0, len(ids), DETAIL_CONCURRENCY):
-        batch = ids[i : i + DETAIL_CONCURRENCY]
-        await asyncio.gather(*[fetch_one_detail(aid) for aid in batch])
-        await asyncio.sleep(0.3)
-
-    detail_fails = sum(1 for v in detail_map.values() if v is None)
-    merged = [(s, detail_map.get(s.id)) for s in all_search]
-
-    return merged, fail_count, detail_fails
-
-
-async def scrape_all(
-    target_province: str | None = None,
     max_assets: int | None = None,
-    skip_detail: bool = False,
-) -> tuple[list[tuple[BamAssetSearch, BamAssetDetail | None]], int, int]:
+) -> tuple[list[BamAssetSearch], int]:
     """
-    Scrape all provinces (or one).
-    Returns (merged_items, total_page_fails, total_detail_fails).
+    Search all provinces, push discovered assets to detail_queue.
+    Returns (all_search_items, total_page_fails).
     """
-    all_items: list[tuple[BamAssetSearch, BamAssetDetail | None]] = []
-    total_page_fails = 0
-    total_detail_fails = 0
-
-    # Fetch province list with a throwaway client
-    if target_province:
-        provinces = [target_province]
-    else:
-        async with httpx.AsyncClient(timeout=30.0) as tmp:
-            provinces = await fetch_provinces(tmp)
-        if not provinces:
-            print("  FATAL: Failed to fetch provinces")
-            return all_items, 1, 0
-    print(f"  {len(provinces)} province(s) to scrape\n")
+    limiter = SlidingWindowLimiter(SEARCH_WINDOW_SIZE, SEARCH_WINDOW_SECONDS)
+    all_search: list[BamAssetSearch] = []
+    total_fails = 0
+    seen_ids: set[int] = set()
 
     for i, prov in enumerate(provinces):
-        # Fresh client per province to avoid connection pool issues
         async with httpx.AsyncClient(timeout=60.0, follow_redirects=True) as client:
-            items, page_fails, detail_fails = await scrape_province(
-                client, prov, skip_detail=skip_detail
-            )
+            # Check total
+            _, total = await search_page(client, limiter, prov, 1)
 
-        all_items.extend(items)
-        total_page_fails += page_fails
-        total_detail_fails += detail_fails
+            prov_items: list[BamAssetSearch] = []
+            prov_fails = 0
 
-        if items:
-            detail_ok = sum(1 for _, d in items if d is not None)
+            if total > MAX_SEARCH_RESULTS:
+                # Drill down by district
+                districts = await fetch_districts(client, prov)
+                for dist in districts:
+                    items, fails = await scrape_search_partition(
+                        client,
+                        limiter,
+                        prov,
+                        district=dist,
+                        seen_ids=seen_ids,
+                        detail_queue=detail_queue if not skip_detail else None,
+                    )
+                    prov_items.extend(items)
+                    prov_fails += fails
+                    if items:
+                        print(f"    {dist}: {len(items)} assets")
+            else:
+                items, fails = await scrape_search_partition(
+                    client,
+                    limiter,
+                    prov,
+                    seen_ids=seen_ids,
+                    detail_queue=detail_queue if not skip_detail else None,
+                )
+                prov_items.extend(items)
+                prov_fails += fails
+
+        all_search.extend(prov_items)
+        total_fails += prov_fails
+
+        if prov_items:
             print(
                 f"  [{i + 1}/{len(provinces)}] {prov}: "
-                f"{len(items)} assets, {detail_ok} details "
-                f"({page_fails} page fails, {detail_fails} detail fails)"
+                f"{len(prov_items)} assets ({prov_fails} page fails) "
+                f"[rate: {limiter.count}/{SEARCH_WINDOW_SIZE} in window]"
             )
 
-        # Pause between provinces to avoid rate limiting
-        if i < len(provinces) - 1:
-            await asyncio.sleep(3.0)
-
-        if max_assets and len(all_items) >= max_assets:
-            all_items = all_items[:max_assets]
-            print(f"  Reached limit ({max_assets}), stopping")
+        if max_assets and len(all_search) >= max_assets:
+            all_search = all_search[:max_assets]
+            print(f"  Reached limit ({max_assets}), stopping search")
             break
 
-    print(
-        f"\n  Total: {len(all_items):,} assets, {total_page_fails} page fails, {total_detail_fails} detail fails"
+    return all_search, total_fails
+
+
+# ---------------------------------------------------------------------------
+# Detail consumer pool
+# ---------------------------------------------------------------------------
+
+
+async def detail_consumer(
+    queue: asyncio.Queue,
+    results: dict[int, BamAssetDetail | None],
+    skip_ids: set[int],
+    stats: dict[str, int],
+) -> None:
+    """
+    Worker pool: consume asset IDs from queue, fetch details concurrently.
+    Runs until it receives None sentinel.
+    """
+    sem = asyncio.Semaphore(DETAIL_CONCURRENCY)
+    pending: set[asyncio.Task] = set()
+
+    async def fetch_one(search_item: BamAssetSearch) -> None:
+        async with sem:
+            if search_item.id in skip_ids:
+                stats["skipped"] += 1
+                return
+            async with httpx.AsyncClient(timeout=60.0) as client:
+                detail = await fetch_detail(client, search_item.id)
+            results[search_item.id] = detail
+            if detail:
+                stats["ok"] += 1
+            else:
+                stats["fail"] += 1
+            await asyncio.sleep(DETAIL_DELAY)
+
+    while True:
+        item = await queue.get()
+        if item is None:
+            break
+        task = asyncio.create_task(fetch_one(item))
+        pending.add(task)
+        task.add_done_callback(pending.discard)
+
+    # Wait for remaining tasks
+    if pending:
+        await asyncio.gather(*pending, return_exceptions=True)
+
+
+async def fetch_detail(
+    client: httpx.AsyncClient,
+    asset_id: int,
+) -> BamAssetDetail | None:
+    data = await fetch_with_retry(client, "GET", f"{DETAIL_URL}/{asset_id}")
+    if not data:
+        return None
+    try:
+        return BamAssetDetail.model_validate(data)
+    except Exception as e:
+        print(f"    Detail parse error for {asset_id}: {e}")
+        return None
+
+
+# ---------------------------------------------------------------------------
+# DB helpers
+# ---------------------------------------------------------------------------
+
+
+def load_recent_detail_ids(max_age_hours: int = 24) -> set[int]:
+    """Load asset IDs that already have detail data scraped recently."""
+    engine = get_engine()
+    cutoff = datetime.now(timezone.utc).replace(
+        hour=datetime.now(timezone.utc).hour - max_age_hours
     )
-    return all_items, total_page_fails, total_detail_fails
+    with Session(engine) as session:
+        stmt = (
+            select(BamProperty.id)
+            .where(BamProperty.has_detail.is_(True))
+            .where(BamProperty.last_scraped_at >= cutoff)
+        )
+        return {row[0] for row in session.execute(stmt)}
 
 
 def save_to_db(
     items: list[tuple[BamAssetSearch, BamAssetDetail | None]],
     page_fails: int,
     detail_fails: int,
+    detail_skipped: int,
     started_at: datetime,
     provinces_scraped: str,
 ) -> dict[str, int]:
-    """Upsert properties into database with price tracking."""
     engine = get_engine()
     batch_size = 500
     total_counts = {"new": 0, "updated": 0, "price_changed": 0, "state_changed": 0}
@@ -408,6 +468,11 @@ def save_to_db(
     return total_counts
 
 
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
+
+
 async def main(
     province: str | None = None,
     limit: int | None = None,
@@ -418,28 +483,80 @@ async def main(
         create_tables()
         return
 
-    global _search_request_count
-    _search_request_count = 0
-
     started_at = datetime.now(timezone.utc)
-    print(f"=== BAM Scraper — {started_at.isoformat()} ===\n")
+    print(f"=== BAM Scraper v2 — {started_at.isoformat()} ===\n")
 
     create_tables()
 
-    print("\n1. Scraping API...")
-    items, page_fails, detail_fails = await scrape_all(
-        target_province=province,
-        max_assets=limit,
-        skip_detail=skip_detail,
+    # Resolve provinces
+    if province:
+        provinces = [province]
+    else:
+        async with httpx.AsyncClient(timeout=30.0) as tmp:
+            provinces = await fetch_provinces(tmp)
+        if not provinces:
+            print("  FATAL: Failed to fetch provinces")
+            return
+    print(f"  {len(provinces)} province(s) to scrape")
+
+    # Load recently-detailed IDs to skip
+    skip_ids: set[int] = set()
+    if not skip_detail:
+        try:
+            skip_ids = load_recent_detail_ids(max_age_hours=24)
+            if skip_ids:
+                print(f"  Skipping detail for {len(skip_ids)} recently-scraped assets")
+        except Exception:
+            pass  # first run, table might not exist yet
+
+    # Set up interleaved pipeline
+    detail_queue: asyncio.Queue[BamAssetSearch | None] = asyncio.Queue(maxsize=200)
+    detail_results: dict[int, BamAssetDetail | None] = {}
+    detail_stats = {"ok": 0, "fail": 0, "skipped": 0}
+
+    # Start detail consumer (runs in background)
+    detail_task = None
+    if not skip_detail:
+        detail_task = asyncio.create_task(
+            detail_consumer(detail_queue, detail_results, skip_ids, detail_stats)
+        )
+
+    # Run search producer (blocks until all provinces scraped)
+    print("\n1. Scraping (search + detail interleaved)...")
+    all_search, page_fails = await search_producer(
+        provinces, detail_queue, skip_detail=skip_detail, max_assets=limit
     )
 
-    if not items:
+    # Signal detail consumer to finish
+    if detail_task:
+        await detail_queue.put(None)
+        print(
+            f"\n  Search done ({len(all_search):,} assets). "
+            f"Waiting for {detail_queue.qsize()} remaining details..."
+        )
+        await detail_task
+        print(
+            f"  Details: {detail_stats['ok']} ok, "
+            f"{detail_stats['fail']} failed, "
+            f"{detail_stats['skipped']} skipped"
+        )
+
+    # Merge search + detail
+    merged: list[tuple[BamAssetSearch, BamAssetDetail | None]] = [
+        (s, detail_results.get(s.id)) for s in all_search
+    ]
+
+    if not merged:
         print("   No properties scraped — aborting DB save")
         return
 
+    # Save to DB
     print("\n2. Saving to database...")
     prov_str = province or "all"
-    counts = save_to_db(items, page_fails, detail_fails, started_at, prov_str)
+    detail_fails = detail_stats["fail"]
+    counts = save_to_db(
+        merged, page_fails, detail_fails, detail_stats["skipped"], started_at, prov_str
+    )
 
     elapsed = (datetime.now(timezone.utc) - started_at).total_seconds()
     print(f"\n=== Done in {elapsed:.0f}s ({elapsed / 60:.1f}m) ===")
@@ -448,14 +565,12 @@ async def main(
     print(f"   Price changed: {counts['price_changed']:,}")
     print(f"   State changed: {counts['state_changed']:,}")
     print(f"   Page fails: {page_fails}")
-    print(f"   Detail fails: {detail_fails}")
+    print(f"   Detail: {detail_stats['ok']} ok, {detail_fails} failed, {detail_stats['skipped']} skipped")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="BAM NPA Property Scraper")
-    parser.add_argument(
-        "--province", type=str, help="Scrape single province (Thai name)"
-    )
+    parser.add_argument("--province", type=str, help="Scrape single province (Thai name)")
     parser.add_argument("--limit", type=int, help="Max assets to scrape (for testing)")
     parser.add_argument(
         "--skip-detail", action="store_true", help="Skip detail endpoint (faster)"
