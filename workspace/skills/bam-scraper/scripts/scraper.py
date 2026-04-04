@@ -21,7 +21,7 @@ Usage:
 import argparse
 import asyncio
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import httpx
 from sqlalchemy import select
@@ -412,9 +412,7 @@ async def fetch_detail(
 def load_recent_detail_ids(max_age_hours: int = 24) -> set[int]:
     """Load asset IDs that already have detail data scraped recently."""
     engine = get_engine()
-    cutoff = datetime.now(timezone.utc).replace(
-        hour=datetime.now(timezone.utc).hour - max_age_hours
-    )
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=max_age_hours)
     with Session(engine) as session:
         stmt = (
             select(BamProperty.id)

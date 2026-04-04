@@ -21,6 +21,7 @@ from sqlalchemy import (
     Numeric,
     String,
     Text,
+    UniqueConstraint,
     func,
 )
 from sqlalchemy.dialects.postgresql import JSONB
@@ -541,12 +542,12 @@ class BamProperty(Base):
     raw_detail_json: Mapped[dict | None] = mapped_column(JSONB)
 
     __table_args__ = (
+        UniqueConstraint("asset_no", name="uq_bam_asset_no"),
         Index("ix_bam_province", "province"),
         Index("ix_bam_asset_type", "asset_type"),
         Index("ix_bam_grade", "grade"),
         Index("ix_bam_sell_price", "sell_price"),
         Index("ix_bam_location", "province", "district"),
-        Index("ix_bam_asset_no", "asset_no"),
         Index("ix_bam_evaluate", "evaluate_amt"),
     )
 

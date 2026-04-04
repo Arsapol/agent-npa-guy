@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session
@@ -154,6 +154,28 @@ def _merge_detail_to_prop(prop: BamProperty, detail: BamAssetDetail) -> None:
     prop.raw_detail_json = detail.model_dump(mode="json")
 
 
+def _load_latest_price_history(
+    session: Session, asset_ids: list[int]
+) -> dict[int, BamPriceHistory]:
+    """Return the most recent BamPriceHistory row per asset_id."""
+    if not asset_ids:
+        return {}
+    # Subquery: max scraped_at per asset_id
+    from sqlalchemy import func
+    subq = (
+        select(BamPriceHistory.asset_id, func.max(BamPriceHistory.scraped_at).label("max_ts"))
+        .where(BamPriceHistory.asset_id.in_(asset_ids))
+        .group_by(BamPriceHistory.asset_id)
+        .subquery()
+    )
+    stmt = select(BamPriceHistory).join(
+        subq,
+        (BamPriceHistory.asset_id == subq.c.asset_id)
+        & (BamPriceHistory.scraped_at == subq.c.max_ts),
+    )
+    return {row.asset_id: row for row in session.execute(stmt).scalars()}
+
+
 def upsert_properties(
     session: Session,
     properties: list[tuple[BamAssetSearch, BamAssetDetail | None]],
@@ -166,15 +188,19 @@ def upsert_properties(
     now = datetime.now(timezone.utc)
     counts = {"new": 0, "updated": 0, "price_changed": 0, "state_changed": 0}
 
-    asset_ids = [s.id for s, _ in properties]
-    existing_map: dict[int, BamProperty] = {}
-    if asset_ids:
-        stmt = select(BamProperty).where(BamProperty.id.in_(asset_ids))
+    asset_nos = [s.asset_no for s, _ in properties if s.asset_no]
+    existing_map: dict[str, BamProperty] = {}
+    if asset_nos:
+        stmt = select(BamProperty).where(BamProperty.asset_no.in_(asset_nos))
         for row in session.execute(stmt).scalars():
-            existing_map[row.id] = row
+            existing_map[row.asset_no] = row
+
+    existing_db_ids = [row.id for row in existing_map.values()]
+    latest_history: dict[int, BamPriceHistory] = _load_latest_price_history(session, existing_db_ids)
 
     for search, detail in properties:
-        existing = existing_map.get(search.id)
+        existing = existing_map.get(search.asset_no) if search.asset_no else None
+        prev_hist = latest_history.get(existing.id) if existing else None
 
         if existing is None:
             prop = BamProperty(id=search.id, first_seen_at=now)
@@ -182,16 +208,18 @@ def upsert_properties(
             if detail:
                 _merge_detail_to_prop(prop, detail)
             session.add(prop)
-            session.add(BamPriceHistory(
-                asset_id=search.id,
-                sell_price=search.sell_price,
-                discount_price=search.discount_price,
-                shock_price=search.shock_price,
-                evaluate_amt=_parse_numeric(detail.evaluate_amt) if detail else None,
-                sale_price_spc=_parse_numeric(detail.sale_price_spc_amt) if detail else None,
-                change_type="new",
-                scraped_at=now,
-            ))
+            # Only add "new" history if no prior history exists for this asset
+            if prev_hist is None:
+                session.add(BamPriceHistory(
+                    asset_id=search.id,
+                    sell_price=search.sell_price,
+                    discount_price=search.discount_price,
+                    shock_price=search.shock_price,
+                    evaluate_amt=_parse_numeric(detail.evaluate_amt) if detail else None,
+                    sale_price_spc=_parse_numeric(detail.sale_price_spc_amt) if detail else None,
+                    change_type="new",
+                    scraped_at=now,
+                ))
             counts["new"] += 1
         else:
             old_sell = float(existing.sell_price or 0)
@@ -212,9 +240,15 @@ def upsert_properties(
             )
             state_changed = old_state != search.asset_state
 
-            if price_changed:
+            # Guard against duplicate history entries within the same scrape window (1h)
+            recent_cutoff = now - timedelta(hours=1)
+            already_recorded_today = (
+                prev_hist is not None and prev_hist.scraped_at >= recent_cutoff
+            )
+
+            if price_changed and not already_recorded_today:
                 session.add(BamPriceHistory(
-                    asset_id=search.id,
+                    asset_id=existing.id,
                     sell_price=search.sell_price,
                     discount_price=search.discount_price,
                     shock_price=search.shock_price,
@@ -224,10 +258,12 @@ def upsert_properties(
                     scraped_at=now,
                 ))
                 counts["price_changed"] += 1
+            elif price_changed:
+                counts["price_changed"] += 1  # count it, just don't re-insert
 
-            if state_changed:
+            if state_changed and not already_recorded_today:
                 session.add(BamPriceHistory(
-                    asset_id=search.id,
+                    asset_id=existing.id,
                     sell_price=search.sell_price,
                     discount_price=search.discount_price,
                     shock_price=search.shock_price,
@@ -237,5 +273,7 @@ def upsert_properties(
                     scraped_at=now,
                 ))
                 counts["state_changed"] += 1
+            elif state_changed:
+                counts["state_changed"] += 1  # count it, just don't re-insert
 
     return counts
