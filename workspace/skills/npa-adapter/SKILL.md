@@ -11,14 +11,14 @@ Query layer that sits on top of all provider tables without changing them. Norma
 
 ## Providers
 
-| Source | Table | Price Unit | GPS | Notes |
-|--------|-------|-----------|-----|-------|
-| LED | `properties` + `led_properties` | satang (÷100) | No | Court auctions, case/deed info |
-| SAM | `sam_properties` | baht | Yes | Government NPA, auction/direct sale |
-| BAM | `bam_properties` | baht | Yes | Bank NPA, grade/shock prices |
-| JAM | `jam_properties` | baht | Yes | Housing finance, rental data |
-| KTB | `ktb_properties` | baht | Yes | Krung Thai Bank NPA |
-| KBANK | `kbank_properties` | baht | Yes | KBank NPA, promotion prices |
+| Source | Table | Price Unit | GPS | Business ID | Notes |
+|--------|-------|-----------|-----|-------------|-------|
+| LED | `properties` + `led_properties` | satang (÷100) | No | internal | Court auctions, case/deed info |
+| SAM | `sam_properties` | baht | Yes | `sam_id` (unique) | Government NPA, auction/direct sale |
+| BAM | `bam_properties` | baht | Yes | `asset_no` (unique) | PK is internal `id`; always key by `asset_no` |
+| JAM | `jam_properties` | baht | Yes | `asset_id` (PK) | Housing finance, rental data |
+| KTB | `ktb_properties` | baht | Yes | `coll_grp_id` (PK) | Krung Thai Bank NPA |
+| KBANK | `kbank_properties` | baht | Yes | `property_id` (PK, string) | KBank NPA, promotion prices |
 
 ## Commands
 

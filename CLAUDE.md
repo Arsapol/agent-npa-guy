@@ -108,10 +108,37 @@ Categories expire: pricing/rental 90d, flood/infrastructure/project 365d, legal/
 | Sentinel | `~/.nanobot-sentinel/` | News monitoring, KB curation |
 | Reviewer | `~/.nanobot-reviewer/` | Critical review of investment theses |
 
+## Scraper Data Integrity
+
+### Provider unique identifiers
+| Scraper | Business ID | PK type | Notes |
+|---------|------------|---------|-------|
+| BAM | `asset_no` | `UNIQUE` constraint (PK is internal `id`) | Upsert keyed by `asset_no` |
+| JAM | `asset_id` | Integer PK | Is the stable provider ID |
+| KTB | `coll_grp_id` | Integer PK | Is the stable provider ID |
+| KBank | `property_id` | String PK | Already stable string ID |
+| SAM | `sam_id` | `UNIQUE` constraint (PK is autoincrement `id`) | |
+
+### Price history duplicate guard
+All price history tables (BAM/JAM/KTB/KBank) have:
+- "new" entry only inserted if no prior history exists for that asset
+- Change events (price/state) skipped if a record already exists within the last 1 hour
+
+### Dedup scripts
+Run after any bulk import or table restore:
+```bash
+python workspace/skills/bam-scraper/scripts/dedup.py [--apply]
+python workspace/skills/jam-scraper/scripts/dedup.py [--apply]
+python workspace/skills/kbank-scraper/scripts/dedup.py [--apply]
+python workspace/skills/ktb-scraper/scripts/dedup.py [--apply]
+```
+Default is dry-run; pass `--apply` to execute.
+
 ## Development Notes
 
 - Python scripts use **async httpx**, **selectolax**, **Pydantic v2**, **SQLAlchemy**
 - Scrapers run with `asyncio.Semaphore(10)` for bounded concurrency
 - Use `bun` instead of `npm`, `bunx` instead of `npx`
+- `datetime.now()` used throughout (no timezone — machine runs local Bangkok time)
 - User is expert-level, expects direct technical communication
 - Thai location names used throughout (not transliterated)
