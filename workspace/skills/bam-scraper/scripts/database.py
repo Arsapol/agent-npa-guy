@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import os
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session
@@ -185,7 +185,7 @@ def upsert_properties(
     Each item is (search_data, detail_data_or_None).
     Returns counts: {new, updated, price_changed, state_changed}
     """
-    now = datetime.now(timezone.utc)
+    now = datetime.now()
     counts = {"new": 0, "updated": 0, "price_changed": 0, "state_changed": 0}
 
     asset_nos = [s.asset_no for s, _ in properties if s.asset_no]

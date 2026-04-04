@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timedelta
 
-from sqlalchemy import create_engine, select
+from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import Session
 
 from models import (
@@ -39,6 +39,25 @@ def _parse_dt(val: str | None) -> datetime | None:
         return None
 
 
+def _load_latest_price_history(
+    session: Session, asset_ids: list[int]
+) -> dict[int, JamPriceHistory]:
+    if not asset_ids:
+        return {}
+    subq = (
+        select(JamPriceHistory.asset_id, func.max(JamPriceHistory.scraped_at).label("max_ts"))
+        .where(JamPriceHistory.asset_id.in_(asset_ids))
+        .group_by(JamPriceHistory.asset_id)
+        .subquery()
+    )
+    stmt = select(JamPriceHistory).join(
+        subq,
+        (JamPriceHistory.asset_id == subq.c.asset_id)
+        & (JamPriceHistory.scraped_at == subq.c.max_ts),
+    )
+    return {row.asset_id: row for row in session.execute(stmt).scalars()}
+
+
 def upsert_properties(
     session: Session,
     properties: list[JamPropertyParsed],
@@ -48,7 +67,7 @@ def upsert_properties(
     Detects: new inserts, price changes, sold transitions.
     Returns counts: {new, updated, price_changed, sold, unsold}
     """
-    now = datetime.now(timezone.utc)
+    now = datetime.now()
     counts = {"new": 0, "updated": 0, "price_changed": 0, "sold": 0, "unsold": 0}
 
     # Load existing properties in bulk
@@ -59,8 +78,11 @@ def upsert_properties(
         for row in session.execute(stmt).scalars():
             existing_map[row.asset_id] = row
 
+    latest_history = _load_latest_price_history(session, asset_ids)
+
     for parsed in properties:
         existing = existing_map.get(parsed.asset_id)
+        prev_hist = latest_history.get(parsed.asset_id)
 
         if existing is None:
             # New property
@@ -112,17 +134,21 @@ def upsert_properties(
                 raw_json=parsed.raw_json,
             )
             session.add(prop)
-            session.add(JamPriceHistory(
-                asset_id=parsed.asset_id,
-                selling=parsed.selling,
-                discount=parsed.discount,
-                rental=parsed.rental,
-                change_type="new",
-                scraped_at=now,
-            ))
+            if prev_hist is None:
+                session.add(JamPriceHistory(
+                    asset_id=parsed.asset_id,
+                    selling=parsed.selling,
+                    discount=parsed.discount,
+                    rental=parsed.rental,
+                    change_type="new",
+                    scraped_at=now,
+                ))
             counts["new"] += 1
         else:
             # Existing — check for changes
+            recent_cutoff = now - timedelta(hours=1)
+            already_recorded = prev_hist is not None and prev_hist.scraped_at >= recent_cutoff
+
             price_changed = (
                 float(existing.selling or 0) != float(parsed.selling or 0)
                 or float(existing.discount or 0) != float(parsed.discount or 0)
@@ -171,7 +197,7 @@ def upsert_properties(
 
             counts["updated"] += 1
 
-            if price_changed:
+            if price_changed and not already_recorded:
                 session.add(JamPriceHistory(
                     asset_id=parsed.asset_id,
                     selling=parsed.selling,
@@ -181,8 +207,10 @@ def upsert_properties(
                     scraped_at=now,
                 ))
                 counts["price_changed"] += 1
+            elif price_changed:
+                counts["price_changed"] += 1
 
-            if sold_transition:
+            if sold_transition and not already_recorded:
                 session.add(JamPriceHistory(
                     asset_id=parsed.asset_id,
                     selling=parsed.selling,
@@ -192,8 +220,10 @@ def upsert_properties(
                     scraped_at=now,
                 ))
                 counts["sold"] += 1
+            elif sold_transition:
+                counts["sold"] += 1
 
-            if unsold_transition:
+            if unsold_transition and not already_recorded:
                 session.add(JamPriceHistory(
                     asset_id=parsed.asset_id,
                     selling=parsed.selling,
@@ -202,6 +232,8 @@ def upsert_properties(
                     change_type="unsold",
                     scraped_at=now,
                 ))
+                counts["unsold"] += 1
+            elif unsold_transition:
                 counts["unsold"] += 1
 
     return counts

@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timedelta
 
-from sqlalchemy import create_engine, select
+from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import Session
 
 from models import (
@@ -90,6 +90,25 @@ def _apply_item_to_prop(prop: KbankProperty, item: KbankPropertyItem, now: datet
     prop.last_scraped_at = now
 
 
+def _load_latest_price_history(
+    session: Session, property_ids: list[str]
+) -> dict[str, KbankPriceHistory]:
+    if not property_ids:
+        return {}
+    subq = (
+        select(KbankPriceHistory.property_id, func.max(KbankPriceHistory.scraped_at).label("max_ts"))
+        .where(KbankPriceHistory.property_id.in_(property_ids))
+        .group_by(KbankPriceHistory.property_id)
+        .subquery()
+    )
+    stmt = select(KbankPriceHistory).join(
+        subq,
+        (KbankPriceHistory.property_id == subq.c.property_id)
+        & (KbankPriceHistory.scraped_at == subq.c.max_ts),
+    )
+    return {row.property_id: row for row in session.execute(stmt).scalars()}
+
+
 def upsert_properties(
     session: Session,
     items: list[KbankPropertyItem],
@@ -99,7 +118,7 @@ def upsert_properties(
     Upsert KBank properties from list API.
     Returns counts: {new, updated, price_changed, status_changed}
     """
-    now = datetime.now(timezone.utc)
+    now = datetime.now()
     counts = {"new": 0, "updated": 0, "price_changed": 0, "status_changed": 0}
 
     prop_ids = [item.property_id for item in items]
@@ -109,22 +128,26 @@ def upsert_properties(
         for row in session.execute(stmt).scalars():
             existing_map[row.property_id] = row
 
+    latest_history = _load_latest_price_history(session, prop_ids)
+
     for item, raw in zip(items, raw_items):
         existing = existing_map.get(item.property_id)
+        prev_hist = latest_history.get(item.property_id)
 
         if existing is None:
             prop = KbankProperty(property_id=item.property_id, first_seen_at=now)
             _apply_item_to_prop(prop, item, now)
             prop.raw_json = raw
             session.add(prop)
-            session.add(KbankPriceHistory(
-                property_id=item.property_id,
-                sell_price=item.sell_price,
-                promotion_price=item.promotion_price,
-                adjust_price=item.adjust_price,
-                change_type="new",
-                scraped_at=now,
-            ))
+            if prev_hist is None:
+                session.add(KbankPriceHistory(
+                    property_id=item.property_id,
+                    sell_price=item.sell_price,
+                    promotion_price=item.promotion_price,
+                    adjust_price=item.adjust_price,
+                    change_type="new",
+                    scraped_at=now,
+                ))
             counts["new"] += 1
         else:
             old_sell = float(existing.sell_price or 0)
@@ -143,13 +166,15 @@ def upsert_properties(
                 or old_promo != float(item.promotion_price or 0)
                 or old_adjust != float(item.adjust_price or 0)
             )
-
             status_changed = (
                 old_sold_out != item.is_sold_out
                 or old_reserve != item.is_reserve
             )
 
-            if price_changed:
+            recent_cutoff = now - timedelta(hours=1)
+            already_recorded = prev_hist is not None and prev_hist.scraped_at >= recent_cutoff
+
+            if price_changed and not already_recorded:
                 session.add(KbankPriceHistory(
                     property_id=item.property_id,
                     sell_price=item.sell_price,
@@ -159,8 +184,10 @@ def upsert_properties(
                     scraped_at=now,
                 ))
                 counts["price_changed"] += 1
+            elif price_changed:
+                counts["price_changed"] += 1
 
-            if status_changed:
+            if status_changed and not already_recorded:
                 session.add(KbankPriceHistory(
                     property_id=item.property_id,
                     sell_price=item.sell_price,
@@ -169,6 +196,8 @@ def upsert_properties(
                     change_type="status_change",
                     scraped_at=now,
                 ))
+                counts["status_changed"] += 1
+            elif status_changed:
                 counts["status_changed"] += 1
 
     return counts

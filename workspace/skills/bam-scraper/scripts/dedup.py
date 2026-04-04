@@ -22,7 +22,7 @@ from __future__ import annotations
 import argparse
 import os
 from collections import defaultdict
-from datetime import datetime, timezone
+from datetime import datetime
 
 from sqlalchemy import create_engine, delete, select, text, update
 from sqlalchemy.orm import Session
@@ -160,7 +160,7 @@ def dedup_price_history(session: Session, dry_run: bool) -> int:
 def main(apply: bool) -> None:
     dry_run = not apply
     mode = "DRY RUN" if dry_run else "APPLYING"
-    print(f"=== BAM dedup [{mode}] — {datetime.now(timezone.utc).isoformat()} ===\n")
+    print(f"=== BAM dedup [{mode}] — {datetime.now().isoformat()} ===\n")
 
     engine = get_engine()
     with Session(engine) as session:

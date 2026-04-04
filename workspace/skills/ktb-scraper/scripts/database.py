@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timedelta
 
-from sqlalchemy import create_engine, select
+from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import Session
 
 from models import (
@@ -114,6 +114,25 @@ def _merge_detail_to_prop(prop: KtbProperty, detail: KtbSearchItem) -> None:
     prop.raw_detail_json = detail.raw_json
 
 
+def _load_latest_price_history(
+    session: Session, coll_grp_ids: list[int]
+) -> dict[int, KtbPriceHistory]:
+    if not coll_grp_ids:
+        return {}
+    subq = (
+        select(KtbPriceHistory.coll_grp_id, func.max(KtbPriceHistory.scraped_at).label("max_ts"))
+        .where(KtbPriceHistory.coll_grp_id.in_(coll_grp_ids))
+        .group_by(KtbPriceHistory.coll_grp_id)
+        .subquery()
+    )
+    stmt = select(KtbPriceHistory).join(
+        subq,
+        (KtbPriceHistory.coll_grp_id == subq.c.coll_grp_id)
+        & (KtbPriceHistory.scraped_at == subq.c.max_ts),
+    )
+    return {row.coll_grp_id: row for row in session.execute(stmt).scalars()}
+
+
 def upsert_properties(
     session: Session,
     properties: list[tuple[KtbSearchItem, KtbSearchItem | None]],
@@ -123,7 +142,7 @@ def upsert_properties(
     Each item is (search_data, detail_data_or_None).
     Returns counts: {new, updated, price_changed, category_changed}
     """
-    now = datetime.now(timezone.utc)
+    now = datetime.now()
     counts = {"new": 0, "updated": 0, "price_changed": 0, "category_changed": 0}
 
     ids = [s.coll_grp_id for s, _ in properties]
@@ -133,8 +152,11 @@ def upsert_properties(
         for row in session.execute(stmt).scalars():
             existing_map[row.coll_grp_id] = row
 
+    latest_history = _load_latest_price_history(session, ids)
+
     for search, detail in properties:
         existing = existing_map.get(search.coll_grp_id)
+        prev_hist = latest_history.get(search.coll_grp_id)
 
         if existing is None:
             prop = KtbProperty(coll_grp_id=search.coll_grp_id, first_seen_at=now)
@@ -142,15 +164,16 @@ def upsert_properties(
             if detail:
                 _merge_detail_to_prop(prop, detail)
             session.add(prop)
-            session.add(KtbPriceHistory(
-                coll_grp_id=search.coll_grp_id,
-                price=search.get_price_baht(),
-                nml_price=search.get_nml_price_baht(),
-                cate_no=search.cate_no,
-                cate_name=search.cate_name,
-                change_type="new",
-                scraped_at=now,
-            ))
+            if prev_hist is None:
+                session.add(KtbPriceHistory(
+                    coll_grp_id=search.coll_grp_id,
+                    price=search.get_price_baht(),
+                    nml_price=search.get_nml_price_baht(),
+                    cate_no=search.cate_no,
+                    cate_name=search.cate_name,
+                    change_type="new",
+                    scraped_at=now,
+                ))
             counts["new"] += 1
         else:
             old_price = float(existing.price or 0)
@@ -166,7 +189,10 @@ def upsert_properties(
             price_changed = old_price != new_price
             category_changed = old_cate_no != search.cate_no
 
-            if price_changed:
+            recent_cutoff = now - timedelta(hours=1)
+            already_recorded = prev_hist is not None and prev_hist.scraped_at >= recent_cutoff
+
+            if price_changed and not already_recorded:
                 session.add(KtbPriceHistory(
                     coll_grp_id=search.coll_grp_id,
                     price=search.get_price_baht(),
@@ -177,8 +203,10 @@ def upsert_properties(
                     scraped_at=now,
                 ))
                 counts["price_changed"] += 1
+            elif price_changed:
+                counts["price_changed"] += 1
 
-            if category_changed:
+            if category_changed and not already_recorded:
                 session.add(KtbPriceHistory(
                     coll_grp_id=search.coll_grp_id,
                     price=search.get_price_baht(),
@@ -188,6 +216,8 @@ def upsert_properties(
                     change_type="state_change",
                     scraped_at=now,
                 ))
+                counts["category_changed"] += 1
+            elif category_changed:
                 counts["category_changed"] += 1
 
     return counts

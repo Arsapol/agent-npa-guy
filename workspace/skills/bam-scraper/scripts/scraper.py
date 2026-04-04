@@ -21,7 +21,7 @@ Usage:
 import argparse
 import asyncio
 import time
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 
 import httpx
 from sqlalchemy import select
@@ -412,7 +412,7 @@ async def fetch_detail(
 def load_recent_detail_ids(max_age_hours: int = 24) -> set[int]:
     """Load asset IDs that already have detail data scraped recently."""
     engine = get_engine()
-    cutoff = datetime.now(timezone.utc) - timedelta(hours=max_age_hours)
+    cutoff = datetime.now() - timedelta(hours=max_age_hours)
     with Session(engine) as session:
         stmt = (
             select(BamProperty.id)
@@ -449,7 +449,7 @@ def save_to_db(
 
         log = BamScrapeLog(
             started_at=started_at,
-            finished_at=datetime.now(timezone.utc),
+            finished_at=datetime.now(),
             total_api=len(items),
             total_detail=sum(1 for _, d in items if d is not None),
             new_count=total_counts["new"],
@@ -481,7 +481,7 @@ async def main(
         create_tables()
         return
 
-    started_at = datetime.now(timezone.utc)
+    started_at = datetime.now()
     print(f"=== BAM Scraper v2 — {started_at.isoformat()} ===\n")
 
     create_tables()
@@ -556,7 +556,7 @@ async def main(
         merged, page_fails, detail_fails, detail_stats["skipped"], started_at, prov_str
     )
 
-    elapsed = (datetime.now(timezone.utc) - started_at).total_seconds()
+    elapsed = (datetime.now() - started_at).total_seconds()
     print(f"\n=== Done in {elapsed:.0f}s ({elapsed / 60:.1f}m) ===")
     print(f"   New: {counts['new']:,}")
     print(f"   Updated: {counts['updated']:,}")
