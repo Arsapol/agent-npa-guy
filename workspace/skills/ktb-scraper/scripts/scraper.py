@@ -35,6 +35,7 @@ from models import (
 )
 
 BASE_URL = "https://npa.krungthai.com/api/v1"
+PROVINCE_URL = f"{BASE_URL}/system/DopaProvince/dopaProvinceListNew/detail?amphurCode=&provinceCode=&tambonCode=&zipCode="
 
 BASE_HEADERS = {
     "accept": "application/json, text/plain, */*",
@@ -143,6 +144,32 @@ async def fetch_with_retry(
 # ---------------------------------------------------------------------------
 
 
+async def resolve_province_codes(
+    client: httpx.AsyncClient,
+    names: list[str],
+) -> list[tuple[str, str]]:
+    """Resolve Thai province names to API codes. Returns list of (code, name)."""
+    data = await fetch_with_retry(client, "GET", PROVINCE_URL)
+    if not data or not isinstance(data, dict):
+        return []
+    provinces = data.get("data", [])
+    name_to_code = {p["text"]: p["value"] for p in provinces}
+
+    results = []
+    for name in names:
+        if name in name_to_code:
+            results.append((name_to_code[name], name))
+        else:
+            # Partial match
+            matches = [(v, k) for k, v in name_to_code.items() if name in k]
+            if matches:
+                results.append(matches[0])
+                print(f"  Province '{name}' matched to '{matches[0][1]}' (code {matches[0][0]})")
+            else:
+                print(f"  WARNING: Province '{name}' not found, skipping")
+    return results
+
+
 def parse_search_items(items: list[dict]) -> list[KtbSearchItem]:
     parsed = []
     for item in items:
@@ -159,7 +186,7 @@ def parse_search_items(items: list[dict]) -> list[KtbSearchItem]:
 async def search_all(
     client: httpx.AsyncClient,
     limiter: SlidingWindowLimiter,
-    province_filter: str | None = None,
+    province_code: str | None = None,
     max_assets: int | None = None,
 ) -> tuple[list[KtbSearchItem], int]:
     """Paginate searchAll, returns (items, fail_count)."""
@@ -170,8 +197,8 @@ async def search_all(
     body: dict = {
         "paging": {"totalRows": 0, "rowsPerPage": PAGE_SIZE, "currentPage": 1},
     }
-    if province_filter:
-        body["shrProvince"] = province_filter
+    if province_code:
+        body["shrProvince"] = province_code
 
     await limiter.acquire()
     data = await fetch_with_retry(client, "POST", f"{BASE_URL}/product/searchAll", body)
@@ -337,7 +364,7 @@ def save_to_db(
 
 
 async def main(
-    province: str | None = None,
+    provinces: list[str] | None = None,
     limit: int | None = None,
     skip_detail: bool = False,
     create_tables_only: bool = False,
@@ -353,10 +380,29 @@ async def main(
 
     limiter = SlidingWindowLimiter(RATE_WINDOW_SIZE, RATE_WINDOW_SECONDS)
 
-    # Phase 1: Search
-    print("1. Scraping search results...")
-    async with httpx.AsyncClient(timeout=60.0, follow_redirects=True) as client:
-        all_search, page_fails = await search_all(client, limiter, province_filter=province, max_assets=limit)
+    # Resolve province names to codes
+    targets: list[tuple[str | None, str | None]] = [(None, None)]
+    if provinces:
+        async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
+            resolved = await resolve_province_codes(client, provinces)
+        if not resolved:
+            print("  FATAL: Could not resolve any provinces")
+            return
+        targets = resolved
+        print(f"  Resolved {len(resolved)} province(s): {', '.join(n for _, n in resolved)}\n")
+
+    # Phase 1: Search (loop over provinces if specified, else scrape all)
+    all_search: list[KtbSearchItem] = []
+    page_fails = 0
+
+    print(f"1. Scraping search results ({len(targets)} target(s))...")
+    for code, name in targets:
+        if name:
+            print(f"\n  --- {name} (code={code}) ---")
+        async with httpx.AsyncClient(timeout=60.0, follow_redirects=True) as client:
+            items, fails = await search_all(client, limiter, province_code=code, max_assets=limit)
+        all_search.extend(items)
+        page_fails += fails
 
     if not all_search:
         print("  No properties found — aborting")
@@ -394,15 +440,15 @@ async def main(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="KTB NPA Property Scraper")
-    parser.add_argument("--province", type=str, help="Filter by province (Thai name)")
-    parser.add_argument("--limit", type=int, help="Max assets to scrape (for testing)")
+    parser.add_argument("--province", type=str, nargs="+", help="Province(s) to scrape (Thai name, space-separated)")
+    parser.add_argument("--limit", type=int, help="Max assets to scrape per province (for testing)")
     parser.add_argument("--skip-detail", action="store_true", help="Skip detail endpoint (faster)")
     parser.add_argument("--create-tables", action="store_true", help="Create DB tables only")
     args = parser.parse_args()
 
     asyncio.run(
         main(
-            province=args.province,
+            provinces=args.province,
             limit=args.limit,
             skip_detail=args.skip_detail,
             create_tables_only=args.create_tables,
