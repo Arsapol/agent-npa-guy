@@ -5,7 +5,7 @@ description: Proven patterns for building async Python scrapers against Thai gov
 
 # NPA API Scraper Pattern
 
-Battle-tested architecture for scraping Thai NPA (Non-Performing Asset) property APIs. Extracted from 5 production scrapers: BAM, JAM, SAM, LED, KTB.
+Battle-tested architecture for scraping Thai NPA (Non-Performing Asset) property APIs. Extracted from 6 production scrapers: BAM, JAM, SAM, LED, KTB, KBank.
 
 ## When to use
 
@@ -191,6 +191,7 @@ assert len(missing) == 0, f"Missing: {missing}"
 | SAM | `sam-scraper/` | HTML scraping + AJAX | Moderate | Dropdown cache, separate list/detail scripts |
 | LED | `led-scraper/` | REST JSON (court auctions) | Low | Prices in satang (not baht) |
 | KTB | `ktb-scraper/` | REST JSON, same-origin | Generous (~100/60s) | Province codes from DopaProvince endpoint, 2-phase sequential |
+| KBank | `kbank-scraper/` | ASP.NET JSON (double-parse), HTML detail | ~20/60s | Akamai Bot Manager on detail pages, Camoufox headless bypass |
 
 ## Pattern 12: Dropdown filters use CODES, not display names
 
@@ -263,6 +264,73 @@ python -u scraper.py &
 #!/bin/bash
 exec python -u scraper.py "$@"
 ```
+
+## Pattern 15: ASP.NET double JSON parse
+
+Some bank APIs (KBank) wrap responses in ASP.NET's `{"d": "<json-string>"}` format. The inner value is a **JSON string**, not an object — you must parse twice:
+
+```python
+# WRONG — gets the raw string, not data
+data = response.json()["d"]  # type: str, not dict
+
+# CORRECT — double parse
+inner_str = response.json()["d"]  # str
+data = json.loads(inner_str)       # dict
+```
+
+**Signs you're hitting this:** `data` is a string starting with `{"Success":` instead of a dict.
+
+## Pattern 16: Akamai Bot Manager bypass (Camoufox)
+
+Some bank sites (KBank) protect detail pages with Akamai Bot Manager. Here's what does and doesn't work:
+
+| Approach | Result |
+|----------|--------|
+| httpx / requests | 403 |
+| curl_cffi (TLS impersonation) | Gets PoW challenge, can't solve JS |
+| curl_cffi + manual PoW solver | PoW solved, but still 403 (fingerprint check) |
+| Playwright headless + stealth | 403 |
+| nodriver headless | 403 |
+| nodriver headed | PASS (but shows browser window) |
+| **Camoufox headless=True** | **PASS — no window, fully headless** |
+
+**Why Camoufox works:** It patches Firefox at the C++ level — WebGL, AudioContext, canvas, screen geometry are spoofed *before* Akamai's sensor.js executes. Other tools only patch at JS level.
+
+```python
+from camoufox.async_api import AsyncCamoufox
+from selectolax.parser import HTMLParser
+
+async with AsyncCamoufox(headless=True, humanize=True) as browser:
+    page = await browser.new_page()
+    await page.goto(url, wait_until="networkidle")
+    html = await page.content()
+    tree = HTMLParser(html)  # parse with selectolax, not browser DOM
+```
+
+**Install:** `pip install 'camoufox[geoip]' && python -m camoufox fetch`
+
+**Important:**
+- `headless="virtual"` (Xvfb) only works on Linux. Use `headless=True` on macOS.
+- `playwright_stealth` API changed: use `Stealth().apply_stealth_async(context)`, not `stealth_async(page)`.
+- Camoufox is slow (~8s/page) — only use for detail enrichment, not bulk scraping.
+
+**Architecture rule:** If the list/search API works with plain httpx, use httpx for bulk scraping and Camoufox only for on-demand detail page enrichment.
+
+## Pattern 17: List-only architecture (no interleaved pipeline)
+
+When the list API already provides rich data (40+ fields including lat/lon, images, pricing), you don't need an interleaved pipeline. Use a simple sequential paginator:
+
+```
+Sequential Paginator (N pages × 50 items)
+    ↓ rate-limited
+Batch Upsert to PostgreSQL (500 per batch)
+    ↓
+Optional: Detail enrichment (Camoufox, on-demand)
+```
+
+**Decision rule:** If the list API gives you >80% of the fields you need → skip detail in the pipeline. Add detail enrichment as a separate script (`detail.py`) that runs on-demand for selected properties.
+
+Reference: `workspace/skills/kbank-scraper/scripts/scraper.py` (list-only) + `detail.py` (optional enrichment)
 
 ## Degrees of freedom
 

@@ -14,26 +14,37 @@ Methodology for building scrapers against protected/encrypted web APIs by analyz
 - API parameters are undocumented and guessing returns wrong results
 - Site requires specific cookies/session tokens for API access
 
-## Phase 1: Reconnaissance with Playwright
+## Phase 1: Reconnaissance — capture JS bundles
 
-Use Playwright (with `playwright-stealth`) to load the site and capture all network activity.
+Use Playwright or Camoufox to load the site and capture all JS files.
+
+**IMPORTANT:** `playwright_stealth` API changed. The old `stealth_async(page)` import no longer exists. Use:
 
 ```python
-from playwright.async_api import async_playwright
+# OLD (broken) — ImportError
 from playwright_stealth import stealth_async
-
-browser = await p.chromium.launch(headless=True)
-page = await context.new_page()
 await stealth_async(page)
 
-# Intercept all JS responses
-js_sources = {}
-async def capture_js(response):
-    if "_nuxt/" in response.url and response.url.endswith(".js"):
-        js_sources[response.url] = await response.text()
-page.on("response", capture_js)
+# NEW (correct)
+from playwright_stealth import Stealth
+stealth = Stealth()
+await stealth.apply_stealth_async(context)  # pass context, not page
+page = await context.new_page()
+```
 
-await page.goto(url, wait_until="networkidle")
+**If Akamai blocks Playwright entirely**, use Camoufox instead (see Phase 7).
+
+```python
+from camoufox.async_api import AsyncCamoufox
+
+async with AsyncCamoufox(headless=True, humanize=True) as browser:
+    page = await browser.new_page()
+
+    # Intercept all JS responses
+    js_sources = {}
+    page.on("response", lambda resp: capture_js(resp, js_sources))
+
+    await page.goto(url, wait_until="networkidle")
 ```
 
 Save all JS bundles locally for grep analysis. Do NOT try to read minified JS in context — save to files and search with regex.
@@ -153,6 +164,51 @@ perl -e 'alarm 60; exec @ARGV' python -u scraper.py --limit 100
 ```python
 # If count_with_filter == count_without_filter, the param is being ignored
 ```
+
+## Phase 7: Akamai Bot Manager bypass
+
+Akamai runs **sensor.js** (~50KB fingerprinting engine) that checks CDP `Runtime.Enable` leak, WebGL renderer, canvas hash, TLS fingerprint, and behavioral signals. Most automation tools fail.
+
+**What doesn't work:**
+- `httpx` / `requests` → 403
+- `curl_cffi` (TLS impersonation only) → Gets PoW challenge, can't execute JS
+- `curl_cffi` + manual PoW solver → Solves PoW (200 from `/_sec/verify`), but retry still 403 due to fingerprint validation
+- Playwright headless + stealth → 403
+- nodriver headless → 403
+- nodriver headed → Works but shows browser window
+
+**What works:**
+- **Camoufox `headless=True`** — patches Firefox at C++ level, all fingerprints spoofed before JS executes
+
+```python
+from camoufox.async_api import AsyncCamoufox
+
+async with AsyncCamoufox(headless=True, humanize=True) as browser:
+    page = await browser.new_page()
+    await page.goto(url, wait_until="networkidle")
+    html = await page.content()
+```
+
+**Install:** `pip install 'camoufox[geoip]' && python -m camoufox fetch`
+
+**Platform notes:**
+- `headless=True` works on macOS and Linux
+- `headless="virtual"` (Xvfb) only works on Linux
+- Slow (~8s/page) — only for detail enrichment, not bulk scraping
+
+**Architecture:** If only detail pages are Akamai-protected (list API works with httpx), build two separate scripts: `scraper.py` (httpx, bulk) + `detail.py` (Camoufox, on-demand).
+
+## Phase 8: ASP.NET double JSON parse
+
+Some sites (KBank) use ASP.NET WebMethods that wrap JSON in `{"d": "<json-string>"}`. The `d` value is a **string**, not an object:
+
+```python
+# Response: {"d": "{\"Success\":true,\"Data\":{...}}"}
+raw = response.json()         # {"d": "<string>"}
+inner = json.loads(raw["d"])  # {"Success": true, "Data": {...}}
+```
+
+**How to detect:** If `response.json()["d"]` returns a string starting with `{`, it needs double-parsing.
 
 ## Debugging checklist
 
