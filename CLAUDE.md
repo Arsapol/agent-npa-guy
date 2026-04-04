@@ -31,10 +31,19 @@ PostgreSQL: `postgresql://arsapolm@localhost:5432/npa_kb`
 |-------------|--------|
 | LED scraper | `properties`, `led_properties`, `bank_npa_properties`, `property_images`, `auction_history` |
 | SAM scraper | `sam_properties`, `sam_property_images`, `sam_dropdown_cache`, `sam_scrape_logs` |
+| BAM scraper | `bam_properties`, `bam_price_history`, `bam_scrape_logs` |
+| JAM scraper | `jam_properties`, `jam_price_history`, `jam_scrape_logs` |
+| KTB scraper | `ktb_properties`, `ktb_price_history`, `ktb_scrape_logs` |
+| KBank scraper | `kbank_properties`, `kbank_price_history`, `kbank_scrape_logs` |
 | Knowledge base | LightRAG vector/graph tables + `kb_metadata` |
 
 - LED prices stored in **satang** (integer)
 - SAM prices stored in **whole baht** (numeric)
+- BAM prices stored in **whole baht** (numeric)
+- JAM prices stored in **whole baht** (numeric)
+- KTB prices stored in **whole baht** (numeric)
+- KBank prices stored in **whole baht** (numeric)
+- **Use `npa-adapter` for cross-provider queries** — normalizes all prices to baht
 
 ## Skills
 
@@ -42,6 +51,9 @@ PostgreSQL: `postgresql://arsapolm@localhost:5432/npa_kb`
 |-------|---------|------------|
 | `led-scraper` | Scrape court auction properties from LED.go.th | `python main.py --agency "..." --max-pages 500` |
 | `sam-scraper` | Scrape SAM NPA properties (4,700+) | `./run_scraper.sh` or individual scripts |
+| `bam-scraper` | Scrape BAM NPA properties (15,900+) | `python scraper.py` or `--province กรุงเทพมหานคร` |
+| `jam-scraper` | Scrape JAM NPA properties | `python scraper.py` or `--limit 100` |
+| `npa-adapter` | Unified query across all providers (LED/SAM/BAM/JAM/KTB/KBank) | `python query.py search --province "กรุงเทพ" --sources LED,BAM` |
 | `led-query` | Query LED properties by location/price/date | `python query.py search --province "กรุงเทพ"` |
 | `kb` | Temporal knowledge base (LightRAG + PostgreSQL) | `insert_document(content, desc, category, area, source)` |
 | `flood-check` | Flood risk assessment (HIGH/MEDIUM/LOW) | `python flood_check.py --lat 13.95 --lon 100.62` |
