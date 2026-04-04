@@ -229,7 +229,7 @@ def _flush_batch(engine, parsed: list[KbankPropertyItem], raw: list[dict]) -> No
 def main():
     parser = argparse.ArgumentParser(description="KBank NPA Scraper")
     parser.add_argument("--limit", type=int, help="Max items to scrape (for testing)")
-    parser.add_argument("--province", type=int, help="Province ID filter (e.g. 10=BKK)")
+    parser.add_argument("--province", type=int, nargs="+", help="Province ID(s) (e.g. 10 20 50)")
     parser.add_argument("--type", dest="prop_type", help="Property type code (e.g. 05=condo)")
     parser.add_argument("--min-price", type=int, help="Min price filter (baht)")
     parser.add_argument("--max-price", type=int, help="Max price filter (baht)")
@@ -244,8 +244,8 @@ def main():
     label_parts: list[str] = []
 
     if args.province:
-        filter_extra["Provinces"] = [args.province]
-        label_parts.append(f"province={args.province}")
+        filter_extra["Provinces"] = args.province
+        label_parts.append(f"provinces={args.province}")
     if args.prop_type:
         filter_extra["PropertyTypes"] = [args.prop_type]
         label_parts.append(f"type={args.prop_type}")
