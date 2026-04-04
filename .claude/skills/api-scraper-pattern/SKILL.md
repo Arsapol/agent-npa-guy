@@ -5,7 +5,7 @@ description: Proven patterns for building async Python scrapers against Thai gov
 
 # NPA API Scraper Pattern
 
-Battle-tested architecture for scraping Thai NPA (Non-Performing Asset) property APIs. Extracted from 4 production scrapers: BAM, JAM, SAM, LED.
+Battle-tested architecture for scraping Thai NPA (Non-Performing Asset) property APIs. Extracted from 5 production scrapers: BAM, JAM, SAM, LED, KTB.
 
 ## When to use
 
@@ -190,6 +190,79 @@ assert len(missing) == 0, f"Missing: {missing}"
 | JAM | `jam-scraper/` | REST JSON, AES-GCM encrypted | ~30/60s | Needs `crypto.py` for decryption |
 | SAM | `sam-scraper/` | HTML scraping + AJAX | Moderate | Dropdown cache, separate list/detail scripts |
 | LED | `led-scraper/` | REST JSON (court auctions) | Low | Prices in satang (not baht) |
+| KTB | `ktb-scraper/` | REST JSON, same-origin | Generous (~100/60s) | Province codes from DopaProvince endpoint, 2-phase sequential |
+
+## Pattern 12: Dropdown filters use CODES, not display names
+
+Thai APIs populate dropdowns with `{value: "83", text: "ภูเก็ต"}`. The search filter takes the **value (code)**, not the text (name). Passing the display name silently returns 0 results.
+
+```python
+# WRONG — returns 0 results, no error
+body = {"shrProvince": "ภูเก็ต", "paging": {...}}
+
+# CORRECT — resolve name to code first
+body = {"shrProvince": "83", "paging": {...}}
+```
+
+**Always during recon:** test the filter with both name and code. Save the dropdown response to `recon/` and build a resolver function:
+
+```python
+async def resolve_province_codes(client, names: list[str]) -> list[tuple[str, str]]:
+    """Resolve Thai names to API codes. Returns [(code, name), ...]."""
+    data = await fetch_with_retry(client, "GET", PROVINCE_URL)
+    name_to_code = {p["text"]: p["value"] for p in data["data"]}
+    results = []
+    for name in names:
+        if name in name_to_code:
+            results.append((name_to_code[name], name))
+        else:
+            # Partial match fallback
+            matches = [(v, k) for k, v in name_to_code.items() if name in k]
+            if matches:
+                results.append(matches[0])
+    return results
+```
+
+## Pattern 13: Same-origin = shared rate limit, separate concurrency
+
+When search and detail endpoints share the same origin (e.g., KTB's `npa.krungthai.com`), they share a single rate limit pool. **Do NOT use interleaved pipeline** — it won't speed things up.
+
+Instead, use 2-phase sequential:
+1. Search with rate limiter (sequential pagination)
+2. Detail with concurrency control only (no rate limiter) — `Semaphore(20)` + small delay
+
+```python
+# Search: rate-limited (sequential pages)
+limiter = SlidingWindowLimiter(100, 60.0)
+for page in range(1, total_pages + 1):
+    await limiter.acquire()
+    ...
+
+# Detail: concurrency-controlled only (no limiter)
+sem = asyncio.Semaphore(20)
+async def fetch_one(item):
+    async with sem:
+        result = await fetch_detail(client, item)
+        await asyncio.sleep(0.05)  # small courtesy delay
+```
+
+**Decision rule:** Separate subdomains for search/detail → interleaved pipeline. Same origin → 2-phase sequential.
+
+## Pattern 14: Always run Python with `-u` flag
+
+Python buffers stdout by default. Background processes (`launchd`, `&`, `run_in_background`) show **zero output** until the buffer flushes or the process ends.
+
+```bash
+# WRONG — output appears only when process finishes or crashes
+python scraper.py &
+
+# CORRECT — output streams in real-time
+python -u scraper.py &
+
+# Also in wrapper scripts:
+#!/bin/bash
+exec python -u scraper.py "$@"
+```
 
 ## Degrees of freedom
 
@@ -199,11 +272,14 @@ assert len(missing) == 0, f"Missing: {missing}"
 - Recon-first workflow (test → verify → scrape)
 - Price history tracking pattern
 - `raw_json` / `raw_detail_json` JSONB columns for future-proofing
+- Verify dropdown filter values during recon (codes vs names)
+- Run Python with `-u` flag in wrapper scripts and background runs
 
 **Claude decides:**
 - Rate limiter parameters (based on observed 500 threshold)
 - Detail concurrency level (based on endpoint behavior)
-- Whether to use interleaved pipeline (only if separate search+detail endpoints)
+- Whether to use interleaved pipeline (only if search+detail are on **separate subdomains**)
+- If same origin → 2-phase sequential with concurrency control on detail (no rate limiter)
 - Partition strategy for pagination caps (district, asset type, price range, etc.)
 
 ## Pattern 9: Concurrency — parallel partitions, sequential pages
