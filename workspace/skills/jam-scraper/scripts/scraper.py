@@ -32,15 +32,16 @@ HEADERS = {
     ),
     "Referer": "https://www.jjpropertythai.com/Search",
 }
-CONCURRENCY = 5
+CONCURRENCY = 2
 PAGE_SIZE = 50
 
 
-async def init_session(client: httpx.AsyncClient) -> bool:
-    """Visit homepage to acquire cookiesession1."""
+async def init_session(client: httpx.AsyncClient, quiet: bool = False) -> bool:
+    """Visit homepage to acquire/refresh cookiesession1."""
     resp = await client.get("https://www.jjpropertythai.com/", headers=HEADERS)
     cookie = dict(client.cookies).get("cookiesession1", "none")
-    print(f"  Cookie: {cookie[:16]}...")
+    if not quiet:
+        print(f"  Cookie: {cookie[:16]}...")
     return resp.status_code == 200
 
 
@@ -75,15 +76,66 @@ async def fetch_with_retry(
     return None
 
 
-async def fetch_page(client: httpx.AsyncClient, page: int) -> dict | None:
-    return await fetch_with_retry(client, f"{BASE_URL}/assets", {
+async def fetch_page(
+    client: httpx.AsyncClient,
+    page: int,
+    province: str | None = None,
+    district: str | None = None,
+    subdistrict: str | None = None,
+) -> dict | None:
+    params: dict = {
         "freeText": "",
         "page": page,
         "user_code": "521789",
         "limit": PAGE_SIZE,
         "SellingStart": 0,
         "SellingEnd": 100000000,
-    })
+    }
+    if province is not None:
+        params["Province"] = province
+    if district is not None:
+        params["District"] = district
+    if subdistrict is not None:
+        params["SubDistrict"] = subdistrict
+    return await fetch_with_retry(client, f"{BASE_URL}/assets", params)
+
+
+async def fetch_provinces(client: httpx.AsyncClient) -> list[dict]:
+    """Fetch province dropdown list."""
+    result = await fetch_with_retry(client, f"{BASE_URL}/dropdown/province", {})
+    if result and "data" in result:
+        return result["data"]
+    return []
+
+
+async def fetch_all_amphurs(client: httpx.AsyncClient) -> dict[int, list[dict]]:
+    """Fetch all amphurs, grouped by PROVINCE_ID."""
+    result = await fetch_with_retry(client, f"{BASE_URL}/dropdown/amphur", {})
+    grouped: dict[int, list[dict]] = {}
+    if result and isinstance(result, dict) and "data" in result:
+        data = result["data"]
+        items = data if isinstance(data, list) else []
+        for item in items:
+            pid = item.get("PROVINCE_ID")
+            if pid is not None:
+                grouped.setdefault(pid, []).append(item)
+    print(f"  Loaded {sum(len(v) for v in grouped.values())} amphurs across {len(grouped)} provinces")
+    return grouped
+
+
+async def fetch_all_subdistricts(client: httpx.AsyncClient) -> dict[int, list[dict]]:
+    """Fetch all subdistricts (tambons), grouped by AMPHUR_ID."""
+    result = await fetch_with_retry(client, f"{BASE_URL}/dropdown/district", {})
+    grouped: dict[int, list[dict]] = {}
+    if result and isinstance(result, dict) and "data" in result:
+        data = result["data"]
+        items = data if isinstance(data, list) else []
+        for item in items:
+            aid = item.get("AMPHUR_ID")
+            if aid is not None:
+                grouped.setdefault(aid, []).append(item)
+    print(f"  Loaded {sum(len(v) for v in grouped.values())} subdistricts across {len(grouped)} amphurs")
+    return grouped
 
 
 def parse_properties(raw_items: list[dict]) -> list[JamPropertyParsed]:
@@ -100,89 +152,144 @@ def parse_properties(raw_items: list[dict]) -> list[JamPropertyParsed]:
     return parsed
 
 
-async def scrape_all(max_properties: int | None = None) -> tuple[list[JamPropertyParsed], list[int]]:
-    """Scrape all properties from JAM API. Returns (properties, failed_pages)."""
+MAX_PAGES_BEFORE_DRILL = 50
+
+
+async def scrape_partition(
+    client: httpx.AsyncClient,
+    seen_ids: set[int],
+    province: str | None = None,
+    district: str | None = None,
+    subdistrict: str | None = None,
+) -> tuple[list[JamPropertyParsed], int, int]:
+    """Scrape all pages for a partition. Returns (properties, fail_count, api_total)."""
+    props: list[JamPropertyParsed] = []
+    fail_count = 0
+
+    label = "/".join(filter(None, [province, district, subdistrict]))
+    t0 = time.time()
+    result = await fetch_page(
+        client, page=1, province=province, district=district, subdistrict=subdistrict
+    )
+    if not result:
+        print(f"      [{label}] page 1 FAILED ({time.time()-t0:.1f}s)")
+        return props, 1, 0
+
+    total = result.get("count", 0)
+    if total == 0:
+        return props, 0, 0
+
+    total_pages = (total + PAGE_SIZE - 1) // PAGE_SIZE
+    print(f"      [{label}] {total} items, {total_pages}p ({time.time()-t0:.1f}s)")
+
+    # Process page 1
+    for p in parse_properties(result.get("data", [])):
+        if p.asset_id not in seen_ids:
+            seen_ids.add(p.asset_id)
+            props.append(p)
+
+    # Paginate sequentially — the backend can't handle concurrent deep pagination
+    for page in range(2, total_pages + 1):
+        r = await fetch_page(
+            client, page=page, province=province, district=district, subdistrict=subdistrict
+        )
+        if r:
+            for p in parse_properties(r.get("data", [])):
+                if p.asset_id not in seen_ids:
+                    seen_ids.add(p.asset_id)
+                    props.append(p)
+        else:
+            fail_count += 1
+        await asyncio.sleep(0.3)
+
+    if total_pages > 1:
+        print(f"      [{label}] done: {len(props)} scraped, {fail_count} fails ({time.time()-t0:.1f}s)")
+
+    return props, fail_count, total
+
+
+async def scrape_all(max_properties: int | None = None) -> tuple[list[JamPropertyParsed], int]:
+    """Scrape all properties: province → amphur → subdistrict (if needed). Returns (properties, total_fails)."""
     all_parsed: list[JamPropertyParsed] = []
     seen_ids: set[int] = set()
-    failed_pages: list[int] = []
+    total_fails = 0
 
-    async with httpx.AsyncClient(timeout=60.0, follow_redirects=True) as client:
+    async with httpx.AsyncClient(timeout=120.0, follow_redirects=True) as client:
         await init_session(client)
 
-        # First page (slow ~30s)
-        print("  Fetching page 1 (cold start, may take ~30s)...")
-        t0 = time.time()
-        result = await fetch_page(client, page=1)
-        if not result:
-            print("  FATAL: Failed to fetch page 1")
-            return all_parsed, [1]
+        # Load reference data upfront
+        provinces = await fetch_provinces(client)
+        if not provinces:
+            print("  FATAL: Failed to fetch provinces")
+            return all_parsed, 1
 
-        total = result.get("count", 0)
-        total_pages = (total + PAGE_SIZE - 1) // PAGE_SIZE
-        if max_properties:
-            total_pages = min(total_pages, (max_properties + PAGE_SIZE - 1) // PAGE_SIZE)
-        print(f"  Page 1 OK ({time.time() - t0:.1f}s) — {total:,} properties, scraping {total_pages} pages")
+        amphurs_by_prov = await fetch_all_amphurs(client)
+        subs_by_amphur = await fetch_all_subdistricts(client)
+        print(f"  {len(provinces)} provinces to scrape\n")
 
-        # Process page 1
-        items = parse_properties(result.get("data", []))
-        for p in items:
-            if p.asset_id not in seen_ids:
-                seen_ids.add(p.asset_id)
-                all_parsed.append(p)
+        # Province → Amphur → SubDistrict (if >50 pages)
+        for i, prov in enumerate(provinces):
+            prov_id = prov["PROVINCE_ID"]        # used as Province= param
+            prov_name = prov["PROVINCE_NAME"]
 
-        # Concurrent pagination
-        sem = asyncio.Semaphore(CONCURRENCY)
+            if i > 0 and i % 20 == 0:
+                await init_session(client, quiet=True)
 
-        async def fetch_one(page: int) -> tuple[int, list[dict], float, bool]:
-            async with sem:
-                t = time.time()
-                r = await fetch_page(client, page=page)
-                elapsed = time.time() - t
-                if r:
-                    return page, r.get("data", []), elapsed, True
-                return page, [], elapsed, False
+            amphurs = amphurs_by_prov.get(prov_id, [])
 
-        for batch_start in range(2, total_pages + 1, CONCURRENCY):
-            batch_end = min(batch_start + CONCURRENCY, total_pages + 1)
-            tasks = [fetch_one(p) for p in range(batch_start, batch_end)]
-            results = await asyncio.gather(*tasks)
+            if not amphurs:
+                # No amphur breakdown — scrape province directly
+                props, fails, api_total = await scrape_partition(
+                    client, seen_ids, province=str(prov_id)
+                )
+                all_parsed.extend(props)
+                total_fails += fails
+                if props:
+                    pages = (api_total + PAGE_SIZE - 1) // PAGE_SIZE
+                    print(f"  {prov_name}: {len(props)} props, {pages}p ({fails} fails)")
+            else:
+                prov_total = 0
+                prov_fails = 0
 
-            for page_num, raw_items, elapsed, ok in sorted(results):
-                if ok:
-                    items = parse_properties(raw_items)
-                    new = 0
-                    for p in items:
-                        if p.asset_id not in seen_ids:
-                            seen_ids.add(p.asset_id)
-                            all_parsed.append(p)
-                            new += 1
-                    print(f"    Page {page_num}/{total_pages}: +{new} → {len(all_parsed):,} ({elapsed:.1f}s)")
-                else:
-                    failed_pages.append(page_num)
-                    print(f"    Page {page_num}/{total_pages}: FAILED ({elapsed:.1f}s)")
+                for amp in amphurs:
+                    amp_id = amp["AMPHUR_ID"]   # used as District= param
+                    amp_name = amp.get("AMPHUR_NAME", str(amp_id))
 
-            await asyncio.sleep(0.5)
+                    props, fails, api_total = await scrape_partition(
+                        client, seen_ids,
+                        province=str(prov_id), district=str(amp_id),
+                    )
+                    api_pages = (api_total + PAGE_SIZE - 1) // PAGE_SIZE
 
-        # Retry failed pages sequentially
-        if failed_pages:
-            print(f"\n  Retrying {len(failed_pages)} failed pages...")
-            still_failed = []
-            for p in failed_pages:
-                await asyncio.sleep(2.0)
-                r = await fetch_page(client, page=p)
-                if r:
-                    items = parse_properties(r.get("data", []))
-                    for item in items:
-                        if item.asset_id not in seen_ids:
-                            seen_ids.add(item.asset_id)
-                            all_parsed.append(item)
-                    print(f"    Page {p}: recovered")
-                else:
-                    still_failed.append(p)
-                    print(f"    Page {p}: still failed")
-            failed_pages = still_failed
+                    # Too many pages — drill into subdistricts
+                    if api_pages > MAX_PAGES_BEFORE_DRILL and amp_id in subs_by_amphur:
+                        subs = subs_by_amphur[amp_id]
+                        print(f"    {amp_name}: {api_total} ({api_pages}p) → {len(subs)} subdistricts")
+                        for sub in subs:
+                            sub_id = sub.get("DISTRICT_ID", "")  # used as SubDistrict= param
+                            sub_props, sub_fails, _ = await scrape_partition(
+                                client, seen_ids,
+                                province=str(prov_id), district=str(amp_id),
+                                subdistrict=str(sub_id),
+                            )
+                            props.extend(sub_props)
+                            fails += sub_fails
 
-    return all_parsed, failed_pages
+                    all_parsed.extend(props)
+                    prov_total += len(props)
+                    prov_fails += fails
+
+                total_fails += prov_fails
+                if prov_total > 0:
+                    print(f"  {prov_name}: {prov_total} props, {len(amphurs)} amphurs ({prov_fails} fails)")
+
+            if max_properties and len(all_parsed) >= max_properties:
+                print(f"  Reached limit ({max_properties}), stopping")
+                break
+
+        print(f"\n  Total: {len(all_parsed):,} properties, {total_fails} fails")
+
+    return all_parsed, total_fails
 
 
 def save_to_db(
@@ -236,8 +343,8 @@ async def main(limit: int | None = None, create_tables_only: bool = False):
 
     # Scrape
     print("\n1. Scraping API...")
-    properties, failed_pages = await scrape_all(max_properties=limit)
-    print(f"\n   Scraped: {len(properties):,} properties, {len(failed_pages)} failed pages")
+    properties, total_fails = await scrape_all(max_properties=limit)
+    print(f"\n   Scraped: {len(properties):,} properties, {total_fails} failed pages")
 
     if not properties:
         print("   No properties scraped — aborting DB save")
@@ -245,7 +352,7 @@ async def main(limit: int | None = None, create_tables_only: bool = False):
 
     # Save to DB
     print("\n2. Saving to database...")
-    counts = save_to_db(properties, failed_pages, started_at)
+    counts = save_to_db(properties, list(range(total_fails)), started_at)
 
     elapsed = (datetime.now(timezone.utc) - started_at).total_seconds()
     print(f"\n=== Done in {elapsed:.0f}s ({elapsed / 60:.1f}m) ===")
@@ -254,7 +361,7 @@ async def main(limit: int | None = None, create_tables_only: bool = False):
     print(f"   Price changed: {counts['price_changed']:,}")
     print(f"   Sold: {counts['sold']:,}")
     print(f"   Unsold: {counts['unsold']:,}")
-    print(f"   Failed pages: {len(failed_pages)}")
+    print(f"   Failed pages: {total_fails}")
 
 
 if __name__ == "__main__":

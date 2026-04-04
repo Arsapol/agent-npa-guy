@@ -144,8 +144,8 @@ class JamProperty(Base):
     type_asset_th: Mapped[str | None] = mapped_column(String(100))
 
     # Project
-    project_th: Mapped[str | None] = mapped_column(String(255))
-    project_en: Mapped[str | None] = mapped_column(String(255))
+    project_th: Mapped[str | None] = mapped_column(Text)
+    project_en: Mapped[str | None] = mapped_column(Text)
 
     # Location
     province: Mapped[str | None] = mapped_column(String(10))
@@ -156,8 +156,8 @@ class JamProperty(Base):
     district_name: Mapped[str | None] = mapped_column(String(100))
     lat: Mapped[float | None] = mapped_column(Float)
     lon: Mapped[float | None] = mapped_column(Float)
-    soi: Mapped[str | None] = mapped_column(String(255))
-    road: Mapped[str | None] = mapped_column(String(255))
+    soi: Mapped[str | None] = mapped_column(Text)
+    road: Mapped[str | None] = mapped_column(Text)
 
     # Size
     wah: Mapped[float | None] = mapped_column(Numeric(12, 2))
