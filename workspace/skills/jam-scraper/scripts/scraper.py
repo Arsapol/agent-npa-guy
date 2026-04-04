@@ -32,8 +32,8 @@ HEADERS = {
     ),
     "Referer": "https://www.jjpropertythai.com/Search",
 }
-CONCURRENCY = 2
-PAGE_SIZE = 50
+AMPHUR_CONCURRENCY = 3
+PAGE_SIZE = 200
 
 
 async def init_session(client: httpx.AsyncClient, quiet: bool = False) -> bool:
@@ -250,31 +250,36 @@ async def scrape_all(max_properties: int | None = None) -> tuple[list[JamPropert
             else:
                 prov_total = 0
                 prov_fails = 0
+                sem = asyncio.Semaphore(AMPHUR_CONCURRENCY)
 
-                for amp in amphurs:
-                    amp_id = amp["AMPHUR_ID"]   # used as District= param
-                    amp_name = amp.get("AMPHUR_NAME", str(amp_id))
+                async def scrape_amphur(amp: dict) -> tuple[list[JamPropertyParsed], int]:
+                    async with sem:
+                        a_id = amp["AMPHUR_ID"]
+                        a_name = amp.get("AMPHUR_NAME", str(a_id))
 
-                    props, fails, api_total = await scrape_partition(
-                        client, seen_ids,
-                        province=str(prov_id), district=str(amp_id),
-                    )
-                    api_pages = (api_total + PAGE_SIZE - 1) // PAGE_SIZE
+                        props, fails, api_total = await scrape_partition(
+                            client, seen_ids,
+                            province=str(prov_id), district=str(a_id),
+                        )
+                        api_pages = (api_total + PAGE_SIZE - 1) // PAGE_SIZE
 
-                    # Too many pages — drill into subdistricts
-                    if api_pages > MAX_PAGES_BEFORE_DRILL and amp_id in subs_by_amphur:
-                        subs = subs_by_amphur[amp_id]
-                        print(f"    {amp_name}: {api_total} ({api_pages}p) → {len(subs)} subdistricts")
-                        for sub in subs:
-                            sub_id = sub.get("DISTRICT_ID", "")  # used as SubDistrict= param
-                            sub_props, sub_fails, _ = await scrape_partition(
-                                client, seen_ids,
-                                province=str(prov_id), district=str(amp_id),
-                                subdistrict=str(sub_id),
-                            )
-                            props.extend(sub_props)
-                            fails += sub_fails
+                        if api_pages > MAX_PAGES_BEFORE_DRILL and a_id in subs_by_amphur:
+                            subs = subs_by_amphur[a_id]
+                            print(f"    {a_name}: {api_total} ({api_pages}p) → {len(subs)} subdistricts")
+                            for sub in subs:
+                                sub_id = sub.get("DISTRICT_ID", "")
+                                sub_props, sub_fails, _ = await scrape_partition(
+                                    client, seen_ids,
+                                    province=str(prov_id), district=str(a_id),
+                                    subdistrict=str(sub_id),
+                                )
+                                props.extend(sub_props)
+                                fails += sub_fails
 
+                        return props, fails
+
+                results = await asyncio.gather(*[scrape_amphur(a) for a in amphurs])
+                for props, fails in results:
                     all_parsed.extend(props)
                     prov_total += len(props)
                     prov_fails += fails
