@@ -1,0 +1,239 @@
+{
+  "feature": "Multi-Strategy NPA Screener v2",
+  "branchName": "feature/multi-strategy-screener",
+  "description": "Rebuild the NPA screening pipeline from a single rental-yield framework into a multi-strategy architecture. Each property gets scored against ALL viable strategies (RENT, FLIP, LAND BANK, RENO/HOSPITALITY) with a financial engineering overlay. Includes cascade logic (failed flip → rental candidate), leverage-aware scoring (CoCR parallel to NRY), investor profile input, and 16% IRR benchmark. Uses debate-validated constants: sale price × 0.92, rent × 0.85 (bare) / × 1.0 (furnished), 7% equity opportunity cost, 55 THB/sqm CAM default.",
+  "stories": [
+    {
+      "id": "story-001",
+      "title": "Define shared models and constants",
+      "description": "Create the shared Pydantic models (InvestorProfile, StrategyScore, PropertyResult, FinancialMetrics) and constants module with all debate-validated values (rent haircuts, CAM default, SBT rates, IRR benchmark, equity cost). These are imported by all strategy scorers and the financial pre-filter.",
+      "priority": 1,
+      "passes": false,
+      "acceptance_criteria": [
+        "File workspace/skills/npa-screener/scripts/models_v2.py exists with InvestorProfile, StrategyScore, PropertyResult, FinancialMetrics as frozen Pydantic models",
+        "File workspace/skills/npa-screener/scripts/constants.py exists with all shared constants (VERIFIED_SALE_MULTIPLIER=0.92, VERIFIED_RENT_BARE=0.85, VERIFIED_RENT_FURNISHED=1.0, CAM_DEFAULT=55, EQUITY_COST=0.07, IRR_BENCHMARK=0.16, SBT_RATE=0.033, STAMP_DUTY=0.005, TRANSFER_FEE=0.02, WHT_RATE=0.03)",
+        "python -c 'from models_v2 import InvestorProfile, StrategyScore; print(\"OK\")' runs without error from scripts directory",
+        "All constants are importable and match debate-agreed values"
+      ],
+      "track": "mechanical",
+      "dependencies": []
+    },
+    {
+      "id": "story-002",
+      "title": "Financial pre-filter (5 gates)",
+      "description": "Implement the 5 mandatory financial gates that run BEFORE any strategy scoring. Gates: (1) entry discount < exit costs + 10% → REJECT, (2) CoCR < 5% on leveraged deal → REJECT, (3) DSCR < 1.25 for income strategies → REJECT, (4) DSCR < 1.0 at +200bps → FLAG, (5) IRR < 16% → FLAG. Takes InvestorProfile + NpaCandidate, returns pass/fail with reasons.",
+      "priority": 2,
+      "passes": false,
+      "acceptance_criteria": [
+        "File workspace/skills/npa-screener/scripts/financial_prefilter.py exists",
+        "Function financial_prefilter(candidate, investor_profile) returns PreFilterResult with pass_fail, flags, and reasons",
+        "Gate 1 rejects when discount_pct < (SBT + transfer + WHT) + 10",
+        "Gate 2 rejects when CoCR < 5% for mortgage investors",
+        "Gate 3 rejects when DSCR < 1.25 for rent/hospitality strategies",
+        "Gate 4 flags when DSCR < 1.0 at rate + 200bps",
+        "Gate 5 flags when IRR < 16% benchmark",
+        "Cash investors skip Gates 2-3 (no debt service)",
+        "pytest tests pass for all 5 gates with edge cases"
+      ],
+      "track": "mechanical",
+      "dependencies": ["story-001"]
+    },
+    {
+      "id": "story-003",
+      "title": "Rental strategy scorer",
+      "description": "Implement the RENT strategy scoring module with 11 metrics from the rental-strategy.md report. Key metrics: GRY with 85% rent haircut (bare) or 100% (furnished), NRY with full holding cost model, CoCR leverage override, Demand Anchor Score (DAS), supply pressure, seasonal adjustment. Includes parallel cash/leveraged tracks.",
+      "priority": 3,
+      "passes": false,
+      "acceptance_criteria": [
+        "File workspace/skills/npa-screener/scripts/strategy_rent.py exists",
+        "Function score_rental(candidate, market_data, investor_profile) returns StrategyScore",
+        "GRY uses rent × 0.85 × 12 / price for bare units",
+        "GRY uses rent × 1.0 × 12 / price for furnished units (when investor_profile.renovation_budget > 0)",
+        "NRY deducts CAM, property tax, vacancy reserve, insurance from gross",
+        "CoCR parallel gate: NRY < 3.5% but CoCR >= tier minimum with DSCR > 1.25 → still viable",
+        "Seasonal adjustment: × 1.12 if current month is April-June for university anchors",
+        "DAS scoring: hospital + BTS proximity combination >= 40 points minimum",
+        "Summer vacancy: Tier C university properties apply 0.75 effective yield multiplier",
+        "Score output is 0-100 with weighted components matching rental-strategy.md report"
+      ],
+      "track": "mechanical",
+      "dependencies": ["story-001"]
+    },
+    {
+      "id": "story-004",
+      "title": "Flip strategy scorer",
+      "description": "Implement the FLIP strategy scoring module with 10 metrics from flip-strategy.md. Three sub-strategies: Quick Flip (6-12mo), Medium Hold (1-3yr), Renovation Flip. Key metrics: absorption rate, price momentum, listing velocity, net flip profit, comparable transaction evidence. Includes tax optimization (SBT vs stamp duty, tabien baan).",
+      "priority": 3,
+      "passes": false,
+      "acceptance_criteria": [
+        "File workspace/skills/npa-screener/scripts/strategy_flip.py exists",
+        "Function score_flip(candidate, market_data, investor_profile) returns StrategyScore",
+        "Quick flip requires: discount >= 35%, absorption < 30mo, 2 sold comparables, net margin >= 15%",
+        "Medium hold requires: discount >= 25%, net margin >= 15% annualized",
+        "Renovation flip requires: reno cost < 20% of purchase, renovation ROI > 2x",
+        "Quick flip auto-rejects LED/SAM properties (cannot meet June 2026 transfer deadline)",
+        "Leveraged quick flips (<24mo) are rejected (financing overhead kills margin)",
+        "SBT vs stamp duty optimization calculated based on hold_horizon_years",
+        "Tabien baan 3.3% saving applied when investor_profile.tabien_baan = True and hold < 5yr",
+        "Minimum annualized return threshold is 15% (above SET index + illiquidity premium)"
+      ],
+      "track": "mechanical",
+      "dependencies": ["story-001"]
+    },
+    {
+      "id": "story-005",
+      "title": "Land banking strategy scorer",
+      "description": "Implement the LAND BANK strategy scoring module with 7 metrics from land-banking-strategy.md. Key metrics: Transit Proximity Score with infrastructure status taxonomy (confirmed/approved/planned/rumored), Land Price Momentum Index, Zoning Upside Score, Holding Cost Burden with 7% equity cost. Only applies to land and house+land property types.",
+      "priority": 4,
+      "passes": false,
+      "acceptance_criteria": [
+        "File workspace/skills/npa-screener/scripts/strategy_landbank.py exists",
+        "Function score_landbank(candidate, market_data, investor_profile) returns StrategyScore",
+        "Infrastructure status multiplier: CONFIRMED=1.0, APPROVED=0.7, PLANNED=0.3, RUMORED=0.0",
+        "Rumored infrastructure = auto-reject",
+        "HCB uses 7% equity opportunity cost, not BoT 1%",
+        "Agricultural tax optimization only applied to plots > 1600 sqw with agricultural zoning",
+        "LPMI > 50% flags 'premium may be priced in'",
+        "Only scores properties with property_type containing land/house+land",
+        "Condos return score = None (not applicable)"
+      ],
+      "track": "mechanical",
+      "dependencies": ["story-001"]
+    },
+    {
+      "id": "story-006",
+      "title": "Renovation/hospitality strategy scorer",
+      "description": "Implement the RENO/HOSPITALITY strategy scoring module from renovation-hospitality-strategy.md. Four sub-strategies: Serviced Apartment (30+ day, low legal risk), Co-living, Mini Resort (landed only), STR (houses only). Hard gate: Legal Compliance Score >= 3. Condo STR = HARD REJECT. Operating cost stack = 53% of gross (fineng-corrected).",
+      "priority": 4,
+      "passes": false,
+      "acceptance_criteria": [
+        "File workspace/skills/npa-screener/scripts/strategy_hospitality.py exists",
+        "Function score_hospitality(candidate, market_data, investor_profile) returns StrategyScore",
+        "Condo + STR (<30 day) = HARD REJECT with reason 'Hotel Act B.E. 2547'",
+        "Legal Compliance Score < 3 = REJECT",
+        "Operating cost stack uses 53% of gross (not 37.5%)",
+        "RROI formula: (annual_net_income - pre_reno_income) / renovation_cost >= 0.20",
+        "Renovation cost capped at 20% of purchase price",
+        "Houses/villas can score for STR sub-strategy",
+        "Serviced apartment (30+ day) is default for condo properties",
+        "Renovation financing cost modeled when reno > 20% of purchase"
+      ],
+      "track": "mechanical",
+      "dependencies": ["story-001"]
+    },
+    {
+      "id": "story-007",
+      "title": "Strategy router with cascade logic",
+      "description": "Implement the main orchestrator that routes each property through viable strategies with cascade logic. Property type determines eligible strategies. Failed flip cascades to rental. Failed bare rental cascades to furnished rental. Dual-strategy flag when both RENT >= 55 AND FLIP >= 55. Outputs best strategy recommendation per property.",
+      "priority": 5,
+      "passes": false,
+      "acceptance_criteria": [
+        "File workspace/skills/npa-screener/scripts/strategy_router.py exists",
+        "Function route_and_score(candidate, market_data, investor_profile) returns PropertyResult with all strategy scores",
+        "Condo properties scored against: RENT, FLIP, HOSPITALITY (30+ day only)",
+        "Land properties scored against: LAND_BANK only",
+        "House+land scored against: FLIP, LAND_BANK, HOSPITALITY (all sub-types)",
+        "Cascade: if flip_score < 55, property is re-scored as RENT",
+        "Cascade: if rent_bare_score < 55 and investor has renovation budget, re-score as RENT_FURNISHED",
+        "Dual-strategy flag set when rent_score >= 55 AND flip_score >= 55",
+        "PropertyResult.best_strategy contains the highest-scoring viable strategy",
+        "PropertyResult.all_scores contains dict of strategy_name -> StrategyScore for all attempted strategies"
+      ],
+      "track": "mechanical",
+      "dependencies": ["story-002", "story-003", "story-004", "story-005", "story-006"]
+    },
+    {
+      "id": "story-008",
+      "title": "Financial engineering overlay",
+      "description": "Implement the financial engineering layer that runs after strategy scoring. Computes: IRR over hold period, cash vs leveraged comparison, tax optimization recommendation (personal vs corporate, tabien baan), hold period optimization, opportunity cost vs SET/bonds/REITs. Attaches FinancialMetrics to each PropertyResult.",
+      "priority": 6,
+      "passes": false,
+      "acceptance_criteria": [
+        "File workspace/skills/npa-screener/scripts/financial_overlay.py exists",
+        "Function compute_financial_overlay(property_result, investor_profile) returns FinancialMetrics",
+        "IRR computed using full cashflow model (acquisition costs, monthly hold costs, exit costs, rental income)",
+        "Cash-on-cash return computed for leveraged investors",
+        "Tax recommendation: personal ownership for hold >= 5yr (saves 2.8% vs company SBT)",
+        "Tabien baan recommendation when hold < 5yr and investor is personal",
+        "Opportunity cost comparison: IRR vs SET 10%, Thai bonds 3%, REITs 7%",
+        "Hold cost per month breakdown: mortgage + CAM + insurance + vacancy reserve + property tax",
+        "Break-even occupancy computed for rental/hospitality strategies"
+      ],
+      "track": "mechanical",
+      "dependencies": ["story-007"]
+    },
+    {
+      "id": "story-009",
+      "title": "Refactor data extraction to support all property types",
+      "description": "Extend the existing extract_all_condos() to extract ALL property types (condos, houses, townhouses, land) for land banking and hospitality strategies. Add NPA vintage calculation (months since first_seen_at). Add LED auction round extraction.",
+      "priority": 2,
+      "passes": false,
+      "acceptance_criteria": [
+        "Function extract_all_properties() replaces extract_all_condos()",
+        "Extracts condos, houses, townhouses, land from all 6 providers",
+        "NPA vintage (months since first_seen_at) computed for each property",
+        "LED auction round count (total_auction_count) extracted from properties table",
+        "Property type normalized to enum: CONDO, HOUSE, TOWNHOUSE, LAND, HOUSE_AND_LAND, COMMERCIAL",
+        "Existing condo extraction SQL preserved (no regression)"
+      ],
+      "track": "mechanical",
+      "dependencies": ["story-001"]
+    },
+    {
+      "id": "story-010",
+      "title": "Multi-strategy report output",
+      "description": "Build the output formatter that generates a ranked report showing each property's best strategy, all strategy scores, financial metrics, and actionable recommendations. Markdown report + JSON export. Dual-strategy properties highlighted.",
+      "priority": 7,
+      "passes": false,
+      "acceptance_criteria": [
+        "File workspace/skills/npa-screener/scripts/report_v2.py exists",
+        "Markdown report shows: summary table, per-strategy breakdown, top N candidates with detailed cards",
+        "Each property card shows: best strategy, all strategy scores, financial overlay, flags, recommendations",
+        "Dual-strategy properties have 'DUAL: RENT+FLIP' badge",
+        "IRR vs 16% benchmark displayed with color coding (above/below)",
+        "JSON export includes all strategy scores and financial metrics per property",
+        "Tax optimization recommendation in each card (personal/corporate, tabien baan)",
+        "Report saved to workspace/output/npa-screening-v2-{date}.md and .json"
+      ],
+      "track": "mechanical",
+      "dependencies": ["story-008"]
+    },
+    {
+      "id": "story-011",
+      "title": "Main pipeline orchestrator (screener_v2.py)",
+      "description": "Wire everything together: CLI entry point that accepts InvestorProfile args, extracts properties, enriches with market data, runs financial pre-filter, routes through strategies, applies financial overlay, generates report. Reuses existing market enrichment and proximity computation from screener.py.",
+      "priority": 8,
+      "passes": false,
+      "acceptance_criteria": [
+        "File workspace/skills/npa-screener/scripts/screener_v2.py exists with CLI interface",
+        "CLI accepts: --purchase-mode cash/mortgage, --ltv, --hold-years, --entity personal/company, --tabien-baan, --reno-budget, --strategies, --province, --max-price, --top N, --json",
+        "Pipeline: extract → enrich market → compute proximity → financial prefilter → strategy router → financial overlay → report",
+        "Reuses enrich_with_market_data() and compute_proximity() from screener.py",
+        "python screener_v2.py --purchase-mode cash --hold-years 5 --strategies rent,flip --json runs successfully",
+        "Output files generated in workspace/output/"
+      ],
+      "track": "mechanical",
+      "dependencies": ["story-009", "story-010"]
+    },
+    {
+      "id": "story-012",
+      "title": "Integration test: full pipeline on real DB data",
+      "description": "Run the complete v2 pipeline against the live NPA database (12,774+ condos + houses/land) with both cash and mortgage investor profiles. Verify that strategy distribution makes sense, cascade logic triggers correctly, financial metrics are realistic, and no runtime errors on real data.",
+      "priority": 9,
+      "passes": false,
+      "acceptance_criteria": [
+        "screener_v2.py --purchase-mode cash --hold-years 5 --strategies all completes without error",
+        "screener_v2.py --purchase-mode mortgage --ltv 0.7 --hold-years 5 --strategies rent,flip completes without error",
+        "At least 3 strategies produce scored results (not all REJECT)",
+        "Cascade logic triggers: at least 1 property shows 'failed flip → rental candidate'",
+        "Dual-strategy flag triggers: at least 1 property scored for both RENT and FLIP",
+        "Financial pre-filter rejects some properties (not 0% and not 100%)",
+        "IRR benchmark comparison appears in output",
+        "No NaN, Inf, or division-by-zero errors in financial metrics",
+        "Report markdown renders correctly with no broken tables"
+      ],
+      "track": "mechanical",
+      "dependencies": ["story-011"]
+    }
+  ]
+}
