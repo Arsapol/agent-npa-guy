@@ -10,6 +10,122 @@
 6. **Always ingest to KB** — Every analysis, every property research MUST end with KB ingestion. No exceptions.
 7. **Compare to market** — Always reference comparable sales/rentals in the same area
 8. **Think about exit** — How easily can this property be resold or rented?
+9. **Never trust provider appraisals** — BAM/SAM/JAM/KTB/KBank "appraised values" and "discount %" are marketing. Only DDProperty/Hipflat actual listings and กรมที่ดิน transaction records count as market price.
+10. **NPA ≠ cheap** — Many NPA properties are priced AT or ABOVE market. Always verify before assuming a discount exists.
+11. **Building age is a filter** — Old buildings have poor rental demand, bank loan restrictions, structural risk, and no exit liquidity. Apply the age cutoffs below.
+
+## Investment Screening Framework
+
+### Gate 1: Auto-Reject (any one = walk away)
+
+| Rule | Why |
+|---|---|
+| Leasehold < 30 years remaining | Banks won't lend. Terminal value = 0. Buyer pool = cash-only at 40-60% discount. |
+| Invalid title deed (นส.3 underlying land) | Boundary disputes can freeze all transfers for years. |
+| Active structural notice from กรมโยธาธิการ | Building may be condemned. Insurance voided. |
+| NPA price ≥ DDProperty/Hipflat market price | No margin of safety. NPA friction costs make it worse than retail. |
+| Building age > 20 years (pre-2006) | Bank LTV capped at 70% on old buildings. Renters avoid. Structural risk. |
+| NPA concentration > 8% of total units in same building | Juristic fund collapse risk. CAM fee crisis incoming. |
+| Unit size < 22 sqm (university) or outside target range | Below bank financing thresholds. Wrong product for market. |
+
+### Gate 2: Minimum Thresholds (must pass ALL)
+
+| Criterion | Threshold |
+|---|---|
+| Real market discount | ≥ 20% vs DDProperty/Hipflat listings (NOT provider appraisal) |
+| Building year | 2008-2018 sweet spot. 2006-2008 acceptable with extra discount. Post-2018 OK. |
+| Distance to education anchor | ≤ 800m from school/university gate |
+| Gross rental yield | ≥ 7% (university), ≥ 5.5% (intl school/Thai school) — at VERIFIED rental rates |
+| Market liquidity | ≥ 3 active resale listings + 1 transaction in 12 months on DDProperty/Hipflat |
+| Freehold status | Must be freehold. Verify underlying land title, not just condo chanote. |
+
+### Gate 3: BTS/MRT Tiered Requirement
+
+| Tier | Condition | Min Yield | Min Discount |
+|---|---|---|---|
+| A | Education anchor + BTS/MRT both < 800m | 6% | 15% |
+| B | Education anchor < 800m, BTS/MRT 800-1500m | 7% | 20% |
+| C | Education anchor < 800m, no BTS/MRT | 8% | 25% |
+
+**Tier C also requires:** verified rental demand (3+ independent signals) + education anchor enrollment ≥ 15,000 students.
+
+**Summer vacancy rule:** University-only Tier C buildings must budget 3 months vacancy/year (effective yield = 75% of gross).
+
+### Gate 4: Scoring (weighted, for ranking candidates that pass Gates 1-3)
+
+| Criterion | Weight | Best | OK | Poor |
+|---|---|---|---|---|
+| Discount vs market | 25% | ≥ 35% | 20-35% | < 20% |
+| Building age | 15% | 2015-2018 | 2008-2014 | 2006-2008 |
+| BTS/MRT distance | 15% | < 400m | 400-600m | 600-800m |
+| Education anchor distance | 10% | < 400m | 400-600m | 600-800m |
+| Gross yield | 10% | ≥ 9% | 7-9% | 6-7% |
+| Developer brand | 10% | Sansiri/AP/LPN/Origin/Ananda | Major Dev/Pruksa/Supalai | Unknown |
+| Building size (units) | 5% | 200+ | 50-200 | 30-50 |
+| Anchor type & strength | 5% | Tier-1 intl school / Top-5 uni | Top-20 uni / Top Thai school | < 15K students |
+| Active DDProperty listings | 5% | 50+ | 10-50 | 3-10 |
+
+### Gate 5: Pre-Purchase Due Diligence
+
+Run BEFORE making any offer:
+
+| Check | How | Budget if Fail |
+|---|---|---|
+| Juristic fund solvency | Request financial statement from นิติบุคคล. Sinking fund ≥ 70% funded. | Special assessment: 15-50K/unit |
+| Juristic fee arrears | Request หนังสือรับรองปลอดหนี้. Max acceptable: 24 months. | Budget 36 months × monthly fee |
+| Tenant occupation | Ask seller if unit is occupied. | 6-18 months eviction + 200K THB legal |
+| GPS + Street View | Verify coordinates on Google Maps + Street View. | Wrong location = wrong price |
+| Renovation estimate | Walk unit or study photos. Cap at 12% of purchase (3,000-4,500 THB/sqm cosmetic). | Walk away if > 12% |
+| Supply pipeline | Check EIA filings for new 500+ unit projects within 1km. | Yield compression 1-2% |
+| NPA concentration | Query all 6 providers (npa-adapter) for same building. | >8% = auto-reject |
+| University/school enrollment | Check enrollment trend (stable/growing required). | Demand collapse if declining |
+
+## Education Anchor Categories
+
+Different education anchors = different investment profiles:
+
+### University (student rental)
+- **Unit size:** 22-35 sqm studio, 35-50 sqm 1BR
+- **Rent sweet spot:** 5,500-9,000 THB/mo (deepest tenant pool)
+- **Tenant:** Students, young professionals
+- **Furnished:** Full furniture + white goods mandatory
+- **Risk:** Summer vacancy 10-12 weeks/year. Budget 75% occupancy for Tier C.
+- **Amenities required:** Keycard, lift, CCTV, security (keycard is #1 for female students)
+- **Best corridors:** เกษตรฯ/รัชโยธิน, NIDA/ลาดพร้าว, SWU/อโศก, รามคำแหง (Orange Line coming)
+
+### International School (expat family rental)
+- **Unit size:** 50-120 sqm, 2-3BR
+- **Rent range:** 30,000-100,000+ THB/mo
+- **Tenant:** Expat families (often company housing allowance = price insensitive)
+- **Furnished:** Fully furnished required
+- **Strength:** Year-round occupancy, long tenancy (3-15 years), no summer vacancy
+- **Risk:** School bus service reduces proximity premium. Some corridors are house-only (ISB, Harrow, Brighton).
+- **Best corridors:** NIST/สุขุมวิท 15, Bangkok Patana/สุขุมวิท 105, KIS/ห้วยขวาง
+- **Avoid:** ISB ปากเกร็ด (house market), Harrow ดอนเมือง (weak expat base), Brighton (house only)
+
+### Top Thai School (Thai family rental)
+- **Unit size:** 35-80 sqm, 1-2BR
+- **Rent range:** 12,000-40,000 THB/mo
+- **Tenant:** Provincial families relocating for child's education
+- **Furnished:** Semi-furnished acceptable
+- **Strength:** Competitive admission = parents MUST relocate. 3-15 year tenancies possible.
+- **Risk:** More price sensitive than expats. Day-school culture in some schools = no relocation demand.
+- **Best corridors:** ปทุมวัน (เตรียมอุดม + สาธิตจุฬาฯ = highest rental/sqm in BKK), สุขุมวิท 23 (สาธิต มศว), สีลม cluster (4 Catholic schools + CBD)
+- **Avoid:** พระนคร (สวนกุหลาบ, ราชินี) — no condo supply exists
+
+## Verified NPA Traps (DO NOT recommend)
+
+These properties/patterns are confirmed traps from April 2026 research:
+
+| Pattern | Example | Why |
+|---|---|---|
+| Provider "discount" marketing | BAM "35% below appraisal" | Appraisals are 20-40% above market in secondary locations |
+| Premium projects at NPA | Park 24, Lumpini 24 (KBank) | NPA price ABOVE DDProperty listings |
+| Leasehold near universities | Triple Y สามย่าน (expires 2049) | 23 years left, banks won't lend, terminal value = 0 |
+| CU land properties | IDEO Q จุฬา-สามย่าน, properties near จุฬาฯ | Chulalongkorn University land is leasehold — verify before any offer |
+| Ultra-cheap old buildings | Monterey Place 1994, รื่นรมย์ 1997, T.N.B. 1997 | High yield on paper but no renters want old buildings, bank won't lend to future buyers |
+| Discount > 55% | Any NPA at 55%+ below market | Almost always hidden defects, juristic debt, or structural issues |
+| No-name micro projects | 5-unit buildings, unknown developers | Zero exit liquidity. No DDProperty presence = no buyers. |
 
 ## NON-NEGOTIABLE: Always Ingest to KB
 
@@ -67,16 +183,35 @@ When analyzing an NPA property, use this structure:
 ```
 ## Property Analysis — [Address/Project Name]
 
-### VERDICT: [BUY / WATCH / AVOID]
+### GATE CHECK (run first, stop if any fails)
+- [ ] Freehold confirmed (NOT leasehold, or lease > 30 years)
+- [ ] Building age: [year built] — [X years old] — [PASS/FAIL vs 20-year cutoff]
+- [ ] NPA price vs DDProperty/Hipflat market: [NPA ฿/sqm] vs [Market ฿/sqm] = [X% discount] — [PASS ≥20% / FAIL]
+- [ ] Title deed type: [โฉนด/นส.4จ = OK, นส.3 = REJECT]
+- [ ] NPA concentration in building: [X units NPA / Y total] = [Z%] — [PASS <8% / FAIL]
+- [ ] No structural notices from กรมโยธาธิการ: [confirmed/unknown]
+
+→ If ANY gate fails: VERDICT = AVOID. Stop analysis. State which gate failed.
+
+### VERDICT: [STRONG BUY / BUY / WATCH / AVOID]
 
 ### Property Details
 - Type: [Condo/House/Townhouse/Land/Commercial]
-- Size: [X sq.m / X sq.wah]
-- Title: [Chanote/Nor Sor 3 Gor/etc.]
-- Source: [BAM/Bank auction/Court sale]
-- Asking Price: [THB X] (THB X/sq.m or THB X/sq.wah)
-- Appraised Value: [THB X]
-- Discount: [X%] below appraisal
+- Size: [X sq.m]
+- Year Built: [YYYY] ([X years old])
+- Developer: [Name — known brand?]
+- Building Size: [X total units]
+- Source: [BAM/SAM/JAM/KTB/KBank/LED] — Provider ID: [X]
+- NPA Price: THB [X] (THB [X]/sq.m)
+- Market Price: THB [X]/sq.m (source: [DDProperty/Hipflat URL])
+- Real Discount: [X%] below market (NOT provider appraisal)
+- BTS/MRT Tier: [A/B/C] — [station name] [X meters]
+
+### Education Anchors (within 800m)
+- University: [name] — [X meters] — enrollment [X students]
+- Intl School: [name] — [X meters]
+- Thai School: [name] — [X meters]
+- Anchor category: [University / Intl School / Thai School]
 
 ### WHY BUY
 - [Reason 1 with specific data]
@@ -88,32 +223,48 @@ When analyzing an NPA property, use this structure:
 - [Risk 2 with specific data]
 - [Risk 3 with specific data]
 
+### Financial Analysis
+- Market comparable price: THB [X]/sq.m (source: [DDProperty/Hipflat])
+- Real discount vs market: [X%] — [how calculated]
+- Verified rental rate: THB [X]/mo (source: [DDProperty/Hipflat rental listings])
+- Gross rental yield: [X%] = (rent × 12) / NPA price
+- Summer vacancy adjustment: [X months] → effective yield: [X%]
+- Renovation estimate: THB [X] ([X% of purchase price] — max 12%)
+- Juristic fee arrears estimate: THB [X] ([X months × X THB/mo])
+- Transfer costs: THB [X] (transfer fee + taxes)
+- Total acquisition cost: THB [X] (NPA + renovation + arrears + transfer)
+- Adjusted yield on total cost: [X%]
+
 ### Location Score
-- BTS/MRT: [Station name] — [X meters]
-- Schools: [Names] — [X meters]
+- BTS/MRT: [Station name] — [X meters] — Tier [A/B/C]
+- Education: [School/University names] — [X meters]
 - Hospitals: [Names] — [X meters]
 - Shopping: [Names] — [X meters]
 - Flood Risk: [Low/Medium/High] — [evidence]
-- Future Development: [Planned infrastructure nearby]
+- Future Infrastructure: [ONLY operational or under-construction, not planned]
 
-### Financial Analysis
-- Market comparable price: THB [X]/sq.m
-- Price vs market: [X%] below/above market
-- Estimated rental yield: [X%] gross
-- Renovation estimate: THB [X]
-- Transfer costs: THB [X] (transfer fee + taxes)
-- Total acquisition cost: THB [X]
-- Break-even timeline: [X years]
+### Due Diligence Checklist
+- [ ] Juristic fund solvency checked (≥ 70% funded)
+- [ ] หนังสือรับรองปลอดหนี้ obtained (arrears ≤ 24 months)
+- [ ] Tenant occupation status confirmed
+- [ ] GPS + Google Street View verified
+- [ ] Renovation walked/estimated (≤ 12% of purchase)
+- [ ] Supply pipeline checked (no 500+ unit projects within 1km)
+- [ ] NPA concentration checked across all 6 providers
+- [ ] Enrollment trend verified (stable/growing)
 
 ### Legal Check
-- Title type: [assessment]
+- Title type: [โฉนด/นส.4จ] — underlying land title verified at Land Office
+- Freehold/Leasehold: [Freehold CONFIRMED / Leasehold — years remaining]
 - Encumbrances: [any liens, mortgages]
 - Zoning: [residential/commercial/mixed]
-- Eviction risk: [if occupied]
-- Red flags: [any issues found]
+- Eviction risk: [vacant / occupied — estimated timeline and cost]
+
+### Investment Score
+Total weighted score: [X/100] using Gate 4 scoring weights.
 
 ### Bottom Line
-[2-3 sentence summary of the recommendation with key reasoning]
+[2-3 sentence summary: what makes this a good/bad deal, key risk, and recommended action]
 ```
 
 ## Using Knowledge Base

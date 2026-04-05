@@ -60,6 +60,8 @@ PostgreSQL: `postgresql://arsapolm@localhost:5432/npa_kb`
 | `location-intel` | BTS/MRT proximity, nearby amenities | `python location.py --lat 13.73 --lon 100.56` |
 | `property-calc` | Acquisition cost, rental yield, break-even | `python calc.py --price 1.8M --sqm 35 ...` |
 | `zoning-check` | Bangkok zoning rules (ผังเมือง พ.ศ. 2556) | `python zoning.py --lat 13.73 --lon 100.56` |
+| `market-checker` | Verify NPA prices against DDProperty/Hipflat/ZMyHome | `python market_checker.py "project name" --no-ddproperty` |
+| `npa-screener` | Screen NPA condos against investment criteria framework | See `SKILL.md` for scoring pipeline |
 | `web-search` | Market research query patterns | Templates only, no scripts |
 | `npa-journal` | Daily analysis journal & reflections | Write to `thoughts/YYYY-MM-DD.md` |
 | `agent-comm` | Message other agents (Ada, Sentinel, Reviewer) | `bash ask_agent.sh "<msg>" "<workspace>"` |
@@ -99,6 +101,38 @@ insert_document(
 Categories expire: pricing/rental 90d, flood/infrastructure/project 365d, legal/area 180d.
 
 **Do NOT store in KB**: zoning rules, tax rates, BTS coords, flood zones — these live in dedicated skills.
+
+## Investment Screening Quick-Reference
+
+### Auto-Reject (any one = stop)
+- Leasehold < 30 years | Building > 20 years (pre-2006) | NPA ≥ market price
+- Invalid title (นส.3 land) | Structural notice | NPA concentration > 8% in building
+
+### Minimum Thresholds
+- Real discount ≥ 20% vs DDProperty/Hipflat (NEVER trust provider appraisals)
+- Building year 2008-2018 sweet spot
+- Education anchor ≤ 800m | Market liquidity ≥ 3 resale listings
+- Yield: ≥ 7% (university), ≥ 5.5% (school) — verified rental rates only
+
+### BTS/MRT Tiers
+- **A** (both < 800m): min 6% yield, 15% discount
+- **B** (BTS 800-1500m): min 7% yield, 20% discount
+- **C** (no BTS): min 8% yield, 25% discount + verified rental demand
+
+### Education Anchor Unit Sizes
+- University: 22-35 sqm studio, rent 5,500-9,000 THB/mo
+- Intl School: 50-120 sqm 2-3BR, rent 30,000-100,000+ THB/mo
+- Thai School: 35-80 sqm 1-2BR, rent 12,000-40,000 THB/mo
+
+### Known Traps (April 2026)
+- CU land properties = leasehold (Triple Y, IDEO Q จุฬา-สามย่าน)
+- KBank premium projects at/above market (Park 24, Lumpini 24, Clover ลาดพร้าว 83)
+- Provider "discount" is marketing — always verify on DDProperty/Hipflat
+
+### Pre-Purchase Due Diligence
+Juristic fund ≥ 70% | Arrears ≤ 24 months | GPS verified | Renovation ≤ 12% | Enrollment stable
+
+**Full framework:** `workspace/AGENTS.md` → Investment Screening Framework section
 
 ## Inter-Agent Communication
 
