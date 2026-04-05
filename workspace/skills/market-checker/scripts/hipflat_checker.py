@@ -65,6 +65,10 @@ class HipflatProject(BaseModel):
     total_units: Optional[int] = None
     service_charge_sqm: Optional[int] = None
 
+    # Location
+    lat: Optional[float] = None
+    lng: Optional[float] = None
+
     # District benchmarks
     district_avg_sale_sqm: Optional[int] = None
     district_avg_rent_sqm: Optional[int] = None
@@ -120,11 +124,37 @@ def fetch_project_data(uuid: str) -> HipflatProject:
     name_en = en_match.group(1).strip() if en_match else full_name
     name_th = th_match.group(1).strip() if th_match else full_name
 
+    # --- Lat/Lng from JSON-LD GeoCoordinates ---
+    lat_val: Optional[float] = None
+    lng_val: Optional[float] = None
+    ld_blocks = re.findall(
+        r'<script type="application/ld\+json">(.*?)</script>', html, re.DOTALL
+    )
+    for ld_raw in ld_blocks:
+        try:
+            ld = json.loads(ld_raw)
+            # JSON-LD can be a dict or a list of dicts
+            ld_items = ld if isinstance(ld, list) else [ld]
+            for item in ld_items:
+                if not isinstance(item, dict):
+                    continue
+                geo = item.get("geo")
+                if geo and isinstance(geo, dict) and geo.get("latitude") and geo.get("longitude"):
+                    lat_val = float(geo["latitude"])
+                    lng_val = float(geo["longitude"])
+                    break
+            if lat_val is not None:
+                break
+        except (json.JSONDecodeError, ValueError, TypeError, AttributeError):
+            continue
+
     proj = HipflatProject(
         uuid=uuid,
         name_th=name_th,
         name_en=name_en,
         slug_url=slug_url,
+        lat=lat_val,
+        lng=lng_val,
     )
 
     # --- Current listing avg sale price/sqm ---

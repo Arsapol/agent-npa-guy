@@ -86,6 +86,20 @@ def _safe_int(val: object) -> Optional[int]:
         return None
 
 
+def _haversine(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    """Distance in meters between two GPS coordinates."""
+    import math
+    R = 6371000
+    phi1, phi2 = math.radians(lat1), math.radians(lat2)
+    dphi = math.radians(lat2 - lat1)
+    dlam = math.radians(lon2 - lon1)
+    a = math.sin(dphi / 2) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(dlam / 2) ** 2
+    return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+
+GEO_VERIFY_MAX_DISTANCE_M = 2000  # 2km threshold
+
+
 def _normalize_year(year: Optional[int]) -> Optional[int]:
     """Convert Buddhist Era year to CE if needed."""
     if year is None:
@@ -231,10 +245,11 @@ def _smart_search_hipflat(
             break
 
     if best_result is None:
-        return None
+        return None, None, None
 
     time.sleep(0.5)
-    return fetch_project_data(best_result["id"])
+    proj = fetch_project_data(best_result["id"])
+    return proj, getattr(proj, "lat", None), getattr(proj, "lng", None)
 
 
 def _smart_search_zmyhome(
@@ -279,13 +294,17 @@ def _smart_search_zmyhome(
                 break
 
         if best_result is None:
-            return None
+            return None, None, None
+
+        # ZMyHome search results include lat/lng
+        zm_lat = best_result.get("lat")
+        zm_lng = best_result.get("lng")
 
         project_id = best_result["id"]
         summary = fetch_project_page(client, project_id)
         summary.sale_listings = fetch_listings(client, project_id, "buy")
         summary.rent_listings = fetch_listings(client, project_id, "rent")
-        return summary
+        return summary, float(zm_lat) if zm_lat else None, float(zm_lng) if zm_lng else None
     finally:
         client.close()
 
@@ -299,13 +318,15 @@ async def _query_hipflat(
     """Query Hipflat with smart multi-variant search."""
     try:
         variants = name_variants or _generate_name_variants(project_name)
-        proj = _smart_search_hipflat(variants)
+        proj, src_lat, src_lng = _smart_search_hipflat(variants)
         if proj is None:
             return {"found": False}
         g = lambda attr, default=None: getattr(proj, attr, default)  # noqa: E731
         return {
             "found": True,
             "matched_name": g("name_en") or g("name_th"),
+            "lat": src_lat,
+            "lng": src_lng,
             "avg_sale_sqm": g("avg_sale_sqm_thb"),
             "avg_sold_sqm": g("avg_sold_sqm_thb"),
             "rent_min": g("rent_price_min"),
@@ -329,7 +350,7 @@ async def _query_zmyhome(
     """Query ZMyHome with smart multi-variant search."""
     try:
         variants = name_variants or _generate_name_variants(project_name)
-        summary = _smart_search_zmyhome(variants)
+        summary, src_lat, src_lng = _smart_search_zmyhome(variants)
         if summary is None:
             return {"found": False}
         g = lambda attr, default=None: getattr(summary, attr, default)  # noqa: E731
@@ -364,6 +385,9 @@ async def _query_zmyhome(
 
         return {
             "found": True,
+            "matched_name": g("name"),
+            "lat": src_lat,
+            "lng": src_lng,
             "sale_median_sqm": sale_median,
             "sale_count": len(sale_listings),
             "rent_median": rent_median,
@@ -503,6 +527,8 @@ async def check_market(
     project_name: str,
     name_th: Optional[str] = None,
     name_en: Optional[str] = None,
+    npa_lat: Optional[float] = None,
+    npa_lng: Optional[float] = None,
     include_ddproperty: bool = True,
     verbose: bool = True,
 ) -> MarketResult:
@@ -513,6 +539,8 @@ async def check_market(
         project_name: Primary project name (Thai or English)
         name_th: Optional Thai name for better search (from NPA database)
         name_en: Optional English name for better search
+        npa_lat: NPA property latitude (for geo-verification of source matches)
+        npa_lng: NPA property longitude (for geo-verification)
         include_ddproperty: Set False to skip DDProperty (avoids Camoufox dependency)
         verbose: Print progress
     """
@@ -566,12 +594,36 @@ async def check_market(
             if verbose:
                 print(f"  [{name}] error: {e}")
 
-    h = results.get("hipflat", {})
-    z = results.get("zmyhome", {})
-    p = results.get("propertyhub", {})
-    d = results.get("ddproperty", {})
+    # --- Geo-verification: reject sources that matched the wrong project ---
+    if npa_lat is not None and npa_lng is not None:
+        for source_name, source_data in list(results.items()):
+            if not source_data.get("found"):
+                continue
+            src_lat = source_data.get("lat")
+            src_lng = source_data.get("lng")
+            if src_lat is not None and src_lng is not None:
+                dist = _haversine(npa_lat, npa_lng, float(src_lat), float(src_lng))
+                source_data["geo_distance_m"] = round(dist)
+                if dist > GEO_VERIFY_MAX_DISTANCE_M:
+                    matched = source_data.get("matched_name", "unknown")
+                    if verbose:
+                        print(
+                            f"  [{source_name}] REJECTED: {matched} "
+                            f"is {dist:.0f}m away (max {GEO_VERIFY_MAX_DISTANCE_M}m)"
+                        )
+                    source_data["found"] = False
+                    source_data["rejected_reason"] = f"geo_distance_{dist:.0f}m"
+                elif verbose:
+                    print(f"  [{source_name}] geo-verified: {dist:.0f}m from NPA")
 
-    # Compute consensus price from all available sources
+    # Only use data from sources that passed verification
+    _empty: dict = {}
+    h = results.get("hipflat", _empty) if results.get("hipflat", _empty).get("found") else _empty
+    z = results.get("zmyhome", _empty) if results.get("zmyhome", _empty).get("found") else _empty
+    p = results.get("propertyhub", _empty) if results.get("propertyhub", _empty).get("found") else _empty
+    d = results.get("ddproperty", _empty) if results.get("ddproperty", _empty).get("found") else _empty
+
+    # Compute consensus price from verified sources only
     consensus_sqm, confidence = _compute_consensus(
         h.get("avg_sale_sqm") or h.get("avg_sold_sqm"),
         z.get("sale_median_sqm"),
@@ -656,11 +708,11 @@ async def check_market(
         district_avg_rent_sqm=h.get("district_avg_rent_sqm"),
         # PropertyHub extras
         utility_fee_sqm=p.get("utility_fee_sqm"),
-        # Source flags
-        hipflat_found=h.get("found", False),
-        zmyhome_found=z.get("found", False),
-        propertyhub_found=p.get("found", False),
-        ddproperty_found=d.get("found", False),
+        # Source flags (True only if found AND passed geo-verification)
+        hipflat_found=bool(h),
+        zmyhome_found=bool(z),
+        propertyhub_found=bool(p),
+        ddproperty_found=bool(d),
         confidence=confidence,
     )
 
@@ -787,6 +839,8 @@ async def main() -> None:
     parser.add_argument(
         "--english", dest="name_en", help="English name (improves Hipflat search)"
     )
+    parser.add_argument("--lat", type=float, help="NPA latitude for geo-verification")
+    parser.add_argument("--lng", type=float, help="NPA longitude for geo-verification")
     parser.add_argument("--json", action="store_true", help="Output as JSON")
     parser.add_argument(
         "--no-ddproperty",
@@ -800,6 +854,8 @@ async def main() -> None:
         project_name,
         name_th=args.name_th,
         name_en=args.name_en,
+        npa_lat=args.lat,
+        npa_lng=args.lng,
         include_ddproperty=not args.no_ddproperty,
         verbose=not args.json,
     )
