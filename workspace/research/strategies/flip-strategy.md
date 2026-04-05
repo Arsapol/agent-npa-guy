@@ -1,5 +1,6 @@
 # Flip Strategy: Measurable, Automatable Metrics
 **Research Date:** 2026-04-05
+**Updated:** 2026-04-05 (post cross-debate with rental-researcher and fineng-researcher)
 **Context:** Bangkok NPA market, mid-fall cycle, 60-month avg sell-out, Tier A 93% clearance
 
 ---
@@ -34,7 +35,9 @@ The Bangkok condo market is in a confirmed declining phase:
 ```
 entry_discount_pct = (verified_market_price_per_sqm - npa_price_per_sqm) / verified_market_price_per_sqm * 100
 ```
-Where `verified_market_price_per_sqm` = median of DDProperty + Hipflat listings for same project OR comparable projects within 500m, same building age ±3 years.
+Where `verified_market_price_per_sqm` = median of DDProperty + Hipflat listings for same project OR comparable projects within 500m, same building age ±3 years, **× 0.92** (8% listing-to-transaction haircut for resale market).
+
+**Note on haircut:** Rental researcher correctly flagged that DDProperty/Hipflat prices are asking, not transaction. An 8% haircut is appropriate for resale (less seasonal than rent; 10–15% haircut applies to rent comps). NPA asking price is compared against adjusted market price — the haircut applies symmetrically so it does not change relative discount % materially, but it does set a more honest absolute baseline.
 
 **Data Source:**
 - NPA price: `bam_properties.asking_price / area_sqm`, `jam_properties.asking_price / area_sqm`, etc.
@@ -43,13 +46,15 @@ Where `verified_market_price_per_sqm` = median of DDProperty + Hipflat listings 
 
 **Thresholds:**
 
-| Sub-Strategy | Minimum | Good | Strong |
-|---|---|---|---|
-| Quick Flip | 35% | 40% | 45%+ |
-| Medium Hold Flip | 25% | 30% | 35%+ |
-| Renovation Flip | 30% (pre-reno) | 35% | 40%+ |
+| Sub-Strategy | Minimum (vs listed) | Good | Strong | Notes |
+|---|---|---|---|---|
+| Quick Flip | 40% | 45% | 50%+ | 40% vs listed = ~35% real after 8% haircut |
+| Medium Hold Flip | 40% | 45% | 50%+ | Raised from 25%; see M8 annualized return math |
+| Renovation Flip | 35% (pre-reno) | 40% | 45%+ | Reno uplift counted separately in M9 |
 
-**Reject if:** NPA price ≥ market price (negative discount). Also reject if "discount" is vs. provider appraised value — always use DDProperty/Hipflat as benchmark.
+**Why medium hold minimum raised to 40%:** fineng-researcher correctly identified that 15% p.a. minimum annualized return (SET + illiquidity premium) requires ~52% net margin at 3yr hold. After ~14% in exit costs + holding costs, gross entry discount must be ≥40% to have any path to that return. A 25% discount produces ~10% p.a. annualized — below the opportunity cost benchmark.
+
+**Reject if:** NPA price ≥ market price (negative discount). Also reject if "discount" is vs. provider appraised value — always use DDProperty/Hipflat × 0.92 as benchmark.
 
 **Weight:** 25% (highest weight — primary buffer for all flip types)
 
@@ -167,6 +172,15 @@ mortgage_exposure_score = (pct_listings_under_3m_thb) * 0.7 + (pct_listings_3m_t
 
 **Note:** Thai government fee reduction (0.01% transfer + mortgage) applies to Thai nationals, properties ≤7M THB, until June 2026. Properties in this range have a structural demand incentive through Q2 2026. Factor this into quick flip timing.
 
+**NPA stigma risk flag (added post-debate):**
+```
+npa_stigma_risk = HIGH if source in ['bam', 'jam'] AND building_npa_concentration > 5%
+npa_stigma_risk = LOW  if source in ['led', 'sam'] OR building_npa_concentration < 3%
+```
+Apply 20% effective buyer pool haircut to absorption rate only when `npa_stigma_risk = HIGH`. LED/SAM court-transferred titles are clean chanote — banks lend against them normally. Blanket haircut penalizes clean-titled units unfairly.
+
+**Minimum exit price floor for quick flip:** NPA resale value (post any reno) must be ≥ 3.5M THB to reach mortgage-eligible buyer pool (40–45% rejection rate vs 70–80% below 3M). Small studios under this threshold are rental plays, not quick flips.
+
 **Weight:** 10%
 
 ---
@@ -232,8 +246,8 @@ withholding_tax = progressive rate on deemed income (year of sale)
 | 5+ years | Stamp Duty 0.5% + WHT (low) | ~1–3% total |
 
 **Optimization Rules:**
-1. **Quick Flip (6–12 mo):** Budget 3.3% SBT + ~2% WHT = 5.3% exit overhead. Need this in discount buffer.
-2. **Medium Hold (1–3 yr):** Same SBT but WHT divisor lowers income tax. ~4.5–5% total.
+1. **Quick Flip (6–12 mo):** Budget 3.3% SBT + ~3% WHT = 6.3% exit overhead. Need this in discount buffer. WHT corrected to 3% (fineng-researcher: Land Dept WHT table based on appraised value gives higher effective rate than previously modeled).
+2. **Medium Hold (1–3 yr):** Same SBT but WHT divisor lowers income tax. ~5–6% total exit cost.
 3. **Renovation Flip crossing 5yr:** If renovation + stabilization pushes past 5 years, drop to 0.5% stamp duty. Worth planning if marginal.
 4. **Inheritance exemption:** If seller inherited the NPA property (rare but possible in estate auctions), SBT may be exempt regardless of hold period.
 5. **House registration book (Tabien Baan) exemption:** If you register in the unit for 1+ year, SBT exempt even if <5yr hold. Practical for small investors with 1 property.
