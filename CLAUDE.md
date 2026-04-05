@@ -35,6 +35,10 @@ PostgreSQL: `postgresql://arsapolm@localhost:5432/npa_kb`
 | JAM scraper | `jam_properties`, `jam_price_history`, `jam_scrape_logs` |
 | KTB scraper | `ktb_properties`, `ktb_price_history`, `ktb_scrape_logs` |
 | KBank scraper | `kbank_properties`, `kbank_price_history`, `kbank_scrape_logs` |
+| PropertyHub scraper | `propertyhub_projects`, `propertyhub_listings`, `propertyhub_price_history`, `propertyhub_scrape_logs` |
+| Hipflat scraper | `hipflat_projects`, `hipflat_price_history`, `hipflat_scrape_logs` |
+| ZMyHome scraper | `zmyhome_projects`, `zmyhome_listings`, `zmyhome_appraisals`, `zmyhome_price_history`, `zmyhome_scrape_logs` |
+| DDProperty scraper | `ddproperty_projects`, `ddproperty_listings`, `ddproperty_price_history`, `ddproperty_scrape_logs` |
 | Knowledge base | LightRAG vector/graph tables + `kb_metadata` |
 
 - LED prices stored in **satang** (integer)
@@ -43,6 +47,10 @@ PostgreSQL: `postgresql://arsapolm@localhost:5432/npa_kb`
 - JAM prices stored in **whole baht** (numeric)
 - KTB prices stored in **whole baht** (numeric)
 - KBank prices stored in **whole baht** (numeric)
+- PropertyHub prices stored in **whole baht** (numeric)
+- Hipflat prices stored in **whole baht per sqm** (integer)
+- ZMyHome prices stored in **whole baht** (integer)
+- DDProperty prices stored in **whole baht** (integer)
 - **Use `npa-adapter` for cross-provider queries** — normalizes all prices to baht
 
 ## Skills
@@ -60,11 +68,29 @@ PostgreSQL: `postgresql://arsapolm@localhost:5432/npa_kb`
 | `location-intel` | BTS/MRT proximity, nearby amenities | `python location.py --lat 13.73 --lon 100.56` |
 | `property-calc` | Acquisition cost, rental yield, break-even | `python calc.py --price 1.8M --sqm 35 ...` |
 | `zoning-check` | Bangkok zoning rules (ผังเมือง พ.ศ. 2556) | `python zoning.py --lat 13.73 --lon 100.56` |
-| `market-checker` | Verify NPA prices against DDProperty/Hipflat/ZMyHome | `python market_checker.py "project name" --no-ddproperty` |
+| `market-checker` | Verify NPA prices against 4 market sources + bulk scrape all listings | See below |
 | `npa-screener` | Screen NPA condos against investment criteria framework | See `SKILL.md` for scoring pipeline |
 | `web-search` | Market research query patterns | Templates only, no scripts |
 | `npa-journal` | Daily analysis journal & reflections | Write to `thoughts/YYYY-MM-DD.md` |
 | `agent-comm` | Message other agents (Ada, Sentinel, Reviewer) | `bash ask_agent.sh "<msg>" "<workspace>"` |
+
+### market-checker sub-commands
+
+```bash
+# Single project lookup (existing)
+python market_checker.py "15 sukhumvit residences" --no-ddproperty
+
+# Bulk scrape all listings (NEW)
+python propertyhub_scraper.py                          # GraphQL bulk, ~30min
+python hipflat_scraper.py --discover                   # Province directory crawl, ~12min
+python zmyhome_scraper.py --discover --discover-rent   # Browse pages, ~2min
+python ddproperty_scraper.py --discover                # JSON API + Camoufox, ~6min
+
+# Resume after crash
+python hipflat_scraper.py --discover --force           # Re-scrape everything
+python zmyhome_scraper.py --discover --start-page 100  # Resume from page 100
+python ddproperty_scraper.py --discover --start-page 50
+```
 
 ## Scheduled Jobs (launchd)
 
@@ -167,6 +193,18 @@ python workspace/skills/kbank-scraper/scripts/dedup.py [--apply]
 python workspace/skills/ktb-scraper/scripts/dedup.py [--apply]
 ```
 Default is dry-run; pass `--apply` to execute.
+
+### Market scraper unique identifiers
+| Scraper | Business ID | PK type | Notes |
+|---------|------------|---------|-------|
+| PropertyHub | `id` (GraphQL project ID) | TEXT PK | Upsert keyed by `id` |
+| Hipflat | `uuid` (project slug/UUID) | TEXT PK | Atomic ON CONFLICT upsert |
+| ZMyHome | `id` (numeric project ID) | TEXT PK | Listings keyed by `property_id` |
+| DDProperty | `id` (property_id) | INTEGER PK | Listings keyed by listing `id` |
+
+All 4 market scrapers use atomic `INSERT ... ON CONFLICT DO UPDATE` for dedup.
+All have per-page/per-project DB commits for crash resilience.
+Price history tables use 1-hour dedup window (no duplicate snapshots within same hour).
 
 ## Development Notes
 
