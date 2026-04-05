@@ -45,20 +45,26 @@ Buy a distressed NPA condo at ≥20% market discount. Hold and rent to a target 
 ```
 GRY = (Estimated Annual Rent / Purchase Price) × 100
 ```
-- **Estimated Annual Rent** = Market listed rent × 0.85 (transaction discount) × 11 (1 month vacancy)
-  - Use 10 months (not 11) for hospital/industrial worker anchors (lower turnover)
-  - Use 9 months for student-only buildings without BTS
+- **Estimated Annual Rent** = Market listed rent × 0.85 (transaction discount) × 12
+  - The 0.85 factor already embeds negotiation friction and ~1 month effective vacancy.
+  - Do NOT additionally multiply by 11 months — that double-counts the discount.
+  - Vacancy is modeled separately in M2 (NRY) as a holding cost, not here.
+  - **Seasonal query adjustment:** If listing data is queried in April–June (Q2 trough), apply:
+    `adjusted_rent = listed_rent × 0.85 × 1.12` to correct for seasonal depression (~12% below annual median).
+    For queries in other months: no adjustment.
 - **Data source:** `hipflat_projects.avg_rent_sqm` or `zmyhome_listings.price` (rent column) filtered by project/area; fallback `ddproperty_listings` rent ads
-- **Threshold:**
+- **Threshold:** Floors are set so that GRY minimum implies NRY ≥ 3% after typical holding costs (GNHC ≤ 50%). At GNHC = 50%, GRY must be ≥ 6% to produce NRY ≥ 3%.
 
 | Anchor type | Reject | Minimum | Good | Best |
 |---|---|---|---|---|
-| University (Tier C, no BTS) | < 7% | 7% | 8–9% | ≥ 9% |
-| University (Tier B, BTS 800–1500m) | < 7% | 7% | 8–9% | ≥ 9% |
-| University (Tier A, BTS < 800m) | < 6% | 6% | 7–8% | ≥ 8% |
-| Thai school | < 5.5% | 5.5% | 6.5–7.5% | ≥ 7.5% |
-| Intl school | < 5% | 5% | 6–7% | ≥ 7% |
-| Hospital/worker | < 6% | 6% | 7–8% | ≥ 8% |
+| University (Tier C, no BTS) | < 9% | 9% | 10–11% | ≥ 11% |
+| University (Tier B, BTS 800–1500m) | < 8% | 8% | 9–10% | ≥ 10% |
+| University (Tier A, BTS < 800m) | < 7% | 7% | 8–9% | ≥ 9% |
+| Thai school | < 6.5% | 6.5% | 7.5–8.5% | ≥ 8.5% |
+| Intl school | < 6% | 6% | 7–8% | ≥ 8% |
+| Hospital/worker | < 7% | 7% | 8–9% | ≥ 9% |
+
+**Why floors increased vs. prior version:** At GNHC 50–65% (observed in worked examples), the old 7% GRY floor produced NRY 2.45–2.72% — below the M2 reject threshold of 3%. Thresholds are now set so GRY minimum × (1 − 0.50) ≥ 3% at minimum, with a buffer for higher GNHC scenarios.
 
 - **Weight in scoring:** 15%
 
@@ -85,12 +91,17 @@ NRY = ((Annual Rent - Holding Costs) / Purchase Price) × 100
 - CAM: 60 × 30 × 12 = 21,600 THB
 - Tax: 1,350,000 × 0.02% = 270 THB (minimal at this price)
 - Insurance: 1,500,000 × 0.15% = 2,250 THB
-- Vacancy: 1 month = 1/11 of annual rent
-- Agent: 8% of rent
+- Vacancy reserve: 1 month (Tier A/B) or 2 months (Tier C student) of adjusted annual rent (from M1)
+- Agent: 8% of adjusted annual rent
 - Maintenance reserve: 7,500 THB
-- Tax: ~10% of gross rent
+- Tax: ~10% of adjusted annual rent
 
-**Threshold:** NRY must be ≥ 60% of GRY. If NRY drops below 3%, reject (negative carry risk in down cycle).
+**Note:** Adjusted annual rent here = listed × 0.85 × 12 (from M1). Vacancy is a separate line item in M2, not embedded in M1. No double-count.
+
+**Threshold:**
+- Primary: NRY ≥ 3% (cash purchase). If NRY < 3%, reject for cash purchase.
+- Leverage override: If NRY < 3% but CoCR ≥ tier minimum (Tier A: 5%, Tier B: 7%, Tier C: 9%) with DSCR > 1.25 at 70% LTV, property passes for leveraged rental. Do NOT reject solely on NRY when leverage is available.
+- Hard reject: NRY < 1.5% regardless of leverage (negative carry even with mortgage service).
 
 - **Data source:** Derived from M1 + holding cost model
 - **Weight in scoring:** 20%
@@ -284,48 +295,60 @@ NPA concentration < 3% in building = likely high owner-occupancy = low distress 
 
 ## 6. Net Yield Model: Full Example
 
-**Property:** 28 sqm studio, university area (Tier B: BTS 1km, uni 500m)
-**Purchase price:** 1,200,000 THB
-**Listed rent comp:** 7,500 THB/mo (DDProperty median for same sqm)
-**Adjusted rent:** 7,500 × 0.85 = 6,375 THB/mo
-
-**GRY:** (6,375 × 11) / 1,200,000 = 5.84% — FAILS minimum 7% for Tier B. **Reject.**
+Formula convention used throughout:
+- Adjusted annual rent = listed_rent × 0.85 × 12 (NO additional monthly multiplier)
+- Vacancy reserve = separate line in M2 holding costs (1 month for Tier A/B, 2 months for Tier C)
+- GRY = adjusted_annual_rent / purchase_price × 100
 
 ---
 
-**Property:** 28 sqm studio, university area (Tier B)
-**Purchase price:** 880,000 THB (NPA at 27% discount from 1,200,000)
-**Adjusted rent:** 6,375 THB/mo
+**Example A — Reject (at-market price):**
+28 sqm studio, university Tier B (BTS 1km, uni 500m)
+Purchase price: 1,200,000 THB | Listed rent: 7,500 THB/mo
+Adjusted annual rent: 7,500 × 0.85 × 12 = 76,500 THB
+**GRY:** 76,500 / 1,200,000 = 6.38% — FAILS minimum 8% for Tier B. **Reject.**
 
-**GRY:** (6,375 × 11) / 880,000 = 7.97% ✓ passes Tier B minimum
+---
 
-**Annual holding costs:**
+**Example B — Pass GRY, marginal NRY (NPA discount):**
+Same property, NPA price: 740,000 THB (38% discount from 1,200,000)
+**GRY:** 76,500 / 740,000 = 10.34% ✓ passes Tier B minimum (8%)
+
+Annual holding costs (M2):
 - CAM: 60 × 28 × 12 = 20,160
-- Insurance: 880,000 × 0.15% = 1,320
-- Property tax: 792,000 × 0.02% = 158
-- Agent fee: 6,375 × 12 × 8% = 6,120
-- Maintenance: 880,000 × 0.5% = 4,400
-- Income tax (10% gross): 6,375 × 12 × 10% = 7,650
-- Vacancy (1 month): 6,375
+- Insurance: 740,000 × 0.15% = 1,110
+- Property tax: 666,000 × 0.02% = 133
+- Agent fee: 76,500 × 8% = 6,120
+- Maintenance: 740,000 × 0.5% = 3,700
+- Income tax (10% of gross): 76,500 × 10% = 7,650
+- Vacancy reserve (1 month, Tier B): 6,375
 
-**Total costs:** 46,183 THB/yr
-**Net annual income:** (6,375 × 11) - 46,183 = 70,125 - 46,183 = 23,942 THB
+**Total costs:** 45,248 THB/yr
+**Net annual income:** 76,500 - 45,248 = 31,252 THB
+**NRY:** 31,252 / 740,000 = 4.22% ✓ passes 3% threshold
+**GNHC:** 1 - (4.22/10.34) = 59.2% — above 50%, borderline. Flag for leverage check.
 
-**NRY:** 23,942 / 880,000 = 2.72% — Marginal. GNHC = 1 - (2.72/7.97) = 65.8% > 50%. **Reject.**
+Leverage check (70% LTV at 3%):
+- Loan: 740,000 × 0.70 = 518,000 THB | Annual debt service: ~29,100 THB
+- Cash invested: 222,000 + 14,800 closing = 236,800 THB
+- Cash flow after debt: 31,252 - 29,100 = 2,152 THB/yr
+- **CoCR: 2,152 / 236,800 = 0.9%** — DSCR = 31,252 / 29,100 = 1.07 < 1.25. Leverage does NOT rescue this property at current rent level.
+- **Conclusion: Cash-only, NRY 4.22% is acceptable but thin. Flag as marginal.**
 
 ---
 
-**Property:** 28 sqm studio, Tier A (BTS 300m, uni 400m)
-**Purchase price:** 880,000 THB
-**Adjusted rent:** 7,500 × 0.85 × 10 months (Tier A: 10 months occupancy budget)
+**Example C — Strong pass (Tier A, higher rent):**
+28 sqm studio, Tier A (BTS 300m, uni 400m)
+NPA price: 740,000 THB | Listed rent: 9,500 THB/mo (Tier A premium)
+Adjusted annual rent: 9,500 × 0.85 × 12 = 96,900 THB
+**GRY:** 96,900 / 740,000 = 13.1% ✓ strong
 
-Wait — for Tier A: use 11 months (lower vacancy). Rent: 6,375 × 11 = 70,125.
+Holding costs: same CAM + insurance + tax; agent fee 96,900 × 8% = 7,752; vacancy 0.5 month = 3,979; tax 9,690; maintenance 3,700
+**Total costs:** 46,524 THB
+**NRY:** (96,900 - 46,524) / 740,000 = 50,376 / 740,000 = 6.81% ✓ strong
+**GNHC:** 48.1% ✓ under 50%
 
-With Tier A reduced agent fee (faster to let): same costs, but vacancy = 0.5 month = 3,188 THB.
-**Net income:** 70,125 - (46,183 - 6,375 + 3,188) = 70,125 - 42,996 = 27,129
-**NRY:** 27,129 / 880,000 = 3.08% — Marginal but not catastrophic. GNHC = 61%. Still borderline.
-
-**Conclusion from example:** At sub-1M THB purchase prices, CAM+tax eats a disproportionate share. Need rent ≥ 8,500 THB/mo for 28 sqm to achieve NRY > 4% at 880K price. Unit size and rent level matter as much as yield %.
+**Conclusion from examples:** The NPA discount is the critical lever. At 38% discount + Tier A rent premium, NRY reaches 6.8% with GNHC < 50%. At market price with Tier B rent, GRY itself fails the new floor. Unit size, rent tier, and NPA discount interact — the screener must evaluate all three simultaneously.
 
 ---
 
