@@ -256,6 +256,15 @@ BEHP (years) = (Acquisition costs + Renovation) / (Annual Net Rent - Annual Hold
 ```
 Where acquisition costs = transfer fee (2% of assessed value) + specific business tax (3.3% if held < 5 years) + stamp duty (0.5%) + agent fee (3%)
 
+**Exit tax reserve (required input — investor profile):**
+```
+if investor_tabien_baan == True and hold_years >= 1:
+    exit_tax_rate = 0.005  # 0.5% stamp duty (SBT exempt)
+else:
+    exit_tax_rate = 0.033  # 3.3% SBT (hold < 5yr default)
+```
+Include exit tax in BEHP numerator: `acquisition_costs + exit_tax_reserve + renovation`. The screener must prompt for `tabien_baan` as an investor profile flag — it changes BEHP by up to 2.8% of sale price.
+
 - **Benchmark:** BEHP ≤ 3 years for university/worker; ≤ 4 years for intl school (higher rent, higher price)
 - **Threshold:** BEHP > 5 years = reject (ties capital through the expected cycle bottom)
 - **Data source:** Derived — uses `property-calc` skill formulas
@@ -384,7 +393,19 @@ Note: M5 weight increased from 20% to 25% (absorbed M3/M8 weight). DAS is the pr
 - 40–54: Marginal — requires local agent confirmation + price negotiation
 - < 40: Reject
 
-**Cross-strategy cascade rule:** If flip screener score < 0.55 AND this rental score ≥ 55, output recommendation: "Flip rejected — evaluate as rental hold." The screener must run rental scoring on any flip reject before discarding the property entirely.
+**Cross-strategy decision output (agreed with flip-researcher):**
+```python
+if flip_score >= 0.55 and rental_score >= 55:
+    recommend = "DUAL: Rent 2–3yr, flip at cycle recovery (2027)"
+    note = "Tier A + strong anchor + viable both strategies — highest priority"
+elif flip_score < 0.55 and rental_score >= 55:
+    recommend = "RENTAL (flip market too slow; absorption > 45 months)"
+elif flip_score >= 0.55 and rental_score < 55:
+    recommend = "FLIP (insufficient rental demand anchor)"
+else:
+    recommend = "REJECT"
+```
+The screener must ALWAYS compute both scores before outputting a recommendation. Binary flip/rental framing is wrong for the current market — most Tier A NPA condos are both.
 
 ---
 
