@@ -170,7 +170,16 @@ Default is dry-run; pass `--apply` to execute.
 
 ## Development Notes
 
-- Python scripts use **async httpx**, **selectolax**, **Pydantic v2**, **SQLAlchemy**
+### Python Standard Libraries (MANDATORY)
+
+| Purpose | Library | NOT allowed |
+|---|---|---|
+| Data models | **Pydantic v2** (`BaseModel`, `Field`, `ConfigDict`) | `dataclasses`, `NamedTuple`, plain dicts |
+| HTTP client | **httpx** (async: `httpx.AsyncClient`, sync: `httpx.Client`) | `requests`, `urllib`, `aiohttp` |
+| HTML parsing | **selectolax** (`HTMLParser`, `.css()`, `.css_first()`) | `BeautifulSoup`, `lxml.html` |
+| ORM / DB | **SQLAlchemy** (async) | raw `psycopg2`, `sqlite3` |
+| Validation | **Pydantic v2** validators | manual if/else validation |
+
 - Scrapers run with `asyncio.Semaphore(10)` for bounded concurrency
 - Use `bun` instead of `npm`, `bunx` instead of `npx`
 - `datetime.now()` used throughout (no timezone — machine runs local Bangkok time)
