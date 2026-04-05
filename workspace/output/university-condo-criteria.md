@@ -385,6 +385,127 @@
 
 1. **Discount**: 20% minimum (Flipper floor), 30% ideal, flag > 55% for extra due diligence (Market's trap warning)
 2. **Building age**: 2008-2018 sweet spot (Market consensus) — old enough for NPA discounts, new enough for renters
-3. **BTS vs University**: Require BOTH within 800m — intersection maximizes rental demand AND exit liquidity
-4. **Target tenant**: Mixed buildings (student + young professional) solve summer vacancy problem
-5. **Unit size**: 24-35 sqm studios for max yield, 35-45 sqm 1BR for co-living defense and grad student demand
+3. **BTS vs University/School**: Tiered approach (see below) — requiring both eliminates ~70% of candidates
+4. **Target tenant**: Mixed buildings (student + young professional + families) solve summer vacancy problem
+5. **Unit size**: 24-35 sqm studios for university yield, 35-45 sqm 1BR for co-living defense, 45-80 sqm 2BR for school/family segment
+
+---
+
+## BTS/MRT Tiered Approach (Revised)
+
+Requiring BOTH BTS/MRT + education institution within 800m eliminates ~70% of candidates — too narrow. Instead, use BTS/MRT as a **yield threshold modifier**:
+
+| Tier | Condition | Min Yield | Min Discount | Risk Level |
+|---|---|---|---|---|
+| **A** | Education + BTS/MRT both < 800m | 6% | 15% | Low |
+| **B** | Education < 800m, BTS/MRT 800-1500m | 7% | 20% | Medium |
+| **C** | Education < 800m, no BTS/MRT within 1500m | **8%** | **25%** | Higher |
+
+**Tier C additional requirements**: verified rental demand (3+ signals) + institution enrollment ≥ 15,000 students (or school with waitlist).
+
+**Logic**: No BTS = harder exit + summer vacancy risk → demand higher yield and deeper discount to compensate. Market prices this naturally — no-BTS condos are cheaper, which is exactly why yields are higher.
+
+---
+
+## Education Institutions: Schools as Demand Anchors
+
+### Why Schools Matter
+
+Schools (international + top Thai) create **similar or stronger** demand drivers compared to universities:
+
+| Factor | University | International/Top School |
+|---|---|---|
+| Tenant income | Students (low) | Parents/expats (high) |
+| Tenancy duration | 1-4 years | **3-15 years** (child's school career) |
+| Summer vacancy | **40-50% leave** | Families stay year-round |
+| Rent tolerance | 5,500-9,000 THB | **30,000-100,000+ THB** |
+| Unit size needed | 22-35 sqm studio | **45-100+ sqm** 2-3BR |
+| Price sensitivity | High | Low (expat housing allowances) |
+| Demand stability | Enrollment shifts possible | **Very stable** (waitlisted schools) |
+
+Schools solve the two biggest university investment weaknesses: **summer vacancy** and **low rent ceiling**.
+
+### Target International Schools (Tier 1 — waitlisted, expat demand)
+
+| School | Area | Province | Key Demand Signal |
+|---|---|---|---|
+| NIST | สุขุมวิท 15 | กรุงเทพฯ | IB curriculum, 1,600+ students, waitlisted |
+| Bangkok Patana | สุขุมวิท 105 (Lasalle) | กรุงเทพฯ | Oldest international school, British curriculum |
+| Shrewsbury International | เจริญนคร riverside | กรุงเทพฯ | Premium British, 1,800+ students |
+| ISB (International School Bangkok) | นิชดาธานี | นนทบุรี | Largest intl school, American curriculum |
+| Harrow International | ดอนเมือง | กรุงเทพฯ | British boarding-day, premium fees |
+| St. Andrews International | สุขุมวิท 107 / สาทร / ดุสิต | กรุงเทพฯ | Multiple campuses, British |
+| Regent's International | พัฒนาการ | กรุงเทพฯ | IB World School |
+| KIS International | ประชาอุทิศ/เกสินี | กรุงเทพฯ | IB PYP-MYP-DP |
+| Wells International | อ่อนนุช สุขุมวิท 95 | กรุงเทพฯ | American curriculum |
+| Anglo Singapore | สุขุมวิท 31 | กรุงเทพฯ | Singapore + IB |
+| VERSO International | บางนา | กรุงเทพฯ | Innovative curriculum |
+| Brighton College Bangkok | กรุงเทพกรีฑา | กรุงเทพฯ | British, new premium |
+| Concordian International | บางนา กม.8 | กรุงเทพฯ | American, IB |
+| Australian International | สุขุมวิท 20 | กรุงเทพฯ | Australian curriculum |
+
+### Target Top Thai Schools (Tier 1 — competitive admission, parents relocate)
+
+| School | Area | Province | Key Demand Signal |
+|---|---|---|---|
+| เตรียมอุดมศึกษา (Triam Udom) | ปทุมวัน | กรุงเทพฯ | #1 ranked, feeds into จุฬาฯ |
+| สาธิต จุฬาฯ | ปทุมวัน | กรุงเทพฯ | University-attached, highly competitive |
+| สาธิต มศว ประสานมิตร | สุขุมวิท 23 | กรุงเทพฯ | University-attached, K-12 |
+| สาธิต เกษตร | บางเขน | กรุงเทพฯ | University-attached |
+| สวนกุหลาบวิทยาลัย | พระนคร | กรุงเทพฯ | Historic top boys' school |
+| เซนต์คาเบรียล | สามเสน | กรุงเทพฯ | Catholic boys' school |
+| อัสสัมชัญ (AC) | บางรัก | กรุงเทพฯ | Catholic boys', historic |
+| กรุงเทพคริสเตียน (BCC) | สีลม | กรุงเทพฯ | Protestant, top-tier |
+| มาแตร์เดอีวิทยาลัย | สาทร | กรุงเทพฯ | Catholic girls' school |
+| ราชินี | ท่าเตียน | กรุงเทพฯ | Royal patronage girls' school |
+| สตรีวิทยา | ดินแดง | กรุงเทพฯ | Top girls' school |
+| บดินทรเดชา | สุขุมวิท | กรุงเทพฯ | Top co-ed, science focus |
+| หอวัง | จตุจักร | กรุงเทพฯ | Top co-ed |
+
+### Adjusted Criteria for School Segment
+
+| Criterion | University Play | School Play |
+|---|---|---|
+| Unit size sweet spot | 22-35 sqm studio / 35-45 sqm 1BR | **45-80 sqm 2-3BR** |
+| Target rent | 5,500-9,000 THB | **20,000-60,000 THB** |
+| Furnished standard | Full furniture required | May be unfurnished (families bring own) |
+| BTS/MRT importance | Medium (students walk) | **High** (parents commute to work) |
+| Building amenities | Pool/gym nice-to-have | **Pool/playground/security essential** |
+| Min yield threshold | 7% gross | **5% gross OK** (stability + tenure premium) |
+| Summer vacancy risk | High (10-12 weeks/year) | **None** (families stay year-round) |
+| Tenant quality | Variable | **High** (expats, affluent Thai families) |
+| Lease duration | 1 year typical | **2-3 years** typical |
+
+### School Segment: Modified Gate 2 Thresholds
+
+| # | Rule | University Threshold | School Threshold |
+|---|---|---|---|
+| 1 | Real market discount | ≥ 20% | ≥ 15% (lower risk = lower discount OK) |
+| 2 | Building year | 2008-2018 | 2010-2022 (families want newer) |
+| 3 | Distance to institution | ≤ 800m | ≤ 800m |
+| 4 | BTS/MRT distance | Tiered A/B/C | ≤ 800m preferred (parents commute) |
+| 5 | Gross rental yield | ≥ 7% | ≥ 5% (stability premium) |
+| 6 | Monthly rent achievable | 5,500-9,000 THB | 20,000-60,000 THB |
+| 7 | Market liquidity | ≥ 3 resale listings | ≥ 3 resale listings |
+| 8 | Unit size | 22-45 sqm | 45-80 sqm |
+
+---
+
+## Combined Search Strategy
+
+When querying NPA databases, run TWO parallel searches:
+
+### Search A: University Segment
+- Filter: คอนโด/อาคารชุด/ห้องชุด
+- Size: 22-45 sqm
+- Distance: < 800m from 22 target universities
+- Provinces: กรุงเทพมหานคร, ปทุมธานี, สมุทรปราการ, นครปฐม
+- Apply university-segment Gate 1-4
+
+### Search B: School Segment
+- Filter: คอนโด/อาคารชุด/ห้องชุด
+- Size: 45-100 sqm (2-3BR family units)
+- Distance: < 800m from target international/top Thai schools
+- Provinces: กรุงเทพมหานคร, นนทบุรี (for ISB/Nichada)
+- Apply school-segment modified thresholds
+- BTS/MRT within 800m strongly preferred (parents commute)

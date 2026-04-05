@@ -191,27 +191,40 @@ async def scrape_all_properties() -> list[dict]:
                     all_properties.append(item)
             start_page = 2
 
-        # Sequential pagination — one page at a time
-        for p in range(start_page, total_pages + 1):
-            t0 = time.time()
-            r = await fetch_page(client, page=p, limit=limit)
-            elapsed = time.time() - t0
+        # Concurrent pagination — 5 pages at a time
+        sem = asyncio.Semaphore(5)
 
-            if r:
-                new = 0
-                for item in r.get("data", []):
-                    aid = item.get("Asset_ID")
-                    if aid and aid not in seen_ids:
-                        seen_ids.add(aid)
-                        all_properties.append(item)
-                        new += 1
-                print(f"    Page {p}/{total_pages}: +{new} → {len(all_properties):,} total ({elapsed:.1f}s)")
-            else:
-                failed_pages.append(p)
-                print(f"    Page {p}/{total_pages}: FAILED ({elapsed:.1f}s) [{len(failed_pages)} total fails]")
+        async def fetch_one(p: int) -> tuple[int, list[dict], float, str]:
+            async with sem:
+                t0 = time.time()
+                r = await fetch_page(client, page=p, limit=limit)
+                elapsed = time.time() - t0
+                if r:
+                    return p, r.get("data", []), elapsed, "ok"
+                return p, [], elapsed, "fail"
 
-            if p % 50 == 0:
-                save_checkpoint(all_properties, p, total_pages, failed_pages)
+        for batch_start in range(start_page, total_pages + 1, 5):
+            batch_end = min(batch_start + 5, total_pages + 1)
+            tasks = [fetch_one(p) for p in range(batch_start, batch_end)]
+            results = await asyncio.gather(*tasks)
+
+            for p, items, elapsed, status in sorted(results):
+                if status == "ok":
+                    new = 0
+                    for item in items:
+                        aid = item.get("Asset_ID")
+                        if aid and aid not in seen_ids:
+                            seen_ids.add(aid)
+                            all_properties.append(item)
+                            new += 1
+                    print(f"    Page {p}/{total_pages}: +{new} → {len(all_properties):,} total ({elapsed:.1f}s)")
+                else:
+                    failed_pages.append(p)
+                    print(f"    Page {p}/{total_pages}: FAILED ({elapsed:.1f}s) [{len(failed_pages)} total fails]")
+
+            last_page = batch_end - 1
+            if last_page % 50 == 0 or last_page >= total_pages:
+                save_checkpoint(all_properties, last_page, total_pages, failed_pages)
                 print(f"    --- checkpoint saved ---")
 
             await asyncio.sleep(0.5)

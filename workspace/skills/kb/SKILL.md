@@ -71,7 +71,23 @@ insert_document(
 )
 ```
 
-## Staleness Checker CLI
+## Freshness Checker CLI
+
+```bash
+# Full report: freshness by category, area, coverage gaps
+python scripts/kb_freshness.py
+
+# Only stale and expiring-soon documents
+python scripts/kb_freshness.py --stale
+
+# Detailed report for a specific area
+python scripts/kb_freshness.py --area "บางเขน"
+
+# Prioritized re-research queue (areas/categories to refresh)
+python scripts/kb_freshness.py --queue
+```
+
+### Legacy Staleness Checker
 
 ```bash
 python scripts/check_stale.py                     # List stale entries

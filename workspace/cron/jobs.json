@@ -1,4 +1,83 @@
 {
   "version": 1,
-  "jobs": []
+  "jobs": [
+    {
+      "id": "fb068f78",
+      "name": "☀️ Morning! Running NPA daily ",
+      "enabled": true,
+      "schedule": {
+        "kind": "cron",
+        "atMs": null,
+        "everyMs": null,
+        "expr": "0 8 * * *",
+        "tz": "Asia/Bangkok"
+      },
+      "payload": {
+        "kind": "agent_turn",
+        "message": "☀️ Morning! Running NPA daily alert report. Check for new properties, best deals, and upcoming auctions.",
+        "deliver": true,
+        "channel": "telegram",
+        "to": "1372818654"
+      },
+      "state": {
+        "nextRunAtMs": 1775437200000,
+        "lastRunAtMs": 1775350800000,
+        "lastStatus": "ok",
+        "lastError": null,
+        "runHistory": [
+          {
+            "runAtMs": 1775264400002,
+            "status": "ok",
+            "durationMs": 43814,
+            "error": null
+          },
+          {
+            "runAtMs": 1775350800000,
+            "status": "ok",
+            "durationMs": 25257,
+            "error": null
+          }
+        ]
+      },
+      "createdAtMs": 1775234757687,
+      "updatedAtMs": 1775350825257,
+      "deleteAfterRun": false
+    },
+    {
+      "id": "f0323000",
+      "name": "🔔 NPA Price Watch Check — run ",
+      "enabled": true,
+      "schedule": {
+        "kind": "cron",
+        "atMs": null,
+        "everyMs": null,
+        "expr": "0 9 * * *",
+        "tz": "Asia/Bangkok"
+      },
+      "payload": {
+        "kind": "agent_turn",
+        "message": "🔔 NPA Price Watch Check — run `cd /Users/arsapolm/.nanobot-npa-guy/workspace/skills/npa-alerts/scripts && python3 price_watch.py check` and notify user of any price drops or target hits",
+        "deliver": true,
+        "channel": "telegram",
+        "to": "1372818654"
+      },
+      "state": {
+        "nextRunAtMs": 1775440800000,
+        "lastRunAtMs": 1775354400029,
+        "lastStatus": "ok",
+        "lastError": null,
+        "runHistory": [
+          {
+            "runAtMs": 1775354400029,
+            "status": "ok",
+            "durationMs": 10985,
+            "error": null
+          }
+        ]
+      },
+      "createdAtMs": 1775284843818,
+      "updatedAtMs": 1775354411014,
+      "deleteAfterRun": false
+    }
+  ]
 }

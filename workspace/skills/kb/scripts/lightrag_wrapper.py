@@ -5,6 +5,13 @@ import os
 from pathlib import Path
 from typing import Optional
 
+# Auto-load .env from workspace root
+from dotenv import load_dotenv
+_workspace = Path(__file__).resolve().parents[3]  # skills/kb/scripts -> workspace
+_env_file = _workspace / ".env"
+if _env_file.exists():
+    load_dotenv(_env_file)
+
 import numpy as np
 from loguru import logger
 

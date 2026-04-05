@@ -8,6 +8,17 @@ import hashlib
 import os
 import subprocess
 from datetime import datetime
+from pathlib import Path
+
+# Auto-load .env from workspace root
+try:
+    from dotenv import load_dotenv
+    _workspace = Path(__file__).resolve().parents[2]  # skills/kb/scripts -> workspace
+    _env_file = _workspace / ".env"
+    if _env_file.exists():
+        load_dotenv(_env_file, override=False)
+except ImportError:
+    pass
 
 from agno.tools import Toolkit
 from loguru import logger
