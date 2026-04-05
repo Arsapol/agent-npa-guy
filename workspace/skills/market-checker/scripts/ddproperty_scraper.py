@@ -15,6 +15,9 @@ Architecture (both modes):
 Discover mode specifics:
   - /_next/data/{BUILD_ID}/en/condo-for-sale.json?page=N  (no freetext)
   - ~57,000 sale listings across ~2,868 pages (~20/page)
+  - Concurrent page fetches (5 workers) — ~6 min vs ~24 min sequential
+  - Per-page DB upserts for crash resilience
+  - Resume support via /tmp/ddproperty_discover_progress.json
 
 Usage:
     # === Targeted mode ===
@@ -27,10 +30,12 @@ Usage:
     python ddproperty_scraper.py --names "triple y" --skip-camoufox
 
     # === Discover mode ===
-    python ddproperty_scraper.py --discover                     # sale only
+    python ddproperty_scraper.py --discover                     # sale only (resumes if interrupted)
     python ddproperty_scraper.py --discover --discover-rent     # sale + rent
     python ddproperty_scraper.py --discover --limit 10          # first 10 pages only
     python ddproperty_scraper.py --discover --build-id ABC123   # override BUILD_ID
+    python ddproperty_scraper.py --discover --start-page 500    # resume from page 500
+    python ddproperty_scraper.py --discover --force              # ignore saved progress, start fresh
 """
 
 import argparse
@@ -68,6 +73,12 @@ COOKIE_FILE = Path("/tmp/ddproperty_cookies.json")
 COOKIE_TTL_SECONDS = 25 * 60  # 25 minutes (conservative; actual ~30min)
 DEDUP_WINDOW_SECONDS = 3600  # 1 hour
 REQUEST_DELAY = 0.5  # seconds between API requests
+
+# Concurrency settings
+DISCOVER_CONCURRENCY = 5  # concurrent page fetches in discover mode
+DISCOVER_LAUNCH_DELAY = 0.2  # seconds between launching new page fetches
+TARGETED_CONCURRENCY = 3  # concurrent project lookups in targeted mode
+PROGRESS_FILE = Path("/tmp/ddproperty_discover_progress.json")
 
 
 # ---------------------------------------------------------------------------
@@ -729,17 +740,125 @@ async def _fetch_listings_with_raw(
 # ---------------------------------------------------------------------------
 
 
+async def _process_single_project(
+    seed: SeedProject,
+    client: httpx.AsyncClient,
+    build_id: str,
+    stats: ScrapeStats,
+    stats_lock: asyncio.Lock,
+    semaphore: asyncio.Semaphore,
+    cookie_acquired_at_ref: list[float],
+    skip_camoufox: bool,
+) -> None:
+    """Process a single project: lookup + parallel sale/rent fetch + DB upsert.
+
+    Runs under the semaphore to limit concurrency to TARGETED_CONCURRENCY.
+    """
+    async with semaphore:
+        async with stats_lock:
+            stats.total_projects += 1
+
+        # Check if cookies need refresh (25min TTL)
+        cookie_age = time.monotonic() - cookie_acquired_at_ref[0]
+        if cookie_age > COOKIE_TTL_SECONDS:
+            print(f"  Cookie expired ({cookie_age:.0f}s), refreshing...")
+            try:
+                fresh = await _acquire_cookies(skip_camoufox=False)
+                cookie_acquired_at_ref[0] = time.monotonic()
+                async with stats_lock:
+                    stats.cookie_refreshes += 1
+                client.cookies.clear()
+                for k, v in fresh.items():
+                    client.cookies.set(k, v)
+            except Exception as e:
+                print(f"  Cookie refresh failed: {e}")
+
+        try:
+            # Step 1: Look up project
+            match = await smart_lookup(seed.name, client)
+
+            if match is None:
+                return
+
+            project_info, raw_project = match
+
+            # Step 2: Fetch sale + rent listings IN PARALLEL
+            sale_task = _fetch_listings_with_raw(
+                freetext=seed.name,
+                listing_type="sale",
+                build_id=build_id,
+                client=client,
+            )
+            rent_task = _fetch_listings_with_raw(
+                freetext=seed.name,
+                listing_type="rent",
+                build_id=build_id,
+                client=client,
+            )
+            (sale_listings, sale_count, sale_raw), (
+                rent_listings,
+                rent_count,
+                rent_raw,
+            ) = await asyncio.gather(sale_task, rent_task)
+
+            scraped = ScrapedProject(
+                project=project_info,
+                raw_project_json=raw_project,
+                sale_listings=sale_listings,
+                rent_listings=rent_listings,
+                sale_count=sale_count,
+                rent_count=rent_count,
+                sale_raw=sale_raw,
+                rent_raw=rent_raw,
+            )
+
+            # Step 3: Upsert to DB (sync, but fast)
+            with psycopg.connect(DB_URL) as conn:
+                upsert_project(conn, scraped, stats)
+                conn.commit()
+
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 403:
+                print(f"  403 on [{seed.name}] — refreshing cookies...")
+                try:
+                    fresh = await _acquire_cookies(skip_camoufox=False)
+                    cookie_acquired_at_ref[0] = time.monotonic()
+                    async with stats_lock:
+                        stats.cookie_refreshes += 1
+                    client.cookies.clear()
+                    for k, v in fresh.items():
+                        client.cookies.set(k, v)
+                except Exception as re_err:
+                    print(f"  Cookie refresh failed: {re_err}")
+                async with stats_lock:
+                    stats.failed_count += 1
+            else:
+                async with stats_lock:
+                    stats.failed_count += 1
+                print(f"  HTTP {e.response.status_code} [{seed.name}]: {e}")
+        except Exception as e:
+            async with stats_lock:
+                stats.failed_count += 1
+            print(f"  ERROR [{seed.name}]: {e}")
+
+
 async def run_scraper(
     seeds: list[SeedProject],
     limit: Optional[int] = None,
     refresh_build_id: bool = False,
     skip_camoufox: bool = False,
 ) -> ScrapeStats:
-    """Run the targeted scraper on a seed list. Returns stats."""
+    """Run the targeted scraper on a seed list. Returns stats.
+
+    Processes up to TARGETED_CONCURRENCY projects in parallel.
+    Each project runs: lookup + parallel sale/rent fetch + DB upsert.
+    """
     stats = ScrapeStats()
+    stats_lock = asyncio.Lock()
     work = seeds[:limit] if limit else seeds
 
     print(f"\nDDProperty targeted scraper — {len(work)} projects to process")
+    print(f"  Concurrency: {TARGETED_CONCURRENCY} projects in parallel")
     print("=" * 60)
 
     # Start scrape log
@@ -759,7 +878,7 @@ async def run_scraper(
     # Acquire cookies
     print("[1] Acquiring cookies...")
     cookies = await _acquire_cookies(skip_camoufox=skip_camoufox)
-    cookie_acquired_at = time.monotonic()
+    cookie_acquired_at_ref = [time.monotonic()]  # mutable ref for workers
 
     # Optionally refresh BUILD_ID
     build_id = BUILD_ID
@@ -770,6 +889,8 @@ async def run_scraper(
     else:
         print(f"[2] Using BUILD_ID: {build_id}")
 
+    semaphore = asyncio.Semaphore(TARGETED_CONCURRENCY)
+
     async with httpx.AsyncClient(
         timeout=30.0,
         follow_redirects=True,
@@ -777,102 +898,37 @@ async def run_scraper(
         cookies=cookies,
     ) as client:
 
-        for i, seed in enumerate(work):
-            stats.total_projects += 1
+        # Process projects in batches to allow progress reporting
+        batch_size = TARGETED_CONCURRENCY * 3
+        for batch_start in range(0, len(work), batch_size):
+            batch = work[batch_start : batch_start + batch_size]
 
-            # Progress every 10 projects (slower due to Camoufox overhead)
-            if i > 0 and i % 10 == 0:
-                elapsed = (datetime.now() - started_at).total_seconds()
-                rate = i / elapsed if elapsed > 0 else 0
-                print(
-                    f"  [{i}/{len(work)}] "
-                    f"new={stats.new_projects} upd={stats.updated_projects} "
-                    f"price_chg={stats.price_changed} fail={stats.failed_count} "
-                    f"listings={stats.total_listings} "
-                    f"({rate:.1f} proj/s, {stats.cookie_refreshes} cookie refreshes)"
-                )
-
-            # Check if cookies need refresh (25min TTL)
-            cookie_age = time.monotonic() - cookie_acquired_at
-            if cookie_age > COOKIE_TTL_SECONDS:
-                print(f"  Cookie expired ({cookie_age:.0f}s), refreshing...")
-                try:
-                    cookies = await _acquire_cookies(skip_camoufox=False)
-                    cookie_acquired_at = time.monotonic()
-                    stats.cookie_refreshes += 1
-                    # Rebuild client with new cookies
-                    # httpx.AsyncClient doesn't support cookie replacement,
-                    # so we set them on each request via a workaround below
-                    client.cookies.clear()
-                    for k, v in cookies.items():
-                        client.cookies.set(k, v)
-                except Exception as e:
-                    print(f"  Cookie refresh failed: {e}")
-
-            try:
-                # Step 1: Look up project
-                match = await smart_lookup(seed.name, client)
-
-                if match is None:
-                    continue
-
-                project_info, raw_project = match
-                await asyncio.sleep(REQUEST_DELAY)
-
-                # Step 2: Fetch sale listings (with raw JSON)
-                sale_listings, sale_count, sale_raw = await _fetch_listings_with_raw(
-                    freetext=seed.name,
-                    listing_type="sale",
-                    build_id=build_id,
+            tasks = [
+                _process_single_project(
+                    seed=seed,
                     client=client,
-                )
-                await asyncio.sleep(REQUEST_DELAY)
-
-                # Step 3: Fetch rent listings (with raw JSON)
-                rent_listings, rent_count, rent_raw = await _fetch_listings_with_raw(
-                    freetext=seed.name,
-                    listing_type="rent",
                     build_id=build_id,
-                    client=client,
+                    stats=stats,
+                    stats_lock=stats_lock,
+                    semaphore=semaphore,
+                    cookie_acquired_at_ref=cookie_acquired_at_ref,
+                    skip_camoufox=skip_camoufox,
                 )
-                await asyncio.sleep(REQUEST_DELAY)
+                for seed in batch
+            ]
+            await asyncio.gather(*tasks, return_exceptions=True)
 
-                scraped = ScrapedProject(
-                    project=project_info,
-                    raw_project_json=raw_project,
-                    sale_listings=sale_listings,
-                    rent_listings=rent_listings,
-                    sale_count=sale_count,
-                    rent_count=rent_count,
-                    sale_raw=sale_raw,
-                    rent_raw=rent_raw,
-                )
-
-                # Step 4: Upsert to DB
-                with psycopg.connect(DB_URL) as conn:
-                    upsert_project(conn, scraped, stats)
-                    conn.commit()
-
-            except httpx.HTTPStatusError as e:
-                if e.response.status_code == 403:
-                    # Cookie expired mid-batch — refresh and retry
-                    print(f"  403 on [{seed.name}] — refreshing cookies...")
-                    try:
-                        cookies = await _acquire_cookies(skip_camoufox=False)
-                        cookie_acquired_at = time.monotonic()
-                        stats.cookie_refreshes += 1
-                        client.cookies.clear()
-                        for k, v in cookies.items():
-                            client.cookies.set(k, v)
-                    except Exception as re:
-                        print(f"  Cookie refresh failed: {re}")
-                    stats.failed_count += 1
-                else:
-                    stats.failed_count += 1
-                    print(f"  HTTP {e.response.status_code} [{seed.name}]: {e}")
-            except Exception as e:
-                stats.failed_count += 1
-                print(f"  ERROR [{seed.name}]: {e}")
+            # Progress report after each batch
+            i = min(batch_start + batch_size, len(work))
+            elapsed = (datetime.now() - started_at).total_seconds()
+            rate = i / elapsed if elapsed > 0 else 0
+            print(
+                f"  [{i}/{len(work)}] "
+                f"new={stats.new_projects} upd={stats.updated_projects} "
+                f"price_chg={stats.price_changed} fail={stats.failed_count} "
+                f"listings={stats.total_listings} "
+                f"({rate:.1f} proj/s, {stats.cookie_refreshes} cookie refreshes)"
+            )
 
     # Finalize scrape log
     error_msg: Optional[str] = None
@@ -938,7 +994,11 @@ DISCOVER_HEADERS = {
     "Accept-Language": "en-US,en;q=0.9",
 }
 
-DISCOVER_DELAY = 0.5  # seconds between page fetches
+DISCOVER_DELAY = 0.2  # seconds between launching concurrent page fetches
+
+
+class CookieRefresh403(Exception):
+    """Raised when a 403 is encountered and cookies need refreshing."""
 
 
 class DiscoveredListing(BaseModel):
@@ -969,6 +1029,7 @@ class DiscoverStats(BaseModel):
     projects_created: int = 0
     listings_upserted: int = 0
     errors: int = 0
+    cookie_refreshes: int = 0
 
 
 def _extract_project_id_from_url(url: str) -> Optional[int]:
@@ -1046,12 +1107,16 @@ async def _fetch_discover_page(
     listing_type: str,
     page: int,
     is_first_request: bool = False,
+    raise_on_403: bool = False,
 ) -> Optional[dict]:
     """Fetch a single page of discover listings.
 
     Cloudflare may 403 the first few requests per session.
     We retry up to 3 times on 403 with short sleeps.
     On 404 the BUILD_ID is stale — return None immediately.
+
+    When raise_on_403=True (concurrent mode), raises CookieRefresh403
+    after exhausting retries so the coordinator can refresh cookies.
     """
     slug = "condo-for-sale" if listing_type == "sale" else "condo-for-rent"
     url = f"{BASE_URL}/_next/data/{build_id}/en/{slug}.json"
@@ -1072,6 +1137,8 @@ async def _fetch_discover_page(
             await asyncio.sleep(1.0)
             continue
 
+    if raise_on_403:
+        raise CookieRefresh403(f"403 on page {page} after {max_attempts} retries")
     return None
 
 
@@ -1185,30 +1252,205 @@ def _upsert_discovered_batch(
         stats.listings_upserted += 1
 
 
+def _save_progress(listing_type: str, last_page: int, build_id: str) -> None:
+    """Save discover progress to disk for resume on crash."""
+    payload = {
+        "listing_type": listing_type,
+        "last_page": last_page,
+        "build_id": build_id,
+        "saved_at": datetime.now().isoformat(),
+    }
+    PROGRESS_FILE.write_text(json.dumps(payload, ensure_ascii=False))
+
+
+def _load_progress() -> Optional[dict]:
+    """Load saved discover progress, or None if no valid state."""
+    if not PROGRESS_FILE.exists():
+        return None
+    try:
+        payload = json.loads(PROGRESS_FILE.read_text())
+        # Validate required keys
+        if all(k in payload for k in ("listing_type", "last_page", "build_id")):
+            return payload
+    except (json.JSONDecodeError, ValueError):
+        pass
+    return None
+
+
+def _clear_progress() -> None:
+    """Remove progress file after successful completion."""
+    if PROGRESS_FILE.exists():
+        PROGRESS_FILE.unlink()
+
+
 async def discover_listings(
     include_rent: bool = False,
     max_pages: Optional[int] = None,
     build_id_override: Optional[str] = None,
     skip_camoufox: bool = False,
+    start_page: Optional[int] = None,
+    force: bool = False,
 ) -> DiscoverStats:
     """Bulk-discover ALL condo listings via the JSON API.
 
     Uses Camoufox to acquire Cloudflare cookies, then httpx for all
     subsequent paginated requests. Cookies are cached for reuse.
 
+    Concurrency: fetches up to DISCOVER_CONCURRENCY pages in parallel.
+    On 403, all workers pause while cookies are refreshed via Camoufox.
+
+    Resume: progress is saved per-page to PROGRESS_FILE. On restart,
+    automatically resumes from the last committed page unless --force.
+
     Args:
         include_rent: Also crawl rent listings (default: sale only).
         max_pages: Cap max pages per listing type (None = all pages).
         build_id_override: Use this BUILD_ID instead of the module constant.
         skip_camoufox: Use cached cookies only (error if none exist).
+        start_page: Manually set starting page number.
+        force: Ignore saved progress, start from page 1.
     """
     stats = DiscoverStats()
     started_at = datetime.now()
+
+    # --- Resume logic ---
+    resume_page: Optional[int] = None
+    resume_listing_type: Optional[str] = None
+    resume_build_id: Optional[str] = None
+
+    if start_page is not None:
+        resume_page = start_page
+        print(f"[Resume] Starting from page {start_page} (--start-page)")
+    elif not force:
+        saved = _load_progress()
+        if saved:
+            resume_page = saved["last_page"] + 1
+            resume_listing_type = saved["listing_type"]
+            resume_build_id = saved["build_id"]
+            print(
+                f"[Resume] Found interrupted run: {resume_listing_type} "
+                f"page {saved['last_page']} at {saved['saved_at']}"
+            )
+            print(f"  Resuming from page {resume_page}")
+            print(f"  Use --force to ignore and start fresh")
+
+    if force:
+        _clear_progress()
 
     # Acquire cookies (same flow as targeted mode)
     print("[1] Acquiring Cloudflare cookies...")
     cookies = await _acquire_cookies(skip_camoufox=skip_camoufox)
     print(f"    Got {len(cookies)} cookies")
+
+    # Shared state for coordinated cookie refresh across concurrent tasks
+    cookie_refresh_lock = asyncio.Lock()
+    cookie_refreshing = asyncio.Event()
+    cookie_refreshing.set()  # Not refreshing initially — workers proceed
+
+    async def _refresh_cookies_once(client: httpx.AsyncClient) -> None:
+        """Refresh cookies, ensuring only one refresh happens at a time."""
+        async with cookie_refresh_lock:
+            # Double-check: another worker may have already refreshed
+            saved_cookies = _load_cookies()
+            if saved_cookies is not None:
+                # Cookies were just refreshed by another worker
+                client.cookies.clear()
+                for k, v in saved_cookies.items():
+                    client.cookies.set(k, v)
+                return
+
+            cookie_refreshing.clear()  # Signal workers to pause
+            try:
+                print("  [Cookie] 403 detected — refreshing via Camoufox...")
+                fresh = await _acquire_cookies(skip_camoufox=False)
+                stats.cookie_refreshes += 1
+                client.cookies.clear()
+                for k, v in fresh.items():
+                    client.cookies.set(k, v)
+                print(f"  [Cookie] Refreshed — {len(fresh)} cookies")
+            finally:
+                cookie_refreshing.set()  # Unblock workers
+
+    semaphore = asyncio.Semaphore(DISCOVER_CONCURRENCY)
+
+    # Track the highest successfully committed page per listing_type
+    committed_pages: dict[str, int] = {}
+    committed_lock = asyncio.Lock()
+
+    # Track if we hit a fatal error (404 = stale BUILD_ID)
+    stop_event = asyncio.Event()
+
+    async def _fetch_and_upsert_page(
+        client: httpx.AsyncClient,
+        build_id: str,
+        lt: str,
+        page_num: int,
+    ) -> tuple[int, bool]:
+        """Fetch one page and upsert to DB. Returns (listing_count, is_empty).
+
+        Coordinates with cookie_refreshing event to pause on 403.
+        """
+        if stop_event.is_set():
+            return 0, True
+
+        async with semaphore:
+            # Wait if cookies are being refreshed
+            await cookie_refreshing.wait()
+
+            try:
+                page_data_resp = await _fetch_discover_page(
+                    client, build_id, lt, page=page_num, raise_on_403=True,
+                )
+            except CookieRefresh403:
+                # Trigger cookie refresh (only one worker does the actual refresh)
+                await _refresh_cookies_once(client)
+                # Retry the page after refresh
+                try:
+                    page_data_resp = await _fetch_discover_page(
+                        client, build_id, lt, page=page_num, raise_on_403=True,
+                    )
+                except CookieRefresh403:
+                    stats.errors += 1
+                    print(f"  ERROR: Still 403 on page {page_num} after cookie refresh")
+                    return 0, False
+
+            if page_data_resp is None:
+                stats.errors += 1
+                print(f"  ERROR on page {page_num} — BUILD_ID may be stale")
+                stop_event.set()
+                return 0, True
+
+            pd = page_data_resp.get("pageProps", {}).get("pageData", {})
+            dn = pd.get("data", {})
+            raw_items = dn.get("listingsData", [])
+
+            page_batch: list[DiscoveredListing] = []
+            for item in raw_items:
+                parsed = _parse_discovered_listing(item, lt)
+                if parsed:
+                    page_batch.append(parsed)
+
+            count = len(page_batch)
+            if page_batch:
+                with psycopg.connect(DB_URL) as conn:
+                    _upsert_discovered_batch(conn, page_batch, stats)
+                    conn.commit()
+
+            # Update committed page tracker + save progress
+            async with committed_lock:
+                prev = committed_pages.get(lt, 0)
+                if page_num > prev:
+                    committed_pages[lt] = page_num
+                    _save_progress(lt, page_num, build_id)
+
+            stats.pages_fetched += 1
+            if lt == "sale":
+                stats.sale_listings += count
+            else:
+                stats.rent_listings += count
+            stats.total_listings += count
+
+            return count, len(raw_items) == 0
 
     async with httpx.AsyncClient(
         timeout=30.0,
@@ -1218,8 +1460,8 @@ async def discover_listings(
     ) as client:
 
         # Resolve BUILD_ID
-        build_id = build_id_override or BUILD_ID
-        if not build_id_override:
+        build_id = resume_build_id or build_id_override or BUILD_ID
+        if not build_id_override and not resume_build_id:
             print("[2] Resolving BUILD_ID from homepage...")
             fetched_id = await _fetch_discover_build_id(client)
             if fetched_id:
@@ -1228,7 +1470,7 @@ async def discover_listings(
             else:
                 print(f"    Could not fetch BUILD_ID, using hardcoded: {build_id}")
         else:
-            print(f"[2] Using provided BUILD_ID: {build_id}")
+            print(f"[2] Using BUILD_ID: {build_id}")
 
         listing_types = ["sale"]
         if include_rent:
@@ -1237,71 +1479,48 @@ async def discover_listings(
         is_first_request = True
 
         for lt in listing_types:
-            print(f"\n[Discover] Crawling condo-for-{lt}...")
-
-            # Fetch page 1 to get total_pages
-            data = await _fetch_discover_page(
-                client, build_id, lt, page=1, is_first_request=is_first_request,
-            )
-            is_first_request = False
-
-            if data is None:
-                print(f"  ERROR: Could not fetch page 1 for {lt}. BUILD_ID may be stale.")
-                print(f"  Try: --build-id <ID> or check BUILD_ID manually.")
-                stats.errors += 1
+            # If resuming a specific listing_type, skip ones already completed
+            if resume_listing_type and resume_listing_type == "rent" and lt == "sale":
+                print(f"\n[Discover] Skipping condo-for-{lt} (already completed)")
                 continue
 
-            page_data = data.get("pageProps", {}).get("pageData", {})
-            data_node = page_data.get("data", {})
-            pagination = data_node.get("paginationData", {})
-            total_pages = pagination.get("totalPages", 1) or 1
-            result_count = page_data.get("resultCount", 0)
+            print(f"\n[Discover] Crawling condo-for-{lt}...")
+            stop_event.clear()
 
-            effective_max = min(total_pages, max_pages) if max_pages else total_pages
-            print(f"  Total: {result_count:,} listings across {total_pages:,} pages")
-            if max_pages and max_pages < total_pages:
-                print(f"  Capped to {effective_max} pages (--limit)")
+            # Determine starting page for this listing_type
+            lt_start_page = 1
+            if resume_page and (resume_listing_type is None or resume_listing_type == lt):
+                lt_start_page = resume_page
+                resume_page = None  # Only apply once
 
-            # Parse page 1
-            page_batch: list[DiscoveredListing] = []
-            listings_raw = data_node.get("listingsData", [])
-            for item in listings_raw:
-                parsed = _parse_discovered_listing(item, lt)
-                if parsed:
-                    page_batch.append(parsed)
-
-            # Upsert page 1 batch
-            if page_batch:
-                with psycopg.connect(DB_URL) as conn:
-                    _upsert_discovered_batch(conn, page_batch, stats)
-                    conn.commit()
-                if lt == "sale":
-                    stats.sale_listings += len(page_batch)
-                else:
-                    stats.rent_listings += len(page_batch)
-                stats.total_listings += len(page_batch)
-            stats.pages_fetched += 1
-
-            # Paginate through remaining pages
-            for page_num in range(2, effective_max + 1):
-                await asyncio.sleep(DISCOVER_DELAY)
-
-                page_data_resp = await _fetch_discover_page(
-                    client, build_id, lt, page=page_num,
+            # Fetch page 1 (or first page) to get total_pages
+            if lt_start_page == 1:
+                data = await _fetch_discover_page(
+                    client, build_id, lt, page=1, is_first_request=is_first_request,
                 )
+                is_first_request = False
 
-                if page_data_resp is None:
+                if data is None:
+                    print(f"  ERROR: Could not fetch page 1 for {lt}. BUILD_ID may be stale.")
+                    print(f"  Try: --build-id <ID> or check BUILD_ID manually.")
                     stats.errors += 1
-                    # 404 likely means BUILD_ID changed mid-crawl
-                    print(f"  ERROR on page {page_num} — stopping {lt} crawl")
-                    break
+                    continue
 
-                pd = page_data_resp.get("pageProps", {}).get("pageData", {})
-                dn = pd.get("data", {})
-                raw_items = dn.get("listingsData", [])
+                page_data = data.get("pageProps", {}).get("pageData", {})
+                data_node = page_data.get("data", {})
+                pagination = data_node.get("paginationData", {})
+                total_pages = pagination.get("totalPages", 1) or 1
+                result_count = page_data.get("resultCount", 0)
 
-                page_batch = []
-                for item in raw_items:
+                effective_max = min(total_pages, max_pages) if max_pages else total_pages
+                print(f"  Total: {result_count:,} listings across {total_pages:,} pages")
+                if max_pages and max_pages < total_pages:
+                    print(f"  Capped to {effective_max} pages (--limit)")
+
+                # Parse & upsert page 1
+                page_batch: list[DiscoveredListing] = []
+                listings_raw = data_node.get("listingsData", [])
+                for item in listings_raw:
                     parsed = _parse_discovered_listing(item, lt)
                     if parsed:
                         page_batch.append(parsed)
@@ -1316,21 +1535,78 @@ async def discover_listings(
                         stats.rent_listings += len(page_batch)
                     stats.total_listings += len(page_batch)
                 stats.pages_fetched += 1
+                _save_progress(lt, 1, build_id)
 
-                # Progress every 50 pages
-                if page_num % 50 == 0:
+                pages_start = 2
+            else:
+                # Resuming: probe page 1 just to get total_pages
+                probe = await _fetch_discover_page(
+                    client, build_id, lt, page=1, is_first_request=is_first_request,
+                )
+                is_first_request = False
+                if probe is None:
+                    print(f"  ERROR: Could not probe page 1 for {lt}.")
+                    stats.errors += 1
+                    continue
+                page_data = probe.get("pageProps", {}).get("pageData", {})
+                data_node = page_data.get("data", {})
+                pagination = data_node.get("paginationData", {})
+                total_pages = pagination.get("totalPages", 1) or 1
+                result_count = page_data.get("resultCount", 0)
+
+                effective_max = min(total_pages, max_pages) if max_pages else total_pages
+                print(
+                    f"  Total: {result_count:,} listings across {total_pages:,} pages "
+                    f"(resuming from page {lt_start_page})"
+                )
+                pages_start = lt_start_page
+
+            # --- Concurrent page fetches ---
+            remaining_pages = list(range(pages_start, effective_max + 1))
+            if not remaining_pages:
+                continue
+
+            print(
+                f"  Fetching pages {pages_start}-{effective_max} "
+                f"({len(remaining_pages)} pages, {DISCOVER_CONCURRENCY} workers)"
+            )
+
+            # Launch pages in batches with staggered delay
+            batch_size = DISCOVER_CONCURRENCY * 2  # pre-fetch buffer
+            for batch_start in range(0, len(remaining_pages), batch_size):
+                if stop_event.is_set():
+                    break
+
+                batch = remaining_pages[batch_start : batch_start + batch_size]
+                tasks = []
+                for page_num in batch:
+                    tasks.append(
+                        _fetch_and_upsert_page(client, build_id, lt, page_num)
+                    )
+                    await asyncio.sleep(DISCOVER_LAUNCH_DELAY)
+
+                results = await asyncio.gather(*tasks, return_exceptions=True)
+
+                # Check for fatal errors
+                for r in results:
+                    if isinstance(r, Exception):
+                        stats.errors += 1
+                        print(f"  ERROR in batch: {r}")
+
+                # Progress report
+                current_page = batch[-1] if batch else pages_start
+                if current_page % 50 == 0 or batch_start + batch_size >= len(remaining_pages):
                     elapsed = (datetime.now() - started_at).total_seconds()
                     rate = stats.pages_fetched / elapsed if elapsed > 0 else 0
                     print(
-                        f"  [{lt}] page {page_num}/{effective_max} | "
+                        f"  [{lt}] page ~{current_page}/{effective_max} | "
                         f"{stats.total_listings:,} listings | "
                         f"{rate:.1f} pages/s | "
                         f"errors={stats.errors}"
                     )
 
-                # Empty page = end
-                if not raw_items:
-                    break
+    # Successful completion — clear progress file
+    _clear_progress()
 
     elapsed = (datetime.now() - started_at).total_seconds()
     print(f"\n{'=' * 60}")
@@ -1342,6 +1618,7 @@ async def discover_listings(
     print(f"  Projects touched:  {stats.projects_created}")
     print(f"  Listings upserted: {stats.listings_upserted:,}")
     print(f"  Errors:            {stats.errors}")
+    print(f"  Cookie refreshes:  {stats.cookie_refreshes}")
     print(f"{'=' * 60}\n")
 
     return stats
@@ -1357,7 +1634,7 @@ def main() -> None:
         description="DDProperty scraper — targeted (Camoufox) or discover (bulk JSON API)",
         epilog=(
             "Examples:\n"
-            "  # Targeted mode (Camoufox)\n"
+            "  # Targeted mode (Camoufox, 3 concurrent projects)\n"
             "  python ddproperty_scraper.py --seed-db\n"
             "  python ddproperty_scraper.py --seed-db --limit 50\n"
             "  python ddproperty_scraper.py --seed-file projects.txt\n"
@@ -1366,11 +1643,13 @@ def main() -> None:
             "  python ddproperty_scraper.py --seed-db --refresh-build-id\n"
             '  python ddproperty_scraper.py --names "triple y" --skip-camoufox\n'
             "\n"
-            "  # Discover mode (no Camoufox)\n"
+            "  # Discover mode (5 concurrent pages, auto-resume)\n"
             "  python ddproperty_scraper.py --discover\n"
             "  python ddproperty_scraper.py --discover --discover-rent\n"
             "  python ddproperty_scraper.py --discover --limit 10\n"
             "  python ddproperty_scraper.py --discover --build-id ABC123\n"
+            "  python ddproperty_scraper.py --discover --start-page 500\n"
+            "  python ddproperty_scraper.py --discover --force\n"
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
@@ -1379,7 +1658,7 @@ def main() -> None:
     parser.add_argument(
         "--discover",
         action="store_true",
-        help="Bulk-discover ALL condo listings via JSON API (no Camoufox)",
+        help="Bulk-discover ALL condo listings via JSON API (5 concurrent pages)",
     )
     parser.add_argument(
         "--discover-rent",
@@ -1391,12 +1670,22 @@ def main() -> None:
         type=str,
         help="Override the Next.js BUILD_ID (for discover mode)",
     )
+    parser.add_argument(
+        "--start-page",
+        type=int,
+        help="Resume discover mode from this page number",
+    )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Ignore saved progress, start discover from page 1",
+    )
 
     # Targeted mode flags
     parser.add_argument(
         "--seed-db",
         action="store_true",
-        help="Seed project names from project_registry + NPA tables",
+        help="Seed project names from project_registry + NPA tables (3 concurrent)",
     )
     parser.add_argument(
         "--seed-file",
@@ -1443,6 +1732,8 @@ def main() -> None:
                 max_pages=args.limit,
                 build_id_override=args.build_id,
                 skip_camoufox=args.skip_camoufox,
+                start_page=args.start_page,
+                force=args.force,
             )
         )
         return

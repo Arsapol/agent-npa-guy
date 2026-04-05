@@ -8,7 +8,7 @@ Two modes:
      listings, and government appraisals.
   2. **Discover mode** (--discover): Crawls ZMyHome's paginated browse pages
      (/buy/condo, /rent/condo) to collect ALL individual listings without
-     needing seed names. Fast bulk collection (~3.5 min for 13k buy listings).
+     needing seed names. Async with Semaphore(5) for ~2 min total.
 
 Usage:
     # --- Discover mode (primary) ---
@@ -16,6 +16,8 @@ Usage:
     python zmyhome_scraper.py --discover --discover-rent
     python zmyhome_scraper.py --discover --province 1
     python zmyhome_scraper.py --discover --province 1 --discover-rent --limit 50
+    python zmyhome_scraper.py --discover --start-page 100
+    python zmyhome_scraper.py --discover --force
 
     # --- Seed mode ---
     python zmyhome_scraper.py --seed-db
@@ -31,6 +33,7 @@ Usage:
 """
 
 import argparse
+import asyncio
 import json
 import sys
 import time
@@ -57,6 +60,12 @@ from zmyhome_lookup import (
 DB_URL = "postgresql://arsapolm@localhost:5432/npa_kb"
 MIGRATION_FILE = Path(__file__).parent / "migration_004_zmyhome.sql"
 DEDUP_WINDOW_SECONDS = 3600  # 1 hour
+
+# Concurrency knobs
+DISCOVER_SEMAPHORE_LIMIT = 5
+DISCOVER_DELAY = 0.1  # seconds between launching new page fetches
+SEED_SEMAPHORE_LIMIT = 3
+SEED_DELAY = 0.3  # seconds between launching project lookups
 
 
 # ---------------------------------------------------------------------------
@@ -382,8 +391,13 @@ def upsert_project(
 
 
 # ---------------------------------------------------------------------------
-# Discover mode — crawl browse pages
+# Discover mode — async crawl browse pages
 # ---------------------------------------------------------------------------
+
+UA = (
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+)
 
 
 def _build_browse_url(
@@ -462,96 +476,159 @@ def _upsert_discovered_listing(
     return bool(row and row[0])
 
 
-def _crawl_listing_type(
-    client: httpx.Client,
-    conn: psycopg.Connection,
-    listing_type: str,
-    province_id: Optional[int],
-    max_pages: Optional[int],
-    stats: DiscoverStats,
-) -> None:
-    """Crawl all pages for a single listing type (buy or rent)."""
+def _get_today_listing_count(listing_type: str, province_id: Optional[int]) -> int:
+    """Query DB for how many listings were already scraped today for resume."""
     discover_source = (
         f"province:{province_id}" if province_id is not None else "browse"
     )
-    page = 1
-    consecutive_empty = 0
-    max_consecutive_empty = 3
+    with psycopg.connect(DB_URL) as conn:
+        cur = conn.execute(
+            """
+            SELECT COUNT(*) FROM zmyhome_listings
+            WHERE discover_source = %s
+              AND listing_type = %s
+              AND last_scraped_at::date = CURRENT_DATE
+            """,
+            (discover_source, listing_type),
+        )
+        row = cur.fetchone()
+        return row[0] if row else 0
+
+
+async def _fetch_page(
+    aclient: httpx.AsyncClient,
+    sem: asyncio.Semaphore,
+    url: str,
+    page: int,
+    label: str,
+) -> tuple[int, list[ListingCard], Optional[str]]:
+    """Fetch a single browse page. Returns (page_num, cards, error_or_None)."""
+    async with sem:
+        try:
+            resp = await aclient.get(url)
+            resp.raise_for_status()
+            cards = parse_listing_cards(resp.text)
+            return (page, cards, None)
+        except Exception as e:
+            return (page, [], str(e))
+
+
+async def _crawl_listing_type_async(
+    aclient: httpx.AsyncClient,
+    listing_type: str,
+    province_id: Optional[int],
+    max_pages: Optional[int],
+    start_page: int,
+    stats: DiscoverStats,
+) -> None:
+    """Crawl all pages for a single listing type using async concurrency."""
+    discover_source = (
+        f"province:{province_id}" if province_id is not None else "browse"
+    )
+    sem = asyncio.Semaphore(DISCOVER_SEMAPHORE_LIMIT)
 
     label = listing_type.upper()
     if province_id is not None:
         label += f" province={province_id}"
 
-    print(f"\n  Crawling {label} ...")
+    print(f"\n  Crawling {label} (starting page {start_page}) ...")
+
+    # Strategy: launch pages in batches, detect empty pages to find the end.
+    # We probe in expanding batches: first batch finds total, then we know.
+    page = start_page
+    consecutive_empty = 0
+    max_consecutive_empty = 3
+    batch_size = DISCOVER_SEMAPHORE_LIMIT  # fetch 5 pages at a time
 
     while True:
-        if max_pages is not None and page > max_pages:
+        if max_pages is not None and page > (start_page - 1) + max_pages:
             break
 
-        url = _build_browse_url(listing_type, page, province_id)
+        # Build batch of page URLs
+        batch_end = page + batch_size
+        if max_pages is not None:
+            batch_end = min(batch_end, (start_page - 1) + max_pages + 1)
 
-        try:
-            resp = client.get(url)
-            resp.raise_for_status()
-        except Exception as e:
-            stats.failed_pages += 1
-            print(f"    page {page} FAILED: {e}")
-            if stats.failed_pages > 10:
-                print("    Too many failures, stopping.")
-                break
-            time.sleep(1)
-            page += 1
-            continue
+        tasks = []
+        for p in range(page, batch_end):
+            url = _build_browse_url(listing_type, p, province_id)
+            tasks.append(_fetch_page(aclient, sem, url, p, label))
+            await asyncio.sleep(DISCOVER_DELAY)
 
-        cards = parse_listing_cards(resp.text)
-        stats.pages_crawled += 1
+        if not tasks:
+            break
 
-        if not cards:
-            consecutive_empty += 1
-            stats.empty_pages += 1
-            if consecutive_empty >= max_consecutive_empty:
-                break
-            page += 1
-            time.sleep(0.5)
-            continue
+        results = await asyncio.gather(*tasks)
 
-        consecutive_empty = 0
-        stats.listings_found += len(cards)
+        # Sort by page number to process in order for empty-page detection
+        results_sorted = sorted(results, key=lambda r: r[0])
 
-        for card in cards:
-            is_new = _upsert_discovered_listing(
-                conn, card, listing_type, discover_source
-            )
-            if is_new:
-                stats.new_count += 1
-            else:
-                stats.updated_count += 1
+        should_stop = False
+        for p_num, cards, error in results_sorted:
+            if error is not None:
+                stats.failed_pages += 1
+                print(f"    page {p_num} FAILED: {error}")
+                if stats.failed_pages > 10:
+                    print("    Too many failures, stopping.")
+                    should_stop = True
+                    break
+                continue
 
-        conn.commit()
+            stats.pages_crawled += 1
 
-        # Progress every 10 pages
-        if page % 10 == 0:
+            if not cards:
+                consecutive_empty += 1
+                stats.empty_pages += 1
+                if consecutive_empty >= max_consecutive_empty:
+                    should_stop = True
+                    break
+                continue
+
+            consecutive_empty = 0
+            stats.listings_found += len(cards)
+
+            # Per-page DB upsert + commit
+            with psycopg.connect(DB_URL) as conn:
+                for card in cards:
+                    is_new = _upsert_discovered_listing(
+                        conn, card, listing_type, discover_source
+                    )
+                    if is_new:
+                        stats.new_count += 1
+                    else:
+                        stats.updated_count += 1
+                conn.commit()
+
+        if should_stop:
+            break
+
+        # Progress every 10 pages (based on highest page in batch)
+        highest_page = max(r[0] for r in results_sorted)
+        if highest_page % 10 < batch_size:
             print(
-                f"    [{label}] page {page}: "
+                f"    [{label}] page ~{highest_page}: "
                 f"{stats.listings_found} listings "
                 f"(new={stats.new_count}, updated={stats.updated_count})"
             )
 
-        page += 1
-        time.sleep(0.5)
+        page = batch_end
 
 
-def discover_listings(
+async def discover_listings_async(
     include_rent: bool = False,
     province_id: Optional[int] = None,
     max_pages: Optional[int] = None,
+    start_page: int = 1,
+    force: bool = False,
 ) -> DiscoverStats:
-    """Crawl ZMyHome browse pages to discover all condo listings.
+    """Crawl ZMyHome browse pages to discover all condo listings (async).
 
     Args:
         include_rent: Also crawl /rent/condo pages (default: buy only).
         province_id: Limit to a single province ID (e.g. 1 = Bangkok).
         max_pages: Max pages to crawl per listing type (None = all).
+        start_page: Page to start from (for resume after crash).
+        force: If True, start from page 1 even if data exists today.
 
     Returns:
         DiscoverStats with totals.
@@ -565,10 +642,28 @@ def discover_listings(
     if include_rent:
         source_label += "+rent"
 
-    print(f"\nZMyHome discover mode")
+    # Resume logic: if no explicit start page and not forced, check DB
+    buy_start = start_page
+    rent_start = start_page
+    if start_page == 1 and not force:
+        buy_count = _get_today_listing_count("buy", province_id)
+        if buy_count > 0:
+            buy_start = max(1, (buy_count // 35) - 1)  # back up 1 page for overlap
+            print(f"  Resume: {buy_count} buy listings already scraped today, "
+                  f"starting from page {buy_start}")
+        if include_rent:
+            rent_count = _get_today_listing_count("rent", province_id)
+            if rent_count > 0:
+                rent_start = max(1, (rent_count // 35) - 1)
+                print(f"  Resume: {rent_count} rent listings already scraped today, "
+                      f"starting from page {rent_start}")
+
+    print(f"\nZMyHome discover mode (async, semaphore={DISCOVER_SEMAPHORE_LIMIT})")
     print(f"  Province: {province_id or 'ALL'}")
     print(f"  Listing types: buy{' + rent' if include_rent else ''}")
     print(f"  Max pages/type: {max_pages or 'unlimited'}")
+    print(f"  Start page: buy={buy_start}"
+          + (f", rent={rent_start}" if include_rent else ""))
     print(f"{'=' * 60}")
 
     # Start scrape log
@@ -582,28 +677,29 @@ def discover_listings(
         log_id = cur.fetchone()[0]
         conn.commit()
 
-    client = make_client()
-    try:
-        # Initialize session
-        client.get(BASE)
+    async with httpx.AsyncClient(
+        headers={"User-Agent": UA},
+        follow_redirects=True,
+        timeout=20,
+    ) as aclient:
+        try:
+            # Initialize session
+            await aclient.get(BASE)
 
-        with psycopg.connect(DB_URL) as conn:
             # Always crawl buy
-            _crawl_listing_type(
-                client, conn, "buy", province_id, max_pages, stats
+            await _crawl_listing_type_async(
+                aclient, "buy", province_id, max_pages, buy_start, stats
             )
 
             if include_rent:
-                _crawl_listing_type(
-                    client, conn, "rent", province_id, max_pages, stats
+                await _crawl_listing_type_async(
+                    aclient, "rent", province_id, max_pages, rent_start, stats
                 )
 
-    except KeyboardInterrupt:
-        print("\n  Interrupted by user, saving progress...")
-    except Exception as e:
-        print(f"\n  FATAL: {e}")
-    finally:
-        client.close()
+        except KeyboardInterrupt:
+            print("\n  Interrupted by user, saving progress...")
+        except Exception as e:
+            print(f"\n  FATAL: {e}")
 
     # Finalize scrape log
     elapsed = (datetime.now() - started_at).total_seconds()
@@ -647,6 +743,23 @@ def discover_listings(
     print(f"{'=' * 60}\n")
 
     return stats
+
+
+def discover_listings(
+    include_rent: bool = False,
+    province_id: Optional[int] = None,
+    max_pages: Optional[int] = None,
+    start_page: int = 1,
+    force: bool = False,
+) -> DiscoverStats:
+    """Sync wrapper for discover_listings_async."""
+    return asyncio.run(discover_listings_async(
+        include_rent=include_rent,
+        province_id=province_id,
+        max_pages=max_pages,
+        start_page=start_page,
+        force=force,
+    ))
 
 
 # ---------------------------------------------------------------------------
@@ -821,20 +934,153 @@ def smart_search(
 
 
 # ---------------------------------------------------------------------------
-# Main scraper loop
+# Seed mode — async with bounded concurrency
 # ---------------------------------------------------------------------------
 
 
-def run_scraper(
+async def _process_seed_project(
+    sem: asyncio.Semaphore,
+    seed: SeedProject,
+    include_sold: bool,
+    stats: ScrapeStats,
+) -> None:
+    """Process a single seed project (search + fetch + upsert).
+
+    Wraps sync zmyhome_lookup calls with asyncio.to_thread for concurrency.
+    """
+    async with sem:
+        try:
+            stats.total_searched += 1
+
+            # Step 1: Resolve project ID via search
+            project_id: Optional[str] = seed.existing_zmyhome_id
+            lat: Optional[float] = None
+            lng: Optional[float] = None
+
+            if project_id is None:
+                client = await asyncio.to_thread(make_client)
+                try:
+                    # Init session
+                    await asyncio.to_thread(client.get, "https://zmyhome.com")
+                    match = await asyncio.to_thread(smart_search, client, seed.name)
+                finally:
+                    await asyncio.to_thread(client.close)
+
+                if match is None:
+                    stats.not_found_count += 1
+                    return
+                project_id, _matched_name, lat, lng = match
+
+            # Step 2: Fetch project page (metadata + appraisals)
+            client = await asyncio.to_thread(make_client)
+            try:
+                await asyncio.to_thread(client.get, "https://zmyhome.com")
+                summary = await asyncio.to_thread(
+                    fetch_project_page, client, project_id
+                )
+
+                # Step 3: Fetch listings
+                sale_listings = await asyncio.to_thread(
+                    fetch_listings, client, project_id, "buy"
+                )
+                rent_listings = await asyncio.to_thread(
+                    fetch_listings, client, project_id, "rent"
+                )
+
+                if include_sold:
+                    sold_listings = await asyncio.to_thread(
+                        fetch_listings, client, project_id, "sold"
+                    )
+                    rented_listings = await asyncio.to_thread(
+                        fetch_listings, client, project_id, "rented"
+                    )
+                else:
+                    sold_listings = []
+                    rented_listings = []
+            finally:
+                await asyncio.to_thread(client.close)
+
+            stats.total_found += 1
+
+            # Step 4: Upsert to DB (per-project commit)
+            with psycopg.connect(DB_URL) as conn:
+                upsert_project(
+                    conn,
+                    summary,
+                    lat,
+                    lng,
+                    sale_listings,
+                    rent_listings,
+                    stats,
+                )
+
+                # Upsert sold/rented listings separately
+                for listing_type, cards in [
+                    ("sold", sold_listings),
+                    ("rented", rented_listings),
+                ]:
+                    for card in cards:
+                        if not card.property_id:
+                            continue
+                        conn.execute(
+                            """
+                            INSERT INTO zmyhome_listings (
+                                property_id, project_id, listing_type,
+                                price_thb, price_psm, size_sqm,
+                                bedrooms, bathrooms, floor, direction, broker_ok,
+                                first_seen_at, last_scraped_at, is_active
+                            ) VALUES (
+                                %s, %s, %s,
+                                %s, %s, %s,
+                                %s, %s, %s, %s, %s,
+                                now(), now(), false
+                            )
+                            ON CONFLICT (property_id) DO UPDATE SET
+                                listing_type    = EXCLUDED.listing_type,
+                                price_thb       = EXCLUDED.price_thb,
+                                price_psm       = EXCLUDED.price_psm,
+                                size_sqm        = EXCLUDED.size_sqm,
+                                bedrooms        = EXCLUDED.bedrooms,
+                                bathrooms       = EXCLUDED.bathrooms,
+                                floor           = EXCLUDED.floor,
+                                direction       = EXCLUDED.direction,
+                                broker_ok       = EXCLUDED.broker_ok,
+                                last_scraped_at = now(),
+                                is_active       = false
+                            """,
+                            (
+                                card.property_id,
+                                project_id,
+                                listing_type,
+                                card.price_thb,
+                                card.price_psm,
+                                card.size_sqm,
+                                card.bedrooms,
+                                card.bathrooms,
+                                card.floor,
+                                card.direction,
+                                card.broker_ok,
+                            ),
+                        )
+
+                conn.commit()
+
+        except Exception as e:
+            stats.failed_count += 1
+            print(f"  ERROR [{seed.name}]: {e}")
+
+
+async def run_scraper_async(
     seeds: list[SeedProject],
     limit: Optional[int] = None,
     include_sold: bool = False,
 ) -> ScrapeStats:
-    """Run the bulk scraper on a seed list. Returns stats."""
+    """Run the bulk scraper on a seed list with async concurrency."""
     stats = ScrapeStats()
     work = seeds[:limit] if limit else seeds
 
-    print(f"\nZMyHome bulk scraper -- {len(work)} projects to process")
+    print(f"\nZMyHome bulk scraper -- {len(work)} projects to process "
+          f"(async, semaphore={SEED_SEMAPHORE_LIMIT})")
     if include_sold:
         print("  (including sold/rented tabs)")
     print(f"{'=' * 60}")
@@ -852,134 +1098,31 @@ def run_scraper(
         conn.commit()
 
     started_at = datetime.now()
+    sem = asyncio.Semaphore(SEED_SEMAPHORE_LIMIT)
 
-    # Shared httpx client for the entire run
-    client = make_client()
-    try:
-        # Initialize session
-        client.get("https://zmyhome.com")
+    # Launch all seed projects with bounded concurrency
+    tasks = []
+    for i, seed in enumerate(work):
+        tasks.append(
+            _process_seed_project(sem, seed, include_sold, stats)
+        )
 
-        for i, seed in enumerate(work):
-            stats.total_searched += 1
-
-            # Progress every 20 projects
-            if i > 0 and i % 20 == 0:
-                elapsed = (datetime.now() - started_at).total_seconds()
-                rate = i / elapsed if elapsed > 0 else 0
-                print(
-                    f"  [{i}/{len(work)}] "
-                    f"found={stats.total_found} new={stats.new_count} "
-                    f"updated={stats.updated_count} price_chg={stats.price_changed} "
-                    f"appraisals={stats.appraisals_count} "
-                    f"not_found={stats.not_found_count} failed={stats.failed_count} "
-                    f"({rate:.1f} proj/s)"
-                )
-
-            try:
-                # Step 1: Resolve project ID via search
-                project_id: Optional[str] = seed.existing_zmyhome_id
-                lat: Optional[float] = None
-                lng: Optional[float] = None
-
-                if project_id is None:
-                    match = smart_search(client, seed.name)
-                    if match is None:
-                        stats.not_found_count += 1
-                        continue
-                    project_id, _matched_name, lat, lng = match
-                    time.sleep(0.5)
-
-                # Step 2: Fetch project page (metadata + appraisals)
-                summary = fetch_project_page(client, project_id)
-
-                # Step 3: Fetch listings
-                sale_listings = fetch_listings(client, project_id, "buy")
-                time.sleep(0.3)
-                rent_listings = fetch_listings(client, project_id, "rent")
-
-                if include_sold:
-                    time.sleep(0.3)
-                    sold_listings = fetch_listings(client, project_id, "sold")
-                    time.sleep(0.3)
-                    rented_listings = fetch_listings(client, project_id, "rented")
-                else:
-                    sold_listings = []
-                    rented_listings = []
-
-                stats.total_found += 1
-
-                # Step 4: Upsert to DB
-                with psycopg.connect(DB_URL) as conn:
-                    upsert_project(
-                        conn,
-                        summary,
-                        lat,
-                        lng,
-                        sale_listings,
-                        rent_listings,
-                        stats,
-                    )
-
-                    # Upsert sold/rented listings separately
-                    for listing_type, cards in [
-                        ("sold", sold_listings),
-                        ("rented", rented_listings),
-                    ]:
-                        for card in cards:
-                            if not card.property_id:
-                                continue
-                            conn.execute(
-                                """
-                                INSERT INTO zmyhome_listings (
-                                    property_id, project_id, listing_type,
-                                    price_thb, price_psm, size_sqm,
-                                    bedrooms, bathrooms, floor, direction, broker_ok,
-                                    first_seen_at, last_scraped_at, is_active
-                                ) VALUES (
-                                    %s, %s, %s,
-                                    %s, %s, %s,
-                                    %s, %s, %s, %s, %s,
-                                    now(), now(), false
-                                )
-                                ON CONFLICT (property_id) DO UPDATE SET
-                                    listing_type    = EXCLUDED.listing_type,
-                                    price_thb       = EXCLUDED.price_thb,
-                                    price_psm       = EXCLUDED.price_psm,
-                                    size_sqm        = EXCLUDED.size_sqm,
-                                    bedrooms        = EXCLUDED.bedrooms,
-                                    bathrooms       = EXCLUDED.bathrooms,
-                                    floor           = EXCLUDED.floor,
-                                    direction       = EXCLUDED.direction,
-                                    broker_ok       = EXCLUDED.broker_ok,
-                                    last_scraped_at = now(),
-                                    is_active       = false
-                                """,
-                                (
-                                    card.property_id,
-                                    project_id,
-                                    listing_type,
-                                    card.price_thb,
-                                    card.price_psm,
-                                    card.size_sqm,
-                                    card.bedrooms,
-                                    card.bathrooms,
-                                    card.floor,
-                                    card.direction,
-                                    card.broker_ok,
-                                ),
-                            )
-
-                    conn.commit()
-
-                time.sleep(0.5)
-
-            except Exception as e:
-                stats.failed_count += 1
-                print(f"  ERROR [{seed.name}]: {e}")
-                time.sleep(1)
-
-    finally:
-        client.close()
+    # Process with progress reporting
+    done_count = 0
+    for coro in asyncio.as_completed(tasks):
+        await coro
+        done_count += 1
+        if done_count % 20 == 0:
+            elapsed = (datetime.now() - started_at).total_seconds()
+            rate = done_count / elapsed if elapsed > 0 else 0
+            print(
+                f"  [{done_count}/{len(work)}] "
+                f"found={stats.total_found} new={stats.new_count} "
+                f"updated={stats.updated_count} price_chg={stats.price_changed} "
+                f"appraisals={stats.appraisals_count} "
+                f"not_found={stats.not_found_count} failed={stats.failed_count} "
+                f"({rate:.1f} proj/s)"
+            )
 
     # Finalize scrape log
     error_msg: Optional[str] = None
@@ -1033,6 +1176,15 @@ def run_scraper(
     return stats
 
 
+def run_scraper(
+    seeds: list[SeedProject],
+    limit: Optional[int] = None,
+    include_sold: bool = False,
+) -> ScrapeStats:
+    """Sync wrapper for run_scraper_async."""
+    return asyncio.run(run_scraper_async(seeds, limit=limit, include_sold=include_sold))
+
+
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
@@ -1048,6 +1200,8 @@ def main() -> None:
             "  python zmyhome_scraper.py --discover --discover-rent\n"
             "  python zmyhome_scraper.py --discover --province 1\n"
             "  python zmyhome_scraper.py --discover --province 1 --limit 50\n"
+            "  python zmyhome_scraper.py --discover --start-page 100\n"
+            "  python zmyhome_scraper.py --discover --force\n"
             "\n"
             "  # Seed mode (search by project name)\n"
             "  python zmyhome_scraper.py --seed-db\n"
@@ -1075,6 +1229,17 @@ def main() -> None:
         "--province",
         type=int,
         help="Limit discover to a single province ID (e.g. 1=Bangkok). Requires --discover",
+    )
+    parser.add_argument(
+        "--start-page",
+        type=int,
+        default=1,
+        help="Page number to start from in discover mode (for manual resume)",
+    )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Force re-scrape even if data was already scraped today",
     )
 
     # Seed mode flags
@@ -1124,6 +1289,12 @@ def main() -> None:
     if args.province is not None and not args.discover:
         print("Error: --province requires --discover")
         sys.exit(1)
+    if args.start_page != 1 and not args.discover:
+        print("Error: --start-page requires --discover")
+        sys.exit(1)
+    if args.force and not args.discover:
+        print("Error: --force requires --discover")
+        sys.exit(1)
 
     # --- Discover mode ---
     if args.discover:
@@ -1131,6 +1302,8 @@ def main() -> None:
             include_rent=args.discover_rent,
             province_id=args.province,
             max_pages=args.limit,
+            start_page=args.start_page,
+            force=args.force,
         )
         return
 

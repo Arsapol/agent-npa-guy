@@ -17,6 +17,9 @@ Usage:
     # Discover specific provinces only
     python hipflat_scraper.py --discover --provinces "bangkok-bm" "nonthaburi-nb"
 
+    # Force re-scrape (ignore 24h freshness)
+    python hipflat_scraper.py --discover --force
+
     # Seed from project_registry + NPA tables
     python hipflat_scraper.py --seed-db
 
@@ -34,6 +37,7 @@ Usage:
 """
 
 import argparse
+import asyncio
 import hashlib
 import re
 import sys
@@ -71,8 +75,12 @@ PROVINCE_LINK_RE = re.compile(
 PROJECT_SLUG_RE = re.compile(
     r'href="(?:https://www\.hipflat\.co\.th)?/en/projects/([a-z0-9-]+)"'
 )
-DIRECTORY_DELAY = 0.5  # seconds between directory page fetches
-DETAIL_DELAY = 0.5  # seconds between project detail fetches
+DIRECTORY_DELAY = 0.2  # seconds between directory page fetches (async)
+DETAIL_DELAY = 0.2  # seconds between project detail fetches (async)
+
+# Concurrency limits
+DIR_SEMAPHORE_LIMIT = 5  # max concurrent province page fetches
+DETAIL_SEMAPHORE_LIMIT = 5  # max concurrent project detail fetches
 
 
 # ---------------------------------------------------------------------------
@@ -206,6 +214,17 @@ def _is_recently_scraped(conn: psycopg.Connection, slug: str, hours: int = DISCO
         (slug, datetime.now() - timedelta(hours=hours)),
     )
     return cur.fetchone() is not None
+
+
+def _load_recently_scraped_uuids(hours: int = DISCOVER_FRESHNESS_HOURS) -> set[str]:
+    """Load all UUIDs scraped within the freshness window into a set for fast lookup."""
+    cutoff = datetime.now() - timedelta(hours=hours)
+    with psycopg.connect(DB_URL) as conn:
+        cur = conn.execute(
+            "SELECT uuid FROM hipflat_projects WHERE last_scraped_at > %s",
+            (cutoff,),
+        )
+        return {row[0] for row in cur.fetchall()}
 
 
 def upsert_project(
@@ -485,37 +504,42 @@ def _seed_from_names(names: list[str]) -> list[SeedProject]:
 
 
 # ---------------------------------------------------------------------------
-# Directory discovery (--discover mode)
+# Async directory fetch helper
 # ---------------------------------------------------------------------------
 
 
-def _fetch_directory_page(url: str) -> Optional[str]:
-    """Fetch a Hipflat directory page, return HTML string or None on error.
+async def _async_fetch_directory_page(url: str, sem: asyncio.Semaphore) -> Optional[str]:
+    """Fetch a Hipflat directory page in a thread pool (non-blocking).
 
-    Uses urllib.request consistent with hipflat_checker.py.
-    Returns None on HTTP 500 (end of pagination) or other errors.
+    Uses urllib.request under the hood via asyncio.to_thread so the event loop
+    is not blocked. Semaphore bounds concurrency.
     """
-    headers = {**BASE_HEADERS, "Accept": "text/html,application/xhtml+xml"}
-    req = urllib.request.Request(url, headers=headers)
-    try:
-        resp = urllib.request.urlopen(req, timeout=15)
-        return resp.read().decode("utf-8", errors="replace")
-    except urllib.error.HTTPError as e:
-        if e.code == 500:
-            return None  # pagination exhausted
-        raise
-    except (urllib.error.URLError, TimeoutError):
-        return None
+
+    def _sync_fetch() -> Optional[str]:
+        headers = {**BASE_HEADERS, "Accept": "text/html,application/xhtml+xml"}
+        req = urllib.request.Request(url, headers=headers)
+        try:
+            resp = urllib.request.urlopen(req, timeout=15)
+            return resp.read().decode("utf-8", errors="replace")
+        except urllib.error.HTTPError as e:
+            if e.code == 500:
+                return None
+            raise
+        except (urllib.error.URLError, TimeoutError):
+            return None
+
+    async with sem:
+        return await asyncio.to_thread(_sync_fetch)
+
+
+# ---------------------------------------------------------------------------
+# Directory discovery (--discover mode) — async
+# ---------------------------------------------------------------------------
 
 
 def _extract_province_routes(html: str) -> list[str]:
-    """Extract province sub-route identifiers from the main directory page.
-
-    Looks for links like href="/en/thailand-projects/condo/bangkok-bm" and returns
-    the province slug (e.g. "bangkok-bm").
-    """
+    """Extract province sub-route identifiers from the main directory page."""
     matches = PROVINCE_LINK_RE.findall(html)
-    # Deduplicate while preserving order
     seen: set[str] = set()
     routes: list[str] = []
     for route in matches:
@@ -526,11 +550,7 @@ def _extract_province_routes(html: str) -> list[str]:
 
 
 def _extract_project_slugs(html: str) -> list[str]:
-    """Extract project slugs from a directory listing page.
-
-    Looks for links like href="/en/projects/ratchada-city-18-juszwl"
-    and returns the slug part.
-    """
+    """Extract project slugs from a directory listing page."""
     matches = PROJECT_SLUG_RE.findall(html)
     seen: set[str] = set()
     slugs: list[str] = []
@@ -541,18 +561,12 @@ def _extract_project_slugs(html: str) -> list[str]:
     return slugs
 
 
-def discover_province_routes(province_filter: Optional[list[str]] = None) -> list[str]:
-    """Fetch the main directory and extract province sub-routes.
-
-    Args:
-        province_filter: If provided, only return routes whose province
-            slug matches one of these values (e.g. ["bangkok-bm", "nonthaburi-nb"]).
-
-    Returns:
-        List of province slugs (e.g. ["bangkok-bm", "nonthaburi-nb", ...]).
-    """
+async def discover_province_routes(province_filter: Optional[list[str]] = None) -> list[str]:
+    """Fetch the main directory and extract province sub-routes."""
     print(f"Fetching main directory: {DIRECTORY_BASE}")
-    html = _fetch_directory_page(DIRECTORY_BASE)
+
+    sem = asyncio.Semaphore(1)  # single fetch for the main page
+    html = await _async_fetch_directory_page(DIRECTORY_BASE, sem)
     if html is None:
         print("  ERROR: Failed to fetch main directory page")
         return []
@@ -568,14 +582,10 @@ def discover_province_routes(province_filter: Optional[list[str]] = None) -> lis
     return routes
 
 
-def discover_province_projects(province_slug: str) -> list[str]:
+async def discover_province_projects(province_slug: str, sem: asyncio.Semaphore) -> list[str]:
     """Paginate through a province's directory pages, collecting project slugs.
 
-    Args:
-        province_slug: e.g. "bangkok-bm"
-
-    Returns:
-        List of unique project slugs found across all pages.
+    Each page fetch respects the shared semaphore for bounded concurrency.
     """
     all_slugs: list[str] = []
     seen: set[str] = set()
@@ -583,14 +593,14 @@ def discover_province_projects(province_slug: str) -> list[str]:
 
     while True:
         url = f"{HIPFLAT_BASE}/en/thailand-projects/condo/{province_slug}?page={page}"
-        html = _fetch_directory_page(url)
+        html = await _async_fetch_directory_page(url, sem)
 
         if html is None:
-            break  # HTTP 500 or error = end of pagination
+            break
 
         slugs = _extract_project_slugs(html)
         if not slugs:
-            break  # empty page = no more results
+            break
 
         new_count = 0
         for slug in slugs:
@@ -599,73 +609,107 @@ def discover_province_projects(province_slug: str) -> list[str]:
                 all_slugs.append(slug)
                 new_count += 1
 
-        # If no new slugs on this page, we've looped
         if new_count == 0:
             break
 
         page += 1
-        time.sleep(DIRECTORY_DELAY)
+        await asyncio.sleep(DIRECTORY_DELAY)
 
     return all_slugs
 
 
-def discover_projects(
+async def discover_projects(
     province_filter: Optional[list[str]] = None,
 ) -> list[DiscoveredProject]:
     """Crawl Hipflat's province-based directory to discover all condo projects.
 
-    Steps:
-    1. Fetch main directory to get all province sub-routes
-    2. For each province, paginate to collect all project slugs
-    3. Return deduplicated list of DiscoveredProject
-
-    Args:
-        province_filter: Optional list of province identifiers to limit crawl.
+    Provinces are crawled concurrently (up to DIR_SEMAPHORE_LIMIT at a time).
     """
-    routes = discover_province_routes(province_filter)
+    routes = await discover_province_routes(province_filter)
     if not routes:
         return []
 
+    sem = asyncio.Semaphore(DIR_SEMAPHORE_LIMIT)
+
+    async def _crawl_one(route: str, idx: int) -> list[DiscoveredProject]:
+        slugs = await discover_province_projects(route, sem)
+        print(f"  [{idx + 1}/{len(routes)}] {route}: {len(slugs)} projects")
+        return [DiscoveredProject(slug=s, province_route=route) for s in slugs]
+
+    tasks = [_crawl_one(route, i) for i, route in enumerate(routes)]
+    results = await asyncio.gather(*tasks)
+
+    # Deduplicate across provinces
     all_projects: list[DiscoveredProject] = []
     seen_slugs: set[str] = set()
-
-    for i, route in enumerate(routes):
-        print(f"  [{i + 1}/{len(routes)}] Crawling {route}...", end=" ", flush=True)
-
-        slugs = discover_province_projects(route)
-        new_count = 0
-        for slug in slugs:
-            if slug not in seen_slugs:
-                seen_slugs.add(slug)
-                all_projects.append(DiscoveredProject(slug=slug, province_route=route))
-                new_count += 1
-
-        print(f"{len(slugs)} found, {new_count} new (total: {len(all_projects)})")
-        time.sleep(DIRECTORY_DELAY)
+    for batch in results:
+        for dp in batch:
+            if dp.slug not in seen_slugs:
+                seen_slugs.add(dp.slug)
+                all_projects.append(dp)
 
     print(f"\nDirectory crawl complete: {len(all_projects)} unique projects across {len(routes)} provinces")
     return all_projects
 
 
-def run_discover(
+# ---------------------------------------------------------------------------
+# Async detail fetch + upsert
+# ---------------------------------------------------------------------------
+
+
+async def _fetch_and_upsert_one(
+    slug: str,
+    stats: ScrapeStats,
+    sem: asyncio.Semaphore,
+    lock: asyncio.Lock,
+) -> None:
+    """Fetch a single project's details and upsert to DB.
+
+    - Uses asyncio.to_thread for the blocking fetch_project_data call
+    - Uses a lock to serialize stats mutations (ScrapeStats is not thread-safe)
+    - Each project gets its own DB connection for crash isolation
+    """
+    async with sem:
+        await asyncio.sleep(DETAIL_DELAY)
+        try:
+            proj = await asyncio.to_thread(fetch_project_data, slug)
+
+            # Upsert to DB immediately (sync psycopg in thread to avoid blocking)
+            def _db_upsert() -> tuple[int, int, int]:
+                """Returns (new, updated, price_changed) deltas."""
+                local_stats = ScrapeStats()
+                with psycopg.connect(DB_URL) as conn:
+                    upsert_project(conn, proj, local_stats)
+                    conn.commit()
+                return local_stats.new_count, local_stats.updated_count, local_stats.price_changed
+
+            new_d, upd_d, pc_d = await asyncio.to_thread(_db_upsert)
+
+            async with lock:
+                stats.total_found += 1
+                stats.new_count += new_d
+                stats.updated_count += upd_d
+                stats.price_changed += pc_d
+
+        except Exception as e:
+            async with lock:
+                stats.failed_count += 1
+            print(f"  ERROR [{slug}]: {e}")
+
+
+async def run_discover_async(
     province_filter: Optional[list[str]] = None,
     limit: Optional[int] = None,
+    force: bool = False,
 ) -> ScrapeStats:
-    """Run the full discover pipeline: crawl directory + fetch project details.
-
-    Steps:
-    1. Crawl directory to get all project slugs
-    2. For each slug, skip if scraped within last 24 hours
-    3. Fetch full project data via fetch_project_data(slug)
-    4. Upsert to hipflat_projects table
-    """
+    """Run the full discover pipeline: crawl directory + fetch project details concurrently."""
     stats = ScrapeStats()
 
-    # Phase 1: Directory crawl
+    # Phase 1: Directory crawl (concurrent province pages)
     print(f"\n{'=' * 60}")
-    print("Phase 1: Directory crawl")
+    print("Phase 1: Directory crawl (concurrent)")
     print(f"{'=' * 60}")
-    discovered = discover_projects(province_filter)
+    discovered = await discover_projects(province_filter)
 
     if not discovered:
         print("No projects discovered. Exiting.")
@@ -673,95 +717,99 @@ def run_discover(
 
     work = discovered[:limit] if limit else discovered
 
-    # Phase 2: Fetch project details
+    # Phase 2: Fetch project details (concurrent)
     print(f"\n{'=' * 60}")
-    print(f"Phase 2: Fetching details for {len(work)} projects")
+    print(f"Phase 2: Fetching details for {len(work)} projects (concurrent, sem={DETAIL_SEMAPHORE_LIMIT})")
     print(f"{'=' * 60}")
 
+    # Load recently-scraped UUIDs for fast skip (unless --force)
+    fresh_uuids: set[str] = set()
+    if not force:
+        fresh_uuids = await asyncio.to_thread(_load_recently_scraped_uuids)
+        print(f"  Loaded {len(fresh_uuids)} recently-scraped UUIDs (skip window: {DISCOVER_FRESHNESS_HOURS}h)")
+
+    # Filter out fresh projects
+    if fresh_uuids:
+        work_filtered = [dp for dp in work if dp.slug not in fresh_uuids]
+        skipped_fresh = len(work) - len(work_filtered)
+        print(f"  Skipping {skipped_fresh} fresh projects, {len(work_filtered)} to fetch")
+    else:
+        work_filtered = list(work)
+        skipped_fresh = 0
+
+    stats.total_searched = len(work)
+
     # Start scrape log
-    log_id: Optional[int] = None
-    with psycopg.connect(DB_URL) as conn:
-        cur = conn.execute(
-            "INSERT INTO hipflat_scrape_logs (started_at, seed_source) VALUES (now(), %s) RETURNING id",
-            ("discover",),
-        )
-        log_id = cur.fetchone()[0]
-        conn.commit()
-
-    started_at = datetime.now()
-    skipped_fresh = 0
-
-    for i, dp in enumerate(work):
-        stats.total_searched += 1
-
-        # Progress every 20 projects
-        if i > 0 and i % 20 == 0:
-            elapsed = (datetime.now() - started_at).total_seconds()
-            rate = i / elapsed if elapsed > 0 else 0
-            print(
-                f"  [{i}/{len(work)}] "
-                f"found={stats.total_found} new={stats.new_count} "
-                f"updated={stats.updated_count} skipped_fresh={skipped_fresh} "
-                f"failed={stats.failed_count} "
-                f"({rate:.1f} proj/s)"
+    def _start_log() -> int:
+        with psycopg.connect(DB_URL) as conn:
+            cur = conn.execute(
+                "INSERT INTO hipflat_scrape_logs (started_at, seed_source) VALUES (now(), %s) RETURNING id",
+                ("discover",),
             )
+            log_id = cur.fetchone()[0]
+            conn.commit()
+            return log_id
 
-        try:
-            # Check freshness — skip if scraped within last 24 hours
-            with psycopg.connect(DB_URL) as conn:
-                if _is_recently_scraped(conn, dp.slug):
-                    skipped_fresh += 1
-                    continue
+    log_id = await asyncio.to_thread(_start_log)
+    started_at = datetime.now()
 
-            # Fetch full project data using slug
-            proj = fetch_project_data(dp.slug)
-            stats.total_found += 1
+    # Launch concurrent detail fetches
+    sem = asyncio.Semaphore(DETAIL_SEMAPHORE_LIMIT)
+    lock = asyncio.Lock()
 
-            # Upsert to DB
-            with psycopg.connect(DB_URL) as conn:
-                upsert_project(conn, proj, stats)
-                conn.commit()
+    # Process in batches of 50 for progress reporting
+    batch_size = 50
+    for batch_start in range(0, len(work_filtered), batch_size):
+        batch = work_filtered[batch_start : batch_start + batch_size]
+        tasks = [_fetch_and_upsert_one(dp.slug, stats, sem, lock) for dp in batch]
+        await asyncio.gather(*tasks)
 
-            time.sleep(DETAIL_DELAY)
-
-        except Exception as e:
-            stats.failed_count += 1
-            print(f"  ERROR [{dp.slug}]: {e}")
-            time.sleep(1)
+        elapsed = (datetime.now() - started_at).total_seconds()
+        done = batch_start + len(batch)
+        rate = done / elapsed if elapsed > 0 else 0
+        print(
+            f"  [{done}/{len(work_filtered)}] "
+            f"found={stats.total_found} new={stats.new_count} "
+            f"updated={stats.updated_count} failed={stats.failed_count} "
+            f"({rate:.1f} proj/s)"
+        )
 
     # Finalize scrape log
     error_msg: Optional[str] = None
     if stats.failed_count > 0:
         error_msg = f"{stats.failed_count} projects failed"
 
-    with psycopg.connect(DB_URL) as conn:
-        conn.execute(
-            """
-            UPDATE hipflat_scrape_logs SET
-                finished_at = now(),
-                total_searched = %s,
-                total_found = %s,
-                new_count = %s,
-                updated_count = %s,
-                price_changed = %s,
-                not_found_count = %s,
-                failed_count = %s,
-                error = %s
-            WHERE id = %s
-            """,
-            (
-                stats.total_searched,
-                stats.total_found,
-                stats.new_count,
-                stats.updated_count,
-                stats.price_changed,
-                skipped_fresh,  # reuse not_found_count column for skipped count
-                stats.failed_count,
-                error_msg,
-                log_id,
-            ),
-        )
-        conn.commit()
+    def _finish_log() -> None:
+        with psycopg.connect(DB_URL) as conn:
+            conn.execute(
+                """
+                UPDATE hipflat_scrape_logs SET
+                    finished_at = now(),
+                    total_searched = %s,
+                    total_found = %s,
+                    new_count = %s,
+                    updated_count = %s,
+                    price_changed = %s,
+                    not_found_count = %s,
+                    failed_count = %s,
+                    error = %s
+                WHERE id = %s
+                """,
+                (
+                    stats.total_searched,
+                    stats.total_found,
+                    stats.new_count,
+                    stats.updated_count,
+                    stats.price_changed,
+                    skipped_fresh,
+                    stats.failed_count,
+                    error_msg,
+                    log_id,
+                ),
+            )
+            conn.commit()
+
+    await asyncio.to_thread(_finish_log)
 
     elapsed = (datetime.now() - started_at).total_seconds()
     print(f"\n{'=' * 60}")
@@ -771,7 +819,7 @@ def run_discover(
     print(f"  Fetched:       {stats.total_found}")
     print(f"  New:           {stats.new_count}")
     print(f"  Updated:       {stats.updated_count}")
-    print(f"  Price Δ:       {stats.price_changed}")
+    print(f"  Price changes: {stats.price_changed}")
     print(f"  Skipped fresh: {skipped_fresh}")
     print(f"  Failed:        {stats.failed_count}")
     print(f"{'=' * 60}\n")
@@ -828,7 +876,7 @@ def smart_search(name: str) -> Optional[tuple[str, str]]:
 
 
 # ---------------------------------------------------------------------------
-# Main scraper loop
+# Main scraper loop (seed mode — kept synchronous)
 # ---------------------------------------------------------------------------
 
 
@@ -962,6 +1010,7 @@ def main() -> None:
             "  python hipflat_scraper.py --discover\n"
             "  python hipflat_scraper.py --discover --limit 100\n"
             '  python hipflat_scraper.py --discover --provinces "bangkok-bm" "nonthaburi-nb"\n'
+            "  python hipflat_scraper.py --discover --force\n"
             "  python hipflat_scraper.py --seed-db\n"
             "  python hipflat_scraper.py --seed-db --limit 50\n"
             "  python hipflat_scraper.py --seed-file projects.txt\n"
@@ -979,6 +1028,11 @@ def main() -> None:
         "--provinces",
         nargs="+",
         help="Limit --discover to specific provinces (e.g. 'bangkok-bm' 'nonthaburi-nb')",
+    )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Override 24h freshness check — re-scrape all projects",
     )
     parser.add_argument(
         "--seed-db",
@@ -1012,13 +1066,22 @@ def main() -> None:
         if not (args.discover or args.seed_db or args.seed_file or args.names):
             return
 
-    # Discover mode — crawl directory
+    # Discover mode — crawl directory (async)
     if args.discover:
-        run_discover(province_filter=args.provinces, limit=args.limit)
+        asyncio.run(
+            run_discover_async(
+                province_filter=args.provinces,
+                limit=args.limit,
+                force=args.force,
+            )
+        )
         return
 
     if args.provinces and not args.discover:
         parser.error("--provinces requires --discover")
+
+    if args.force and not args.discover:
+        parser.error("--force requires --discover")
 
     # Build seed list
     seeds: list[SeedProject] = []

@@ -5,11 +5,18 @@ Discovers ALL condo projects via globalSearch pagination, fetches full
 project metadata + listings (FOR_SALE / FOR_RENT), and upserts into
 PostgreSQL with append-only price history tracking.
 
+Features:
+    - Async concurrency with semaphore (10 parallel requests)
+    - Per-batch DB upserts for crash resilience
+    - Resume support: skips projects scraped within last 24 hours
+    - Staggered requests (0.1s delay) to be polite
+
 Usage:
     python propertyhub_scraper.py                     # full scrape
     python propertyhub_scraper.py --limit 50          # test mode (first 50 projects)
     python propertyhub_scraper.py --create-tables     # init DB tables only
     python propertyhub_scraper.py --zone ZONE_ID      # single zone scrape
+    python propertyhub_scraper.py --force              # ignore freshness, re-scrape all
 """
 
 from __future__ import annotations
@@ -50,6 +57,9 @@ _HEADERS = {
 CONCURRENCY = 10
 SEARCH_PAGE_SIZE = 50
 LISTING_PAGE_SIZE = 100
+BATCH_SIZE = 20
+FRESHNESS_HOURS = 24
+STAGGER_DELAY = 0.1
 
 # Thai province names for discovery fallback
 _THAI_PROVINCES = [
@@ -563,6 +573,23 @@ def create_tables() -> None:
     print("[db] Tables created successfully")
 
 
+def get_fresh_project_ids(hours: int = FRESHNESS_HOURS) -> set[str]:
+    """Return project IDs that were scraped within the last `hours` hours."""
+    try:
+        with psycopg.connect(DB_URL) as conn:
+            rows = conn.execute(
+                """
+                SELECT id FROM propertyhub_projects
+                WHERE last_scraped_at > now() - interval '%s hours'
+                """,
+                (hours,),
+            ).fetchall()
+            return {str(row[0]) for row in rows}
+    except Exception as exc:
+        print(f"  [warn] Could not check freshness: {exc}")
+        return set()
+
+
 def upsert_project(conn: psycopg.Connection, proj: ProjectDetail) -> bool:
     """Upsert a project. Returns True if this is a new project."""
     facilities_json = json.dumps(proj.facilities, ensure_ascii=False) if proj.facilities else None
@@ -888,6 +915,7 @@ def save_project_results(
 async def run_scraper(
     limit: Optional[int] = None,
     zone_id: Optional[str] = None,
+    force: bool = False,
 ) -> ScrapeStats:
     """Main scraper entry point."""
     started_at = datetime.now()
@@ -922,35 +950,60 @@ async def run_scraper(
             found = await discover_all_projects(client, sem, limit)
             project_ids = list(found.keys())
 
+        # Resume support: skip projects scraped within FRESHNESS_HOURS
+        skipped = 0
+        if not force:
+            fresh_ids = get_fresh_project_ids(FRESHNESS_HOURS)
+            if fresh_ids:
+                before = len(project_ids)
+                project_ids = [pid for pid in project_ids if pid not in fresh_ids]
+                skipped = before - len(project_ids)
+                if skipped > 0:
+                    print(f"[resume] Skipping {skipped} projects scraped within last {FRESHNESS_HOURS}h")
+        else:
+            print("[force] Ignoring freshness — re-scraping all projects")
+
         total = len(project_ids)
         print(f"\n[scrape] Processing {total} projects...\n")
 
-        # Process in batches: fetch concurrently, then save sequentially
-        batch_size = 10
-        for batch_start in range(0, total, batch_size):
-            batch = project_ids[batch_start : batch_start + batch_size]
+        # Process in batches: staggered fan-out, then save per batch
+        for batch_start in range(0, total, BATCH_SIZE):
+            batch = project_ids[batch_start : batch_start + BATCH_SIZE]
+            batch_num = batch_start // BATCH_SIZE + 1
 
-            # Parallel HTTP fetch
+            # Fan out with stagger delay — start each project 0.1s apart
+            async def _staggered_fetch(pid: str, idx: int) -> FetchResult:
+                if idx > 0:
+                    await asyncio.sleep(STAGGER_DELAY * idx)
+                return await fetch_single_project(client, sem, pid)
+
             fetch_tasks = [
-                fetch_single_project(client, sem, pid)
-                for pid in batch
+                _staggered_fetch(pid, i)
+                for i, pid in enumerate(batch)
             ]
-            results = await asyncio.gather(*fetch_tasks)
+            results = await asyncio.gather(*fetch_tasks, return_exceptions=True)
 
-            # Sequential DB save (one connection, no concurrency issues)
-            with psycopg.connect(DB_URL) as conn:
-                for result in results:
-                    save_project_results(conn, result, stats)
+            # Sequential DB save per batch — one connection, commit at end
+            try:
+                with psycopg.connect(DB_URL) as conn:
+                    for result in results:
+                        if isinstance(result, Exception):
+                            print(f"  [error] Batch {batch_num} fetch exception: {result}")
+                            stats.failed_count += 1
+                            continue
+                        save_project_results(conn, result, stats)
+            except Exception as exc:
+                print(f"  [error] Batch {batch_num} DB save failed: {exc}")
+                stats.failed_count += len(batch)
 
-            processed = min(batch_start + batch_size, total)
-            if processed % 50 == 0 or processed == total:
-                print(
-                    f"  [{processed}/{total}] "
-                    f"new={stats.new_projects} upd={stats.updated_projects} "
-                    f"listings={stats.total_listings} "
-                    f"price_chg={stats.price_changed} "
-                    f"fail={stats.failed_count}"
-                )
+            processed = min(batch_start + BATCH_SIZE, total)
+            print(
+                f"  [batch {batch_num}] [{processed}/{total}] "
+                f"new={stats.new_projects} upd={stats.updated_projects} "
+                f"listings={stats.total_listings} "
+                f"price_chg={stats.price_changed} "
+                f"fail={stats.failed_count}"
+            )
 
     # Log the run
     error_msg = None
@@ -969,6 +1022,8 @@ async def run_scraper(
     print(f"  Listings: {stats.total_listings}")
     print(f"  Price changes: {stats.price_changed}")
     print(f"  Failed: {stats.failed_count}")
+    if skipped > 0:
+        print(f"  Skipped (fresh): {skipped}")
     print(f"{'=' * 60}\n")
 
     return stats
@@ -994,13 +1049,17 @@ def main() -> None:
         "--zone", type=str, default=None,
         help="Scrape a single zone by ID/name",
     )
+    parser.add_argument(
+        "--force", action="store_true",
+        help="Ignore freshness check, re-scrape all projects",
+    )
     args = parser.parse_args()
 
     if args.create_tables:
         create_tables()
         sys.exit(0)
 
-    asyncio.run(run_scraper(limit=args.limit, zone_id=args.zone))
+    asyncio.run(run_scraper(limit=args.limit, zone_id=args.zone, force=args.force))
 
 
 if __name__ == "__main__":
