@@ -131,13 +131,11 @@ def create_tables() -> None:
     print(f"Tables created from {MIGRATION_FILE.name}")
 
 
-def _get_existing_project(conn: psycopg.Connection, uuid: str) -> Optional[dict]:
-    """Fetch existing hipflat_projects row as dict, or None."""
+def _get_existing_prices(conn: psycopg.Connection, uuid: str) -> Optional[dict]:
+    """Fetch price-relevant fields from existing hipflat_projects row, or None."""
     cur = conn.execute(
         """
-        SELECT uuid, avg_sale_sqm, avg_sold_sqm, units_for_sale, units_for_rent,
-               rent_price_min, rent_price_max, yoy_change_pct, district_avg_sale_sqm,
-               raw_html_hash
+        SELECT avg_sale_sqm, avg_sold_sqm, rent_price_min, rent_price_max
         FROM hipflat_projects WHERE uuid = %s
         """,
         (uuid,),
@@ -145,18 +143,7 @@ def _get_existing_project(conn: psycopg.Connection, uuid: str) -> Optional[dict]
     row = cur.fetchone()
     if row is None:
         return None
-    cols = [
-        "uuid",
-        "avg_sale_sqm",
-        "avg_sold_sqm",
-        "units_for_sale",
-        "units_for_rent",
-        "rent_price_min",
-        "rent_price_max",
-        "yoy_change_pct",
-        "district_avg_sale_sqm",
-        "raw_html_hash",
-    ]
+    cols = ["avg_sale_sqm", "avg_sold_sqm", "rent_price_min", "rent_price_max"]
     return dict(zip(cols, row))
 
 
@@ -230,64 +217,99 @@ def _load_recently_scraped_uuids(hours: int = DISCOVER_FRESHNESS_HOURS) -> set[s
 def upsert_project(
     conn: psycopg.Connection, proj: HipflatProject, stats: ScrapeStats
 ) -> None:
-    """Upsert a HipflatProject into hipflat_projects + track price history."""
+    """Upsert a HipflatProject into hipflat_projects + track price history.
+
+    Uses atomic INSERT ... ON CONFLICT (uuid) DO UPDATE to avoid race conditions.
+    Price history is tracked by fetching old prices before the upsert.
+    """
     html_hash = _compute_html_hash(proj)
-    existing = _get_existing_project(conn, proj.uuid)
 
-    if existing is None:
-        # INSERT new project
-        conn.execute(
-            """
-            INSERT INTO hipflat_projects (
-                uuid, name_th, name_en, slug_url, lat, lng,
-                avg_sale_sqm, avg_sold_sqm, sale_price_min, sale_price_max,
-                rent_price_min, rent_price_max, units_for_sale, units_for_rent,
-                sold_below_asking_pct, avg_days_on_market, price_trend, yoy_change_pct,
-                year_completed, floors, total_units, service_charge_sqm,
-                district_name, district_avg_sale_sqm, district_avg_rent_sqm,
-                raw_html_hash, first_seen_at, last_scraped_at
-            ) VALUES (
-                %s, %s, %s, %s, %s, %s,
-                %s, %s, %s, %s,
-                %s, %s, %s, %s,
-                %s, %s, %s, %s,
-                %s, %s, %s, %s,
-                %s, %s, %s,
-                %s, now(), now()
-            )
-            """,
-            (
-                proj.uuid,
-                proj.name_th,
-                proj.name_en,
-                proj.slug_url,
-                proj.lat,
-                proj.lng,
-                proj.avg_sale_sqm_thb,
-                proj.avg_sold_sqm_thb,
-                proj.sale_price_min,
-                proj.sale_price_max,
-                proj.rent_price_min,
-                proj.rent_price_max,
-                proj.units_for_sale,
-                proj.units_for_rent,
-                proj.sold_below_asking_pct,
-                proj.avg_days_on_market,
-                proj.price_trend,
-                proj.yoy_change_pct,
-                proj.year_completed,
-                proj.floors,
-                proj.total_units,
-                proj.service_charge_sqm,
-                proj.district_name,
-                proj.district_avg_sale_sqm,
-                proj.district_avg_rent_sqm,
-                html_hash,
-            ),
+    # Fetch old prices BEFORE the atomic upsert (for price change detection)
+    old_prices = _get_existing_prices(conn, proj.uuid)
+
+    # Atomic upsert — RETURNING (xmax = 0) tells us if it was an INSERT (true) or UPDATE (false)
+    cur = conn.execute(
+        """
+        INSERT INTO hipflat_projects (
+            uuid, name_th, name_en, slug_url, lat, lng,
+            avg_sale_sqm, avg_sold_sqm, sale_price_min, sale_price_max,
+            rent_price_min, rent_price_max, units_for_sale, units_for_rent,
+            sold_below_asking_pct, avg_days_on_market, price_trend, yoy_change_pct,
+            year_completed, floors, total_units, service_charge_sqm,
+            district_name, district_avg_sale_sqm, district_avg_rent_sqm,
+            raw_html_hash, first_seen_at, last_scraped_at
+        ) VALUES (
+            %s, %s, %s, %s, %s, %s,
+            %s, %s, %s, %s,
+            %s, %s, %s, %s,
+            %s, %s, %s, %s,
+            %s, %s, %s, %s,
+            %s, %s, %s,
+            %s, now(), now()
         )
-        stats.new_count += 1
+        ON CONFLICT (uuid) DO UPDATE SET
+            name_th = COALESCE(EXCLUDED.name_th, hipflat_projects.name_th),
+            name_en = COALESCE(EXCLUDED.name_en, hipflat_projects.name_en),
+            slug_url = COALESCE(EXCLUDED.slug_url, hipflat_projects.slug_url),
+            lat = COALESCE(EXCLUDED.lat, hipflat_projects.lat),
+            lng = COALESCE(EXCLUDED.lng, hipflat_projects.lng),
+            avg_sale_sqm = EXCLUDED.avg_sale_sqm,
+            avg_sold_sqm = EXCLUDED.avg_sold_sqm,
+            sale_price_min = EXCLUDED.sale_price_min,
+            sale_price_max = EXCLUDED.sale_price_max,
+            rent_price_min = EXCLUDED.rent_price_min,
+            rent_price_max = EXCLUDED.rent_price_max,
+            units_for_sale = EXCLUDED.units_for_sale,
+            units_for_rent = EXCLUDED.units_for_rent,
+            sold_below_asking_pct = EXCLUDED.sold_below_asking_pct,
+            avg_days_on_market = EXCLUDED.avg_days_on_market,
+            price_trend = EXCLUDED.price_trend,
+            yoy_change_pct = EXCLUDED.yoy_change_pct,
+            year_completed = COALESCE(EXCLUDED.year_completed, hipflat_projects.year_completed),
+            floors = COALESCE(EXCLUDED.floors, hipflat_projects.floors),
+            total_units = COALESCE(EXCLUDED.total_units, hipflat_projects.total_units),
+            service_charge_sqm = COALESCE(EXCLUDED.service_charge_sqm, hipflat_projects.service_charge_sqm),
+            district_name = COALESCE(EXCLUDED.district_name, hipflat_projects.district_name),
+            district_avg_sale_sqm = EXCLUDED.district_avg_sale_sqm,
+            district_avg_rent_sqm = EXCLUDED.district_avg_rent_sqm,
+            raw_html_hash = EXCLUDED.raw_html_hash,
+            last_scraped_at = now()
+        RETURNING (xmax = 0) AS is_insert
+        """,
+        (
+            proj.uuid,
+            proj.name_th,
+            proj.name_en,
+            proj.slug_url,
+            proj.lat,
+            proj.lng,
+            proj.avg_sale_sqm_thb,
+            proj.avg_sold_sqm_thb,
+            proj.sale_price_min,
+            proj.sale_price_max,
+            proj.rent_price_min,
+            proj.rent_price_max,
+            proj.units_for_sale,
+            proj.units_for_rent,
+            proj.sold_below_asking_pct,
+            proj.avg_days_on_market,
+            proj.price_trend,
+            proj.yoy_change_pct,
+            proj.year_completed,
+            proj.floors,
+            proj.total_units,
+            proj.service_charge_sqm,
+            proj.district_name,
+            proj.district_avg_sale_sqm,
+            proj.district_avg_rent_sqm,
+            html_hash,
+        ),
+    )
+    is_insert = cur.fetchone()[0]
 
-        # Insert 'new' history entry (skip dedup check for new projects)
+    if is_insert:
+        stats.new_count += 1
+        # Insert 'new' history entry (no dedup check needed for new projects)
         conn.execute(
             """
             INSERT INTO hipflat_price_history (
@@ -309,71 +331,9 @@ def upsert_project(
             ),
         )
     else:
-        # UPDATE existing project
-        conn.execute(
-            """
-            UPDATE hipflat_projects SET
-                name_th = COALESCE(%s, name_th),
-                name_en = COALESCE(%s, name_en),
-                slug_url = COALESCE(%s, slug_url),
-                lat = COALESCE(%s, lat),
-                lng = COALESCE(%s, lng),
-                avg_sale_sqm = %s,
-                avg_sold_sqm = %s,
-                sale_price_min = %s,
-                sale_price_max = %s,
-                rent_price_min = %s,
-                rent_price_max = %s,
-                units_for_sale = %s,
-                units_for_rent = %s,
-                sold_below_asking_pct = %s,
-                avg_days_on_market = %s,
-                price_trend = %s,
-                yoy_change_pct = %s,
-                year_completed = COALESCE(%s, year_completed),
-                floors = COALESCE(%s, floors),
-                total_units = COALESCE(%s, total_units),
-                service_charge_sqm = COALESCE(%s, service_charge_sqm),
-                district_name = COALESCE(%s, district_name),
-                district_avg_sale_sqm = %s,
-                district_avg_rent_sqm = %s,
-                raw_html_hash = %s,
-                last_scraped_at = now()
-            WHERE uuid = %s
-            """,
-            (
-                proj.name_th,
-                proj.name_en,
-                proj.slug_url,
-                proj.lat,
-                proj.lng,
-                proj.avg_sale_sqm_thb,
-                proj.avg_sold_sqm_thb,
-                proj.sale_price_min,
-                proj.sale_price_max,
-                proj.rent_price_min,
-                proj.rent_price_max,
-                proj.units_for_sale,
-                proj.units_for_rent,
-                proj.sold_below_asking_pct,
-                proj.avg_days_on_market,
-                proj.price_trend,
-                proj.yoy_change_pct,
-                proj.year_completed,
-                proj.floors,
-                proj.total_units,
-                proj.service_charge_sqm,
-                proj.district_name,
-                proj.district_avg_sale_sqm,
-                proj.district_avg_rent_sqm,
-                html_hash,
-                proj.uuid,
-            ),
-        )
         stats.updated_count += 1
-
         # Track price changes (with 1-hour dedup window)
-        if _price_changed(existing, proj) and not _has_recent_history(conn, proj.uuid):
+        if old_prices is not None and _price_changed(old_prices, proj) and not _has_recent_history(conn, proj.uuid):
             conn.execute(
                 """
                 INSERT INTO hipflat_price_history (
