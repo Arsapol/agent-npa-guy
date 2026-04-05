@@ -15,17 +15,20 @@ Sources:
 Designed to plug into the npa-screener pipeline.
 """
 
+import argparse
 import asyncio
 import json
 import re
-import argparse
-from dataclasses import dataclass, asdict
 from typing import Optional
 
+from pydantic import BaseModel, ConfigDict
 
-@dataclass(frozen=True)
-class MarketResult:
+
+class MarketResult(BaseModel):
     """Unified market data from all sources."""
+
+    model_config = ConfigDict(frozen=True)
+
     project_name: str
 
     # Price consensus
@@ -96,12 +99,23 @@ def _normalize_year(year: Optional[int]) -> Optional[int]:
 
 # Common suffixes to strip/add for search variants
 _SUFFIXES_EN = [
-    " condominium", " condo", " residence", " residences",
-    " place", " tower", " mansion", " court",
+    " condominium",
+    " condo",
+    " residence",
+    " residences",
+    " place",
+    " tower",
+    " mansion",
+    " court",
 ]
 _SUFFIXES_TH = [
-    " คอนโดมิเนียม", " คอนโด", " เรสซิเดนเซส", " เรสซิเดนท์",
-    " เพลส", " ทาวเวอร์", " แมนชั่น",
+    " คอนโดมิเนียม",
+    " คอนโด",
+    " เรสซิเดนเซส",
+    " เรสซิเดนท์",
+    " เพลส",
+    " ทาวเวอร์",
+    " แมนชั่น",
 ]
 
 # Thai tone mark stripping table (sara/mai ek/mai tho etc.)
@@ -188,8 +202,9 @@ def _smart_search_hipflat(
     (the platform already did the matching). Similarity check is a guard
     against wrong results when there are multiple candidates.
     """
-    from hipflat_checker import search_project, fetch_project_data
     import time
+
+    from hipflat_checker import fetch_project_data, search_project
 
     best_result = None
     best_score = 0.0
@@ -229,7 +244,12 @@ def _smart_search_zmyhome(
 
     When search returns exactly 1 result, trust the platform's matching.
     """
-    from zmyhome_lookup import make_client, search_project, fetch_project_page, fetch_listings
+    from zmyhome_lookup import (
+        fetch_listings,
+        fetch_project_page,
+        make_client,
+        search_project,
+    )
 
     client = make_client()
     client.get("https://zmyhome.com")
@@ -272,7 +292,10 @@ def _smart_search_zmyhome(
 
 # ── Source query functions ────────────────────────────────────────────────────
 
-async def _query_hipflat(project_name: str, name_variants: Optional[list[str]] = None) -> dict:
+
+async def _query_hipflat(
+    project_name: str, name_variants: Optional[list[str]] = None
+) -> dict:
     """Query Hipflat with smart multi-variant search."""
     try:
         variants = name_variants or _generate_name_variants(project_name)
@@ -300,7 +323,9 @@ async def _query_hipflat(project_name: str, name_variants: Optional[list[str]] =
         return {"found": False, "error": str(e)}
 
 
-async def _query_zmyhome(project_name: str, name_variants: Optional[list[str]] = None) -> dict:
+async def _query_zmyhome(
+    project_name: str, name_variants: Optional[list[str]] = None
+) -> dict:
     """Query ZMyHome with smart multi-variant search."""
     try:
         variants = name_variants or _generate_name_variants(project_name)
@@ -317,7 +342,9 @@ async def _query_zmyhome(project_name: str, name_variants: Optional[list[str]] =
         # Extract rent prices
         rent_listings = g("rent_listings") or []
         rent_prices = [c.price_thb for c in rent_listings if c.price_thb]
-        rent_median = int(sorted(rent_prices)[len(rent_prices) // 2]) if rent_prices else None
+        rent_median = (
+            int(sorted(rent_prices)[len(rent_prices) // 2]) if rent_prices else None
+        )
         rent_min = min(rent_prices) if rent_prices else None
         rent_max = max(rent_prices) if rent_prices else None
 
@@ -352,10 +379,12 @@ async def _query_zmyhome(project_name: str, name_variants: Optional[list[str]] =
         return {"found": False, "error": str(e)}
 
 
-async def _query_propertyhub(project_name: str, name_variants: Optional[list[str]] = None) -> dict:
+async def _query_propertyhub(
+    project_name: str, name_variants: Optional[list[str]] = None
+) -> dict:
     """Query PropertyHub GraphQL API. Returns structured data including CAM fee."""
     try:
-        from propertyhub_checker import search_project, check_project
+        from propertyhub_checker import check_project, search_project
 
         variants = name_variants or _generate_name_variants(project_name)
         best_result = None
@@ -385,7 +414,9 @@ async def _query_propertyhub(project_name: str, name_variants: Optional[list[str
             return {"found": False}
 
         # Use the matched name for the full lookup
-        matched_name = best_result.get("nameEnglish") or best_result.get("name", project_name)
+        matched_name = best_result.get("nameEnglish") or best_result.get(
+            "name", project_name
+        )
         data = check_project(matched_name)
         if data is None:
             return {"found": False}
@@ -419,6 +450,7 @@ async def _query_ddproperty(project_name: str) -> dict:
     """Query DDProperty and return raw data dict. Requires Camoufox."""
     try:
         from ddproperty_checker import check_market
+
         data = await check_market(project_name)
 
         sale_stats = data.sale_psm_stats()
@@ -503,17 +535,19 @@ async def check_market(
             unique_variants.append(v)
 
     if verbose:
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(f"  Market Check: {project_name}")
         if len(unique_variants) > 1:
             print(f"  Search variants: {unique_variants[:5]}")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
 
     # Launch queries in parallel
     tasks = {
         "hipflat": asyncio.create_task(_query_hipflat(project_name, unique_variants)),
         "zmyhome": asyncio.create_task(_query_zmyhome(project_name, unique_variants)),
-        "propertyhub": asyncio.create_task(_query_propertyhub(project_name, unique_variants)),
+        "propertyhub": asyncio.create_task(
+            _query_propertyhub(project_name, unique_variants)
+        ),
     }
     if include_ddproperty:
         tasks["ddproperty"] = asyncio.create_task(_query_ddproperty(project_name))
@@ -547,16 +581,28 @@ async def check_market(
 
     # Merge rent data from all sources
     rent_values = [
-        v for v in [
-            h.get("rent_min"), h.get("rent_max"),
-            z.get("rent_min"), z.get("rent_max"),
-            p.get("rent_min"), p.get("rent_max"),
-            d.get("rent_min"), d.get("rent_max"),
-        ] if v
+        v
+        for v in [
+            h.get("rent_min"),
+            h.get("rent_max"),
+            z.get("rent_min"),
+            z.get("rent_max"),
+            p.get("rent_min"),
+            p.get("rent_max"),
+            d.get("rent_min"),
+            d.get("rent_max"),
+        ]
+        if v
     ]
-    rent_medians = [v for v in [
-        p.get("rent_median"), z.get("rent_median"), d.get("rent_median"),
-    ] if v]
+    rent_medians = [
+        v
+        for v in [
+            p.get("rent_median"),
+            z.get("rent_median"),
+            d.get("rent_median"),
+        ]
+        if v
+    ]
 
     result = MarketResult(
         project_name=project_name,
@@ -574,19 +620,33 @@ async def check_market(
         rent_max=max(rent_values) if rent_values else None,
         rent_median=rent_medians[0] if rent_medians else None,
         # Specs (first valid from any source)
-        year_built=_normalize_year(_first_valid(
-            h.get("year_completed"), p.get("year_built"), z.get("year_built"), d.get("year_built"),
-        )),
+        year_built=_normalize_year(
+            _first_valid(
+                h.get("year_completed"),
+                p.get("year_built"),
+                z.get("year_built"),
+                d.get("year_built"),
+            )
+        ),
         total_units=_first_valid(
-            p.get("total_units"), h.get("total_units"), z.get("total_units"), d.get("total_units"),
+            p.get("total_units"),
+            h.get("total_units"),
+            z.get("total_units"),
+            d.get("total_units"),
         ),
         developer=p.get("developer") or z.get("developer"),
         # Liquidity
         units_for_sale=_first_valid(
-            h.get("units_for_sale"), d.get("sale_count"), p.get("sale_count"), z.get("sale_count"),
+            h.get("units_for_sale"),
+            d.get("sale_count"),
+            p.get("sale_count"),
+            z.get("sale_count"),
         ),
         units_for_rent=_first_valid(
-            h.get("units_for_rent"), d.get("rent_count"), p.get("rent_count"), z.get("rent_count"),
+            h.get("units_for_rent"),
+            d.get("rent_count"),
+            p.get("rent_count"),
+            z.get("rent_count"),
         ),
         # Trends (Hipflat only)
         yoy_change_pct=h.get("yoy_change_pct"),
@@ -614,7 +674,11 @@ def npa_discount(npa_price_sqm: int, market: MarketResult) -> Optional[float]:
     """Calculate real discount vs market consensus. Returns percentage."""
     if market.sale_price_sqm_consensus is None:
         return None
-    return (market.sale_price_sqm_consensus - npa_price_sqm) / market.sale_price_sqm_consensus * 100
+    return (
+        (market.sale_price_sqm_consensus - npa_price_sqm)
+        / market.sale_price_sqm_consensus
+        * 100
+    )
 
 
 def npa_yield(npa_price: int, market: MarketResult) -> Optional[float]:
@@ -637,13 +701,17 @@ def print_result(r: MarketResult) -> None:
     if r.ddproperty_found:
         sources.append("DDProperty")
 
-    print(f"\n  Sources: {', '.join(sources) or 'NONE'} | Confidence: {r.confidence.upper()}")
+    print(
+        f"\n  Sources: {', '.join(sources) or 'NONE'} | Confidence: {r.confidence.upper()}"
+    )
 
     print("\n  --- SALE PRICE/SQM ---")
     if r.sale_price_sqm_hipflat:
         print(f"  Hipflat listing avg : ฿{r.sale_price_sqm_hipflat:,}")
     if r.sold_price_sqm_hipflat:
-        print(f"  Hipflat SOLD avg    : ฿{r.sold_price_sqm_hipflat:,}  <- historical txn")
+        print(
+            f"  Hipflat SOLD avg    : ฿{r.sold_price_sqm_hipflat:,}  <- historical txn"
+        )
     if r.sale_price_sqm_zmyhome_median:
         print(f"  ZMyHome median      : ฿{r.sale_price_sqm_zmyhome_median:,}")
     if r.sale_price_sqm_propertyhub_median:
@@ -651,7 +719,9 @@ def print_result(r: MarketResult) -> None:
     if r.sale_price_sqm_ddproperty_median:
         print(f"  DDProperty median   : ฿{r.sale_price_sqm_ddproperty_median:,}")
     if r.sale_price_sqm_consensus:
-        print(f"  >>> CONSENSUS       : ฿{r.sale_price_sqm_consensus:,}/sqm ({r.confidence})")
+        print(
+            f"  >>> CONSENSUS       : ฿{r.sale_price_sqm_consensus:,}/sqm ({r.confidence})"
+        )
     if r.govt_appraisal_sqm:
         print(f"  กรมธนารักษ์ appraisal: ฿{r.govt_appraisal_sqm:,}/sqm")
 
@@ -664,7 +734,11 @@ def print_result(r: MarketResult) -> None:
     print("\n  --- PROJECT ---")
     if r.year_built:
         age = 2026 - r.year_built
-        flag = " OK" if 2008 <= r.year_built <= 2018 else (" OLD" if r.year_built < 2006 else "")
+        flag = (
+            " OK"
+            if 2008 <= r.year_built <= 2018
+            else (" OLD" if r.year_built < 2006 else "")
+        )
         print(f"  Year built          : {r.year_built} ({age} years){flag}")
     if r.developer:
         print(f"  Developer           : {r.developer}")
@@ -701,17 +775,24 @@ async def main() -> None:
     parser = argparse.ArgumentParser(
         description="Unified Market Price Checker",
         epilog="Examples:\n"
-               "  python market_checker.py 'esta phahol'\n"
-               "  python market_checker.py 'esta condo' --thai 'เอสต้า พหล-สะพานใหม่'\n"
-               "  python market_checker.py 'inspire place abac' --no-ddproperty\n",
+        "  python market_checker.py 'esta phahol'\n"
+        "  python market_checker.py 'esta condo' --thai 'เอสต้า พหล-สะพานใหม่'\n"
+        "  python market_checker.py 'inspire place abac' --no-ddproperty\n",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument("name", nargs="+", help="Project name to search")
-    parser.add_argument("--thai", dest="name_th", help="Thai name (improves ZMyHome search)")
-    parser.add_argument("--english", dest="name_en", help="English name (improves Hipflat search)")
+    parser.add_argument(
+        "--thai", dest="name_th", help="Thai name (improves ZMyHome search)"
+    )
+    parser.add_argument(
+        "--english", dest="name_en", help="English name (improves Hipflat search)"
+    )
     parser.add_argument("--json", action="store_true", help="Output as JSON")
-    parser.add_argument("--no-ddproperty", action="store_true",
-                        help="Skip DDProperty (avoids Camoufox dependency)")
+    parser.add_argument(
+        "--no-ddproperty",
+        action="store_true",
+        help="Skip DDProperty (avoids Camoufox dependency)",
+    )
     args = parser.parse_args()
 
     project_name = " ".join(args.name)
@@ -724,7 +805,7 @@ async def main() -> None:
     )
 
     if args.json:
-        out = {k: v for k, v in asdict(result).items() if v is not None}
+        out = {k: v for k, v in result.model_dump().items() if v is not None}
         print(json.dumps(out, ensure_ascii=False, indent=2))
 
 

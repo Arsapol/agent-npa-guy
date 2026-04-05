@@ -12,11 +12,10 @@ API: GraphQL at https://api.propertyhub.in.th/graphql (no auth required)
 from __future__ import annotations
 
 import statistics
-from dataclasses import dataclass, field
 from typing import Optional
 
 import httpx
-
+from pydantic import BaseModel, Field
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -139,8 +138,8 @@ query listings(
 # Data models
 # ---------------------------------------------------------------------------
 
-@dataclass
-class SaleListing:
+
+class SaleListing(BaseModel):
     listing_id: str
     price_thb: int
     area_sqm: float
@@ -152,8 +151,7 @@ class SaleListing:
     updated_at: Optional[str]
 
 
-@dataclass
-class RentListing:
+class RentListing(BaseModel):
     listing_id: str
     rent_monthly_thb: int
     area_sqm: Optional[float]
@@ -164,8 +162,7 @@ class RentListing:
     updated_at: Optional[str]
 
 
-@dataclass
-class ProjectInfo:
+class ProjectInfo(BaseModel):
     project_id: str
     name_en: str
     slug: str
@@ -183,11 +180,10 @@ class ProjectInfo:
     facilities: dict
 
 
-@dataclass
-class ProjectResult:
+class ProjectResult(BaseModel):
     project: ProjectInfo
-    sale_listings: list[SaleListing] = field(default_factory=list)
-    rent_listings: list[RentListing] = field(default_factory=list)
+    sale_listings: list[SaleListing] = Field(default_factory=list)
+    rent_listings: list[RentListing] = Field(default_factory=list)
 
     # ---------- computed summaries ----------
 
@@ -204,7 +200,9 @@ class ProjectResult:
         }
 
     def rent_stats(self) -> dict:
-        rents = [l.rent_monthly_thb for l in self.rent_listings if l.rent_monthly_thb > 0]
+        rents = [
+            l.rent_monthly_thb for l in self.rent_listings if l.rent_monthly_thb > 0
+        ]
         if not rents:
             return {}
         return {
@@ -234,6 +232,7 @@ class ProjectResult:
 # ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------
+
 
 def _gql_post(client: httpx.Client, query: str, variables: dict) -> dict:
     resp = client.post(GQL_URL, json={"query": query, "variables": variables})
@@ -319,6 +318,7 @@ def _fetch_all_listings(
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
+
 
 def search_project(
     keyword: str,
@@ -453,9 +453,10 @@ def check_project(keyword: str) -> Optional[ProjectResult]:
 # CLI
 # ---------------------------------------------------------------------------
 
+
 def _print_result(result: ProjectResult) -> None:
     p = result.project
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"Project : {p.name_en}")
     print(f"Slug    : {p.slug}")
     print(f"Address : {p.address}")
@@ -472,21 +473,25 @@ def _print_result(result: ProjectResult) -> None:
     ss = result.sale_price_sqm_stats()
     if ss:
         print(f"SALE ({ss['count']} listings with area):")
-        print(f"  Price/sqm  min={ss['min']:,}  avg={ss['avg']:,}  median={ss['median']:,}  max={ss['max']:,} THB")
+        print(
+            f"  Price/sqm  min={ss['min']:,}  avg={ss['avg']:,}  median={ss['median']:,}  max={ss['max']:,} THB"
+        )
     else:
-        print(f"SALE: no listings with area data")
+        print("SALE: no listings with area data")
 
     rs = result.rent_stats()
     if rs:
         print(f"RENT ({rs['count']} listings with price):")
-        print(f"  Rent/mo    min={rs['min']:,}  avg={rs['avg']:,}  median={rs['median']:,}  max={rs['max']:,} THB")
+        print(
+            f"  Rent/mo    min={rs['min']:,}  avg={rs['avg']:,}  median={rs['median']:,}  max={rs['max']:,} THB"
+        )
     else:
         print("RENT: no listings with price data")
 
     y = result.implied_yield_pct()
     if y:
         print(f"\nImplied gross yield: ~{y}%")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
 
 if __name__ == "__main__":

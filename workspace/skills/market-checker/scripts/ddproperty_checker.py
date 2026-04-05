@@ -21,11 +21,10 @@ import asyncio
 import json
 import statistics
 import sys
-from dataclasses import dataclass, field
 from typing import Optional
 
 import httpx
-
+from pydantic import BaseModel, Field
 
 # ── Config ────────────────────────────────────────────────────────────────────
 
@@ -49,8 +48,8 @@ HEADERS = {
 
 # ── Data models ───────────────────────────────────────────────────────────────
 
-@dataclass
-class ListingSummary:
+
+class ListingSummary(BaseModel):
     listing_id: int
     price_thb: int
     sqm: Optional[float]
@@ -60,20 +59,18 @@ class ListingSummary:
     url: str
 
 
-@dataclass
-class ProjectInfo:
-    project_id: int          # internal DDProperty project ID (used in SRP)
+class ProjectInfo(BaseModel):
+    project_id: int  # internal DDProperty project ID (used in SRP)
     name: str
     completion_year: Optional[int]
     total_units: Optional[int]
     starting_price: Optional[int]
 
 
-@dataclass
-class MarketData:
+class MarketData(BaseModel):
     project: Optional[ProjectInfo]
-    sale_listings: list[ListingSummary] = field(default_factory=list)
-    rent_listings: list[ListingSummary] = field(default_factory=list)
+    sale_listings: list[ListingSummary] = Field(default_factory=list)
+    rent_listings: list[ListingSummary] = Field(default_factory=list)
     sale_count: int = 0
     rent_count: int = 0
 
@@ -104,12 +101,15 @@ class MarketData:
 
 # ── Cookie acquisition ────────────────────────────────────────────────────────
 
+
 async def get_cf_cookies() -> dict[str, str]:
     """Use Camoufox to bypass Cloudflare and acquire session cookies."""
     try:
         from camoufox.async_api import AsyncCamoufox
     except ImportError:
-        raise RuntimeError("camoufox not installed. Run: pip install 'camoufox[geoip]' && python -m camoufox fetch")
+        raise RuntimeError(
+            "camoufox not installed. Run: pip install 'camoufox[geoip]' && python -m camoufox fetch"
+        )
 
     async with AsyncCamoufox(headless=True, humanize=True) as browser:
         context = await browser.new_context()
@@ -127,6 +127,7 @@ async def get_cf_cookies() -> dict[str, str]:
 
 
 # ── Build ID refresh ──────────────────────────────────────────────────────────
+
 
 async def fetch_build_id(cookies: dict[str, str]) -> str:
     """Fetch the current Next.js BUILD_ID from the homepage HTML."""
@@ -146,6 +147,7 @@ async def fetch_build_id(cookies: dict[str, str]) -> str:
 
 
 # ── API calls ─────────────────────────────────────────────────────────────────
+
 
 async def lookup_project(
     name: str,
@@ -168,7 +170,7 @@ async def lookup_project(
     p = projects[0]
     starting = p.get("starting_price", {}) or {}
     return ProjectInfo(
-        project_id=p.get("property_id"),      # This is the project_id used in SRP filter
+        project_id=p.get("property_id"),  # This is the project_id used in SRP filter
         name=p.get("name", ""),
         completion_year=p.get("completion_year"),
         total_units=p.get("total_units"),
@@ -178,7 +180,7 @@ async def lookup_project(
 
 async def fetch_listings(
     freetext: str,
-    listing_type: str,          # "sale" or "rent"
+    listing_type: str,  # "sale" or "rent"
     build_id: str,
     client: httpx.AsyncClient,
     page: int = 1,
@@ -225,15 +227,17 @@ async def fetch_listings(
             sqm = ld.get("floorArea")
             psm = round(price_val / sqm) if price_val and sqm else None
 
-            all_listings.append(ListingSummary(
-                listing_id=ld.get("id"),
-                price_thb=price_val,
-                sqm=sqm,
-                price_per_sqm=psm,
-                bedrooms=ld.get("bedrooms", 0),
-                bathrooms=ld.get("bathrooms", 0),
-                url=ld.get("url", ""),
-            ))
+            all_listings.append(
+                ListingSummary(
+                    listing_id=ld.get("id"),
+                    price_thb=price_val,
+                    sqm=sqm,
+                    price_per_sqm=psm,
+                    bedrooms=ld.get("bedrooms", 0),
+                    bathrooms=ld.get("bathrooms", 0),
+                    url=ld.get("url", ""),
+                )
+            )
 
         total_pages = pagination.get("totalPages", 1) or 1
         if p >= total_pages:
@@ -245,6 +249,7 @@ async def fetch_listings(
 
 # ── Main entry point ──────────────────────────────────────────────────────────
 
+
 async def check_market(project_name: str, refresh_build_id: bool = False) -> MarketData:
     """
     Main function: look up a condo project and return sale + rental market data.
@@ -253,7 +258,7 @@ async def check_market(project_name: str, refresh_build_id: bool = False) -> Mar
         project_name: Natural-language project name (e.g. "triple y residence samyan")
         refresh_build_id: Set True if you get 404 errors (BUILD_ID expired)
     """
-    print(f"[1/4] Acquiring Cloudflare cookies via Camoufox...")
+    print("[1/4] Acquiring Cloudflare cookies via Camoufox...")
     cookies = await get_cf_cookies()
     print(f"      Got {len(cookies)} cookies: {list(cookies.keys())}")
 
@@ -263,7 +268,6 @@ async def check_market(project_name: str, refresh_build_id: bool = False) -> Mar
         headers=HEADERS,
         cookies=cookies,
     ) as client:
-
         build_id = BUILD_ID
         if refresh_build_id:
             print("[1b] Refreshing BUILD_ID...")
@@ -273,12 +277,14 @@ async def check_market(project_name: str, refresh_build_id: bool = False) -> Mar
         print(f"[2/4] Looking up project: '{project_name}'...")
         project = await lookup_project(project_name, client)
         if project:
-            print(f"      Found: {project.name} (id={project.project_id}, "
-                  f"units={project.total_units}, built={project.completion_year})")
+            print(
+                f"      Found: {project.name} (id={project.project_id}, "
+                f"units={project.total_units}, built={project.completion_year})"
+            )
         else:
             print(f"      No project found for '{project_name}'")
 
-        print(f"[3/4] Fetching SALE listings...")
+        print("[3/4] Fetching SALE listings...")
         sale_listings, sale_count = await fetch_listings(
             freetext=project_name,
             listing_type="sale",
@@ -287,7 +293,7 @@ async def check_market(project_name: str, refresh_build_id: bool = False) -> Mar
         )
         print(f"      {sale_count} total, {len(sale_listings)} fetched")
 
-        print(f"[4/4] Fetching RENT listings...")
+        print("[4/4] Fetching RENT listings...")
         rent_listings, rent_count = await fetch_listings(
             freetext=project_name,
             listing_type="rent",
@@ -319,13 +325,13 @@ def print_report(data: MarketData, project_name: str) -> None:
         if p.starting_price:
             print(f"Starting Price: ฿{p.starting_price:,}")
 
-    print(f"\nActive Listings:")
+    print("\nActive Listings:")
     print(f"  For Sale:  {data.sale_count}")
     print(f"  For Rent:  {data.rent_count}")
 
     sale_stats = data.sale_psm_stats()
     if sale_stats:
-        print(f"\nSale Price/sqm:")
+        print("\nSale Price/sqm:")
         print(f"  Min:    ฿{sale_stats['min']:,}/sqm")
         print(f"  Median: ฿{sale_stats['median']:,}/sqm")
         print(f"  Max:    ฿{sale_stats['max']:,}/sqm")
@@ -333,29 +339,37 @@ def print_report(data: MarketData, project_name: str) -> None:
 
     rent_stats = data.rent_stats()
     if rent_stats:
-        print(f"\nRent/month:")
+        print("\nRent/month:")
         print(f"  Min:    ฿{rent_stats['min']:,}/mo")
         print(f"  Median: ฿{rent_stats['median']:,}/mo")
         print(f"  Max:    ฿{rent_stats['max']:,}/mo")
 
     if data.sale_listings:
-        print(f"\nSample Sale Listings:")
+        print("\nSample Sale Listings:")
         for listing in data.sale_listings[:5]:
-            psm_str = f" = ฿{listing.price_per_sqm:,}/sqm" if listing.price_per_sqm else ""
+            psm_str = (
+                f" = ฿{listing.price_per_sqm:,}/sqm" if listing.price_per_sqm else ""
+            )
             sqm_str = f", {listing.sqm}sqm" if listing.sqm else ""
-            print(f"  ฿{listing.price_thb:,}{sqm_str}{psm_str} | {listing.bedrooms}bd/{listing.bathrooms}ba")
+            print(
+                f"  ฿{listing.price_thb:,}{sqm_str}{psm_str} | {listing.bedrooms}bd/{listing.bathrooms}ba"
+            )
 
     if data.rent_listings:
-        print(f"\nSample Rent Listings:")
+        print("\nSample Rent Listings:")
         for listing in data.rent_listings[:5]:
             sqm_str = f", {listing.sqm}sqm" if listing.sqm else ""
-            print(f"  ฿{listing.price_thb:,}/mo{sqm_str} | {listing.bedrooms}bd/{listing.bathrooms}ba")
+            print(
+                f"  ฿{listing.price_thb:,}/mo{sqm_str} | {listing.bedrooms}bd/{listing.bathrooms}ba"
+            )
 
     print()
 
 
 async def main() -> None:
-    project_name = " ".join(sys.argv[1:]) if len(sys.argv) > 1 else "triple y residence samyan"
+    project_name = (
+        " ".join(sys.argv[1:]) if len(sys.argv) > 1 else "triple y residence samyan"
+    )
     refresh = "--refresh-build-id" in sys.argv
 
     data = await check_market(project_name, refresh_build_id=refresh)
@@ -369,7 +383,9 @@ async def main() -> None:
             "name": data.project.name if data.project else None,
             "completion_year": data.project.completion_year if data.project else None,
             "total_units": data.project.total_units if data.project else None,
-        } if data.project else None,
+        }
+        if data.project
+        else None,
         "sale": {
             "count": data.sale_count,
             "price_per_sqm_stats": data.sale_psm_stats(),

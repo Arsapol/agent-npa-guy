@@ -14,14 +14,14 @@ Outputs:
   - Project details (year built, units, floors)
 """
 
+import argparse
+import json
 import re
 import sys
-import json
-import argparse
 from typing import Optional
-from dataclasses import dataclass, field
 
 import httpx
+from pydantic import BaseModel, Field
 from selectolax.parser import HTMLParser
 
 UA = (
@@ -31,8 +31,7 @@ UA = (
 BASE = "https://zmyhome.com"
 
 
-@dataclass
-class ListingCard:
+class ListingCard(BaseModel):
     property_id: str
     price_thb: Optional[int]
     price_psm: Optional[int]
@@ -44,8 +43,7 @@ class ListingCard:
     broker_ok: Optional[bool]
 
 
-@dataclass
-class ProjectSummary:
+class ProjectSummary(BaseModel):
     project_id: str
     project_code: str
     name: str
@@ -55,13 +53,13 @@ class ProjectSummary:
     num_floors: Optional[str] = None
     common_area_fee: Optional[str] = None
     # Listing type summaries: {type: {count, price_min, price_max, last_date}}
-    listing_summary: dict = field(default_factory=dict)
+    listing_summary: dict = Field(default_factory=dict)
     # Sale listings
-    sale_listings: list[ListingCard] = field(default_factory=list)
+    sale_listings: list[ListingCard] = Field(default_factory=list)
     # Rent listings
-    rent_listings: list[ListingCard] = field(default_factory=list)
+    rent_listings: list[ListingCard] = Field(default_factory=list)
     # Government appraisal: list of {building, floor, price_psm, unit_type}
-    gov_appraisal: list[dict] = field(default_factory=list)
+    gov_appraisal: list[dict] = Field(default_factory=list)
 
 
 def make_client() -> httpx.Client:
@@ -139,23 +137,28 @@ def parse_listing_cards(html: str) -> list[ListingCard]:
         unit_raw = unit_node.text(strip=True) if unit_node else ""
         size_sqm, broker_ok = parse_size_raw(unit_raw)
 
-        meta_items = [m.text(strip=True) for m in article.css(".card-property__meta-info__size-list li")]
+        meta_items = [
+            m.text(strip=True)
+            for m in article.css(".card-property__meta-info__size-list li")
+        ]
         bedrooms = meta_items[0] if len(meta_items) > 0 else None
         bathrooms = meta_items[1] if len(meta_items) > 1 else None
         floor_str = meta_items[2] if len(meta_items) > 2 else None
         direction = meta_items[3] if len(meta_items) > 3 else None
 
-        cards.append(ListingCard(
-            property_id=prop_id,
-            price_thb=price_thb,
-            price_psm=price_psm,
-            size_sqm=size_sqm,
-            bedrooms=bedrooms,
-            bathrooms=bathrooms,
-            floor=floor_str,
-            direction=direction,
-            broker_ok=broker_ok,
-        ))
+        cards.append(
+            ListingCard(
+                property_id=prop_id,
+                price_thb=price_thb,
+                price_psm=price_psm,
+                size_sqm=size_sqm,
+                bedrooms=bedrooms,
+                bathrooms=bathrooms,
+                floor=floor_str,
+                direction=direction,
+                broker_ok=broker_ok,
+            )
+        )
     return cards
 
 
@@ -220,12 +223,14 @@ def fetch_project_page(client: httpx.Client, project_id: str) -> ProjectSummary:
         for row in tables[0].css("tr"):
             cells = [td.text(strip=True) for td in row.css("td")]
             if len(cells) >= 3:
-                gov_appraisal.append({
-                    "building": cells[0],
-                    "floor": cells[1],
-                    "price_psm": cells[2],
-                    "unit_type": cells[3] if len(cells) > 3 else "",
-                })
+                gov_appraisal.append(
+                    {
+                        "building": cells[0],
+                        "floor": cells[1],
+                        "price_psm": cells[2],
+                        "unit_type": cells[3] if len(cells) > 3 else "",
+                    }
+                )
 
     return ProjectSummary(
         project_id=project_id,
@@ -241,7 +246,9 @@ def fetch_project_page(client: httpx.Client, project_id: str) -> ProjectSummary:
     )
 
 
-def fetch_listings(client: httpx.Client, project_id: str, listing_type: str = "buy") -> list[ListingCard]:
+def fetch_listings(
+    client: httpx.Client, project_id: str, listing_type: str = "buy"
+) -> list[ListingCard]:
     """listing_type: buy | rent | sold | rented"""
     r = client.get(f"{BASE}/{listing_type}/condo/project-list/{project_id}")
     r.raise_for_status()
@@ -249,7 +256,7 @@ def fetch_listings(client: httpx.Client, project_id: str, listing_type: str = "b
 
 
 def print_summary(summary: ProjectSummary) -> None:
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"Project: {summary.name}")
     print(f"Code: {summary.project_code} | ID: {summary.project_id}")
     print(f"Developer: {summary.developer or 'N/A'}")
@@ -261,8 +268,8 @@ def print_summary(summary: ProjectSummary) -> None:
 
     print("--- Listing Summary ---")
     for ltype, data in summary.listing_summary.items():
-        mn = f"{data['price_min']:,}" if data['price_min'] else "N/A"
-        mx = f"{data['price_max']:,}" if data['price_max'] else "N/A"
+        mn = f"{data['price_min']:,}" if data["price_min"] else "N/A"
+        mx = f"{data['price_max']:,}" if data["price_max"] else "N/A"
         print(f"  {ltype} ({data['count']}): {mn} - {mx} THB | {data['last_date']}")
     print()
 
@@ -271,7 +278,9 @@ def print_summary(summary: ProjectSummary) -> None:
         for c in summary.sale_listings:
             price = f"{c.price_thb:,}" if c.price_thb else "N/A"
             psm = f"{c.price_psm:,}" if c.price_psm else "N/A"
-            print(f"  {c.property_id}: {price} THB | {psm} ฿/m² | {c.size_sqm}m² | {c.bedrooms} | {c.floor} | {c.direction}")
+            print(
+                f"  {c.property_id}: {price} THB | {psm} ฿/m² | {c.size_sqm}m² | {c.bedrooms} | {c.floor} | {c.direction}"
+            )
     print()
 
     if summary.rent_listings:
@@ -279,19 +288,25 @@ def print_summary(summary: ProjectSummary) -> None:
         for c in summary.rent_listings:
             price = f"{c.price_thb:,}" if c.price_thb else "N/A"
             psm = f"{c.price_psm:,}" if c.price_psm else "N/A"
-            print(f"  {c.property_id}: {price}/mo | {psm} ฿/m²/mo | {c.size_sqm}m² | {c.bedrooms} | {c.floor}")
+            print(
+                f"  {c.property_id}: {price}/mo | {psm} ฿/m²/mo | {c.size_sqm}m² | {c.bedrooms} | {c.floor}"
+            )
     print()
 
     if summary.gov_appraisal:
         print("--- Government Appraisal (กรมธนารักษ์) ---")
         for row in summary.gov_appraisal[:10]:
-            print(f"  Bldg {row['building']} Fl {row['floor']}: {row['price_psm']} THB/m² ({row['unit_type'][:30]})")
+            print(
+                f"  Bldg {row['building']} Fl {row['floor']}: {row['price_psm']} THB/m² ({row['unit_type'][:30]})"
+            )
         if len(summary.gov_appraisal) > 10:
-            print(f"  ... +{len(summary.gov_appraisal)-10} more rows")
+            print(f"  ... +{len(summary.gov_appraisal) - 10} more rows")
     print()
 
 
-def lookup(project_name: Optional[str] = None, project_id: Optional[str] = None) -> ProjectSummary:
+def lookup(
+    project_name: Optional[str] = None, project_id: Optional[str] = None
+) -> ProjectSummary:
     with make_client() as client:
         # Initialize session
         client.get(BASE)
@@ -316,7 +331,9 @@ def lookup(project_name: Optional[str] = None, project_id: Optional[str] = None)
 def main() -> None:
     parser = argparse.ArgumentParser(description="ZMyHome project market lookup")
     parser.add_argument("name", nargs="?", help="Project name to search")
-    parser.add_argument("--id", dest="project_id", help="Project numeric ID (skip search)")
+    parser.add_argument(
+        "--id", dest="project_id", help="Project numeric ID (skip search)"
+    )
     parser.add_argument("--json", action="store_true", help="Output as JSON")
     args = parser.parse_args()
 
@@ -327,8 +344,7 @@ def main() -> None:
     summary = lookup(project_name=args.name, project_id=args.project_id)
 
     if args.json:
-        import dataclasses
-        print(json.dumps(dataclasses.asdict(summary), ensure_ascii=False, indent=2))
+        print(json.dumps(summary.model_dump(), ensure_ascii=False, indent=2))
     else:
         print_summary(summary)
 

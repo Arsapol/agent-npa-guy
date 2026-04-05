@@ -10,15 +10,15 @@ Returns avg price/sqm, rental range, active listings, price trend, district avg.
 No cookies, no JS execution. Two HTTP requests per lookup.
 """
 
-import sys
-import re
 import json
+import re
+import sys
 import time
-import urllib.request
 import urllib.parse
-from dataclasses import dataclass, field
+import urllib.request
 from typing import Optional
 
+from pydantic import BaseModel
 
 BROWSER_UA = (
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
@@ -35,15 +35,14 @@ BASE_HEADERS = {
 HIPFLAT_BASE = "https://www.hipflat.co.th"
 
 
-@dataclass
-class HipflatProject:
+class HipflatProject(BaseModel):
     uuid: str
     name_th: str
     name_en: str
     slug_url: str
 
     # Current listing prices
-    avg_sale_sqm_thb: Optional[int] = None      # current listing avg (฿/sqm)
+    avg_sale_sqm_thb: Optional[int] = None  # current listing avg (฿/sqm)
     sale_price_min: Optional[int] = None
     sale_price_max: Optional[int] = None
     units_for_sale: Optional[int] = None
@@ -52,13 +51,13 @@ class HipflatProject:
     rent_price_max: Optional[int] = None
 
     # Historical transaction data
-    avg_sold_sqm_thb: Optional[int] = None      # historical txn avg (฿/sqm)
+    avg_sold_sqm_thb: Optional[int] = None  # historical txn avg (฿/sqm)
     sold_below_asking_pct: Optional[float] = None
     avg_days_on_market: Optional[int] = None
 
     # Price trends
-    price_trend: Optional[str] = None           # "ขาขึ้น" or "ขาลง"
-    yoy_change_pct: Optional[float] = None      # YoY % change
+    price_trend: Optional[str] = None  # "ขาขึ้น" or "ขาลง"
+    yoy_change_pct: Optional[float] = None  # YoY % change
 
     # Project specs
     year_completed: Optional[int] = None
@@ -72,7 +71,7 @@ class HipflatProject:
     district_name: Optional[str] = None
 
     def to_dict(self) -> dict:
-        return {k: v for k, v in self.__dict__.items() if v is not None}
+        return {k: v for k, v in self.model_dump().items() if v is not None}
 
 
 def _fetch(url: str, accept: str = "text/html") -> bytes:
@@ -96,8 +95,8 @@ def search_project(query: str) -> list[dict]:
 
 def _strip_tags(html: str) -> str:
     """Remove HTML tags and normalize whitespace."""
-    text = re.sub(r'<[^>]+>', ' ', html)
-    return re.sub(r'\s+', ' ', text)
+    text = re.sub(r"<[^>]+>", " ", html)
+    return re.sub(r"\s+", " ", text)
 
 
 def fetch_project_data(uuid: str) -> HipflatProject:
@@ -113,11 +112,11 @@ def fetch_project_data(uuid: str) -> HipflatProject:
     slug_url = slug_match.group(1) if slug_match else f"{HIPFLAT_BASE}/projects/{uuid}"
 
     # --- Project name ---
-    h1_match = re.search(r'<h1[^>]*>([^<]+)</h1>', html)
+    h1_match = re.search(r"<h1[^>]*>([^<]+)</h1>", html)
     full_name = h1_match.group(1).strip() if h1_match else ""
     # Format: "15 Sukhumvit Residences (15 สุขุมวิท เรสซิเด็นท์)"
-    en_match = re.match(r'^(.+?)\s*\(', full_name)
-    th_match = re.search(r'\((.+?)\)\s*$', full_name)
+    en_match = re.match(r"^(.+?)\s*\(", full_name)
+    th_match = re.search(r"\((.+?)\)\s*$", full_name)
     name_en = en_match.group(1).strip() if en_match else full_name
     name_th = th_match.group(1).strip() if th_match else full_name
 
@@ -130,73 +129,67 @@ def fetch_project_data(uuid: str) -> HipflatProject:
 
     # --- Current listing avg sale price/sqm ---
     # "ราคาเฉลี่ย ขาย คือ ฿ 125,000 ต่อตารางเมตร"
-    m = re.search(r'ราคาเฉลี่ย ขาย คือ ฿ ([\d,]+)', text)
+    m = re.search(r"ราคาเฉลี่ย ขาย คือ ฿ ([\d,]+)", text)
     if m:
         proj.avg_sale_sqm_thb = _int(m.group(1))
 
     # --- Historical avg sold price/sqm ---
     # "ราคาเฉลี่ยต่อตารางเมตร: ฿110,000" — inside <strong> tag so use text version
-    m = re.search(r'ราคาเฉลี่ยต่อตารางเมตร\s*:\s*฿\s*([\d,]+)', text)
+    m = re.search(r"ราคาเฉลี่ยต่อตารางเมตร\s*:\s*฿\s*([\d,]+)", text)
     if m:
         proj.avg_sold_sqm_thb = _int(m.group(1))
 
     # --- District avg sale price/sqm ---
     # "ราคาเฉลี่ยต่อตารางเมตร สำหรับขาย ใน วัฒนา เท่ากับ ฿ 157,894/ตรม"
-    m = re.search(
-        r'ราคาเฉลี่ยต่อตารางเมตร สำหรับขาย ใน .+? เท่ากับ ฿ ([\d,]+)',
-        text
-    )
+    m = re.search(r"ราคาเฉลี่ยต่อตารางเมตร สำหรับขาย ใน .+? เท่ากับ ฿ ([\d,]+)", text)
     if m:
         proj.district_avg_sale_sqm = _int(m.group(1))
 
     # --- District avg rent price/sqm ---
     # "ราคาเฉลี่ยต่อตารางเมตร ให้เช่า ใน วัฒนา เท่ากับ ฿ 650/ตรม"
-    m = re.search(
-        r'ราคาเฉลี่ยต่อตารางเมตร ให้เช่า ใน .+? เท่ากับ ฿ ([\d,]+)',
-        text
-    )
+    m = re.search(r"ราคาเฉลี่ยต่อตารางเมตร ให้เช่า ใน .+? เท่ากับ ฿ ([\d,]+)", text)
     if m:
         proj.district_avg_rent_sqm = _int(m.group(1))
 
     # --- Price trend ---
-    m = re.search(r'แนวโน้ม(ขาขึ้น|ขาลง)', text)
+    m = re.search(r"แนวโน้ม(ขาขึ้น|ขาลง)", text)
     if m:
         proj.price_trend = m.group(1)
 
     # --- YoY change ---
-    m = re.search(r'([+-]?\d+\.?\d*)\s*%\s*วิวัฒนาการเมื่อเทียบกับ', text)
+    m = re.search(r"([+-]?\d+\.?\d*)\s*%\s*วิวัฒนาการเมื่อเทียบกับ", text)
     if m:
         proj.yoy_change_pct = float(m.group(1))
 
     # --- Active listings (units for sale) ---
     # FAQ JSON-LD: "มียูนิตประกาศขาย 74 ยูนิต"
-    m = re.search(r'มียูนิตประกาศขาย\s+(\d+)\s+ยูนิต', text)
+    m = re.search(r"มียูนิตประกาศขาย\s+(\d+)\s+ยูนิต", text)
     if m:
         proj.units_for_sale = _int(m.group(1))
     else:
         # Header summary "ราคาขาย\n74 ยูนิต" — strip tags first
-        m = re.search(r'ราคาขาย\s+(\d+)\s+ยูนิต', text)
+        m = re.search(r"ราคาขาย\s+(\d+)\s+ยูนิต", text)
         if m:
             proj.units_for_sale = _int(m.group(1))
 
     # --- Active listings (units for rent) ---
     # "มียูนิตให้เช่า 73 ยูนิต" or "ให้เช่า 151 ยูนิต"
-    m = re.search(r'มียูนิตให้เช่า\s+(\d+)\s+ยูนิต', text)
+    m = re.search(r"มียูนิตให้เช่า\s+(\d+)\s+ยูนิต", text)
     if not m:
-        m = re.search(r'ให้เช่า\s+(\d+)\s+ยูนิต', text)
+        m = re.search(r"ให้เช่า\s+(\d+)\s+ยูนิต", text)
     if m:
         proj.units_for_rent = _int(m.group(1))
 
     # --- Sale price range ---
     # FAQ JSON-LD: "มียูนิตประกาศขาย 74 ยูนิต มีราคาเริ่มต้นอยู่ที่ ฿ 3,300,000 จนถึง ฿ 63,125,000"
     m = re.search(
-        r'ยูนิตประกาศขาย\s+\d+\s+ยูนิต\s+มีราคาเริ่มต้นอยู่ที่\s+฿\s+([\d,]+)\s+จนถึง\s+฿\s+([\d,]+)',
-        text
+        r"ยูนิตประกาศขาย\s+\d+\s+ยูนิต\s+มีราคาเริ่มต้นอยู่ที่\s+฿\s+([\d,]+)\s+จนถึง\s+฿\s+([\d,]+)",
+        text,
     )
     if not m:
         m = re.search(
-            r'มียูนิตประกาศขาย\s+\d+\s+ยูนิต\s+มีราคาเริ่มต้นอยู่ที่\s+฿\s+([\d,]+)\s+จนถึง\s+฿\s+([\d,]+)',
-            text
+            r"มียูนิตประกาศขาย\s+\d+\s+ยูนิต\s+มีราคาเริ่มต้นอยู่ที่\s+฿\s+([\d,]+)\s+จนถึง\s+฿\s+([\d,]+)",
+            text,
         )
     if m:
         proj.sale_price_min = _int(m.group(1))
@@ -205,11 +198,11 @@ def fetch_project_data(uuid: str) -> HipflatProject:
     # --- Rent price range ---
     # "มียูนิตให้เช่า 73 ยูนิต มีราคาเริ่มต้นอยู่ที่ ฿ 16,000 / เดือน จนถึง ฿ 380,000 / เดือน"
     m = re.search(
-        r'ยูนิตให้เช่า\s+\d+\s+ยูนิต\s+มีราคาเริ่มต้นอยู่ที่\s+฿\s+([\d,]+).*?฿\s+([\d,]+)\s*/\s*เดือน',
-        text
+        r"ยูนิตให้เช่า\s+\d+\s+ยูนิต\s+มีราคาเริ่มต้นอยู่ที่\s+฿\s+([\d,]+).*?฿\s+([\d,]+)\s*/\s*เดือน",
+        text,
     )
     if not m:
-        m = re.search(r'฿\s*([\d,]+)\s*/\s*เดือน', text)
+        m = re.search(r"฿\s*([\d,]+)\s*/\s*เดือน", text)
         if m:
             proj.rent_price_min = _int(m.group(1))
     else:
@@ -217,51 +210,51 @@ def fetch_project_data(uuid: str) -> HipflatProject:
         proj.rent_price_max = _int(m.group(2))
 
     # --- Sold below asking % ---
-    m = re.search(r'ต่ำกว่าราคาขายเดิม\s*([\d.]+)%', text)
+    m = re.search(r"ต่ำกว่าราคาขายเดิม\s*([\d.]+)%", text)
     if m:
         proj.sold_below_asking_pct = float(m.group(1))
 
     # --- Days on market ---
-    m = re.search(r'(\d+)\s*วันในตลาดก่อนขายได้', text)
+    m = re.search(r"(\d+)\s*วันในตลาดก่อนขายได้", text)
     if m:
         proj.avg_days_on_market = _int(m.group(1))
 
     # --- Year completed ---
     m = re.search(
-        r'(ม\.ค\.|ก\.พ\.|มี\.ค\.|เม\.ย\.|พ\.ค\.|มิ\.ย\.|'
-        r'ก\.ค\.|ส\.ค\.|ก\.ย\.|ต\.ค\.|พ\.ย\.|ธ\.ค\.)\s*(\d{4})',
-        html  # from raw HTML — the header spec area
+        r"(ม\.ค\.|ก\.พ\.|มี\.ค\.|เม\.ย\.|พ\.ค\.|มิ\.ย\.|"
+        r"ก\.ค\.|ส\.ค\.|ก\.ย\.|ต\.ค\.|พ\.ย\.|ธ\.ค\.)\s*(\d{4})",
+        html,  # from raw HTML — the header spec area
     )
     if m:
         proj.year_completed = int(m.group(2))
 
     # --- Floors ---
     # From description "อาคารสูง 25 ชั้น" is more reliable than header
-    m = re.search(r'อาคารสูง\s+(\d+)\s+ชั้น', text)
+    m = re.search(r"อาคารสูง\s+(\d+)\s+ชั้น", text)
     if not m:
-        m = re.search(r'(\d+)\s+ชั้น', text)
+        m = re.search(r"(\d+)\s+ชั้น", text)
     if m:
         proj.floors = _int(m.group(1))
 
     # --- Total units ---
     # Description: "รวมทั้งหมด 514 ยูนิต" — most reliable
-    m = re.search(r'รวมทั้งหมด\s+(\d+)\s+ยูนิต', text)
+    m = re.search(r"รวมทั้งหมด\s+(\d+)\s+ยูนิต", text)
     if not m:
-        m = re.search(r'(\d+)\s+ยูนิต\s+การเดินทาง', text)
+        m = re.search(r"(\d+)\s+ยูนิต\s+การเดินทาง", text)
     if m:
         proj.total_units = _int(m.group(1))
 
     # --- Service charge ---
-    m = re.search(r'ค่าส่วนกลาง\s*[:\s]*฿\s*([\d,]+)\s*/sqm', text)
+    m = re.search(r"ค่าส่วนกลาง\s*[:\s]*฿\s*([\d,]+)\s*/sqm", text)
     if not m:
-        m = re.search(r'ค่าส่วนกลาง.*?฿\s*([\d,]+)', text)
+        m = re.search(r"ค่าส่วนกลาง.*?฿\s*([\d,]+)", text)
     if m:
         proj.service_charge_sqm = _int(m.group(1))
 
     # --- District name ---
-    m = re.search(r'ราคาเฉลี่ยต่อตารางเมตร ให้เช่า ใน\s+(\S+)', text)
+    m = re.search(r"ราคาเฉลี่ยต่อตารางเมตร ให้เช่า ใน\s+(\S+)", text)
     if not m:
-        m = re.search(r'ให้เช่า ใน\s+([^\s,]+)', text)
+        m = re.search(r"ให้เช่า ใน\s+([^\s,]+)", text)
     if m:
         proj.district_name = m.group(1)
 
@@ -286,7 +279,7 @@ def lookup(project_name: str, verbose: bool = True) -> Optional[HipflatProject]:
     if verbose:
         print(f"  Found: {top['name']} (UUID: {top['id']})")
         if len(results) > 1:
-            print(f"  (+ {len(results)-1} other matches, using top result)")
+            print(f"  (+ {len(results) - 1} other matches, using top result)")
 
     time.sleep(0.5)  # polite delay
 
@@ -300,12 +293,12 @@ def lookup(project_name: str, verbose: bool = True) -> Optional[HipflatProject]:
 
 def print_project(proj: HipflatProject) -> None:
     print()
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
     print(f"  {proj.name_en}")
     if proj.name_th != proj.name_en:
         print(f"  {proj.name_th}")
     print(f"  {proj.slug_url}")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     if proj.year_completed:
         print(f"  Year completed  : {proj.year_completed}")
@@ -321,9 +314,13 @@ def print_project(proj: HipflatProject) -> None:
     if proj.avg_sale_sqm_thb:
         print(f"  Avg listing/sqm : ฿{proj.avg_sale_sqm_thb:,}")
     if proj.avg_sold_sqm_thb:
-        print(f"  Avg SOLD/sqm    : ฿{proj.avg_sold_sqm_thb:,}  ← use this for NPA valuation")
+        print(
+            f"  Avg SOLD/sqm    : ฿{proj.avg_sold_sqm_thb:,}  ← use this for NPA valuation"
+        )
     if proj.sale_price_min and proj.sale_price_max:
-        print(f"  Active range    : ฿{proj.sale_price_min:,} – ฿{proj.sale_price_max:,}")
+        print(
+            f"  Active range    : ฿{proj.sale_price_min:,} – ฿{proj.sale_price_max:,}"
+        )
     if proj.units_for_sale is not None:
         print(f"  Active listings : {proj.units_for_sale} units")
     if proj.sold_below_asking_pct:
