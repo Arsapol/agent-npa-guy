@@ -399,10 +399,15 @@ flip_score = sum(metric_score * weight for each metric)
 ## Viable Flip Scenarios in Current BKK Market (April 2026)
 
 ### Scenario A: Quick Flip — Tier A Condo, 3–7M THB
-**Profile:** BAM/JAM/KBank unit on BTS line, 30–50 sqm, priced 90,000–130,000 THB/sqm NPA vs 150,000–180,000 market. 40%+ discount. Ready-to-move-in. Thai buyer eligible for 0.01% transfer fee through June 2026.
-**Why it works:** Fee incentive creates a demand window until June 2026. 93% clearance in this segment. Cash buyer pool viable at 3–7M price point.
-**Exit risk:** LTV relaxation expiry June 2026 may soften demand H2 2026.
-**Target:** Buy by April 2026, exit before June 2026 fee expiry.
+**Profile:** BAM/JAM/KBank **direct sale** unit on BTS line, 30–50 sqm, priced 90,000–130,000 THB/sqm NPA vs 150,000–180,000 market (×0.92 haircut = 138,000–165,600 verified). 40%+ discount vs verified price. Ready-to-move-in. Thai buyer eligible for 0.01% transfer fee through June 2026.
+
+**Critical timing correction (post-debate):** LED/SAM auction properties are **time-disqualified** for Scenario A. Auction-to-title takes 30–90 days (court order + land department transfer). Cannot make June 30 deadline. BAM/JAM/KBank direct purchases can complete SPA + transfer in 2–4 weeks — viable only for properties **already in active negotiation as of April 2026**.
+
+**DB filter:** `source IN ('bam', 'jam', 'kbank') AND npa_status = 'direct_sale'`
+
+**Why it works:** Fee incentive + 93% Tier A clearance + direct-sale speed. Post-June 2026 LTV expiry will shrink mortgage buyer pool — exit before that cliff.
+**Exit risk:** Narrow execution window. Flag output as `URGENT — execute by June 2026 or re-evaluate as medium hold`.
+**Screener output label:** "QUICK FLIP — TIME SENSITIVE (BAM/JAM/KBank only)"
 
 ### Scenario B: Medium Hold Flip — BTS B-Tier, 2027 Recovery
 **Profile:** NPA unit 800–1500m from BTS, 25–35% discount, current market -3% to -5% YoY. Buy at cycle bottom Q2 2026 (post-LTV expiry second dip), exit Q2–Q4 2027 as supply exhaustion in this tier drives price stabilization.
