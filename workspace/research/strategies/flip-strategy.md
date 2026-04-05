@@ -271,13 +271,18 @@ annualized_return = (1 + net_profit_margin/100)^(12/hold_months) - 1
 
 **Minimum Thresholds:**
 
-| Sub-Strategy | Min Net Margin | Min Annualized Return |
-|---|---|---|
-| Quick Flip (6–12mo) | 15% | 18% p.a. |
-| Medium Hold Flip (1–3yr) | 20% | 10% p.a. |
-| Renovation Flip | 18% post-reno | 12% p.a. |
+| Sub-Strategy | Min Net Margin | Min Annualized Return | Benchmark |
+|---|---|---|---|
+| Quick Flip (6–12mo) | 20% | 20% p.a. | SET 10% + 3% conc. + 3% illiq. + 4% execution = 20% |
+| Medium Hold Flip (1–3yr) | 35% (1yr) / 50% (2yr) / 65% (3yr) | 15% p.a. | SET 10% + 6% premium |
+| Renovation Flip | 22% post-reno | 15% p.a. | Same as medium hold |
 
-**Reject if:** Net margin < 10% after all costs — insufficient buffer for market drift and execution risk.
+**IRR hurdle rate (fineng-researcher):** Minimum 16% p.a. for any NPA property (SET 10% + 3% concentration premium + 3% illiquidity premium). Screener must display two IRR outputs:
+- **IRR base case:** exit at target timeline
+- **IRR delayed case:** exit at 2× target timeline
+If delayed-case IRR < 16%, flag as `TIMELINE_SENSITIVE`.
+
+**Reject if:** Net margin < 15% after all costs. Below-minimum = insufficient buffer for market drift + execution risk + exit friction.
 
 **Data Source:** All upstream metrics combined. Property-calc skill outputs this.
 
