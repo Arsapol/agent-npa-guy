@@ -10,8 +10,8 @@
 6. **Always ingest to KB** — Every analysis, every property research MUST end with KB ingestion. No exceptions.
 7. **Compare to market** — Always reference comparable sales/rentals in the same area
 8. **Think about exit** — How easily can this property be resold or rented?
-9. **Never trust provider appraisals** — BAM/SAM/JAM/KTB/KBank "appraised values" and "discount %" are marketing. Only DDProperty/Hipflat actual listings and กรมที่ดิน transaction records count as market price.
-10. **NPA ≠ cheap** — Many NPA properties are priced AT or ABOVE market. Always verify before assuming a discount exists.
+9. **Never trust provider appraisals** — BAM/SAM/JAM/KTB/KBank "appraised values" and "discount %" are marketing. Use the `market-checker` skill to verify against real listings.
+10. **NPA ≠ cheap** — Many NPA properties are priced AT or ABOVE market. Always run `market-checker` before assuming a discount exists.
 11. **Building age is a filter** — Old buildings have poor rental demand, bank loan restrictions, structural risk, and no exit liquidity. Apply the age cutoffs below.
 
 ## Investment Screening Framework
@@ -23,7 +23,7 @@
 | Leasehold < 30 years remaining | Banks won't lend. Terminal value = 0. Buyer pool = cash-only at 40-60% discount. |
 | Invalid title deed (นส.3 underlying land) | Boundary disputes can freeze all transfers for years. |
 | Active structural notice from กรมโยธาธิการ | Building may be condemned. Insurance voided. |
-| NPA price ≥ DDProperty/Hipflat market price | No margin of safety. NPA friction costs make it worse than retail. |
+| NPA price ≥ market price (run `market-checker`) | No margin of safety. NPA friction costs make it worse than retail. |
 | Building age > 20 years (pre-2006) | Bank LTV capped at 70% on old buildings. Renters avoid. Structural risk. |
 | NPA concentration > 8% of total units in same building | Juristic fund collapse risk. CAM fee crisis incoming. |
 | Unit size < 22 sqm (university) or outside target range | Below bank financing thresholds. Wrong product for market. |
@@ -32,11 +32,11 @@
 
 | Criterion | Threshold |
 |---|---|
-| Real market discount | ≥ 20% vs DDProperty/Hipflat listings (NOT provider appraisal) |
+| Real market discount | ≥ 20% vs `market-checker` consensus price (NOT provider appraisal) |
 | Building year | 2008-2018 sweet spot. 2006-2008 acceptable with extra discount. Post-2018 OK. |
 | Distance to education anchor | ≤ 800m from school/university gate |
 | Gross rental yield | ≥ 7% (university), ≥ 5.5% (intl school/Thai school) — at VERIFIED rental rates |
-| Market liquidity | ≥ 3 active resale listings + 1 transaction in 12 months on DDProperty/Hipflat |
+| Market liquidity | ≥ 3 active resale listings + 1 transaction in 12 months (check via `market-checker`) |
 | Freehold status | Must be freehold. Verify underlying land title, not just condo chanote. |
 
 ### Gate 3: BTS/MRT Tiered Requirement
@@ -63,7 +63,7 @@
 | Developer brand | 10% | Sansiri/AP/LPN/Origin/Ananda | Major Dev/Pruksa/Supalai | Unknown |
 | Building size (units) | 5% | 200+ | 50-200 | 30-50 |
 | Anchor type & strength | 5% | Tier-1 intl school / Top-5 uni | Top-20 uni / Top Thai school | < 15K students |
-| Active DDProperty listings | 5% | 50+ | 10-50 | 3-10 |
+| Active listings (via market-checker) | 5% | 50+ | 10-50 | 3-10 |
 
 ### Gate 5: Pre-Purchase Due Diligence
 
@@ -79,6 +79,49 @@ Run BEFORE making any offer:
 | Supply pipeline | Check EIA filings for new 500+ unit projects within 1km. | Yield compression 1-2% |
 | NPA concentration | Query all 6 providers (npa-adapter) for same building. | >8% = auto-reject |
 | University/school enrollment | Check enrollment trend (stable/growing required). | Demand collapse if declining |
+
+## Market Verification (market-checker skill)
+
+**ALWAYS run `market-checker` before recommending any NPA property.**
+
+```bash
+# Fast mode: Hipflat + ZMyHome + PropertyHub (no browser needed)
+cd workspace/skills/market-checker/scripts
+python market_checker.py "project name" --no-ddproperty
+
+# With Thai/English name hints for better matching
+python market_checker.py "esta condo" --thai "เอสต้า พหล-สะพานใหม่" --no-ddproperty
+
+# Full mode: all 4 sources including DDProperty (needs Camoufox)
+python market_checker.py "project name"
+
+# JSON output for pipeline integration
+python market_checker.py "project name" --json --no-ddproperty
+```
+
+### 4 Data Sources
+
+| Source | Best For | Speed |
+|---|---|---|
+| **Hipflat** | YoY trend, historical sold price/sqm, district avg | ~1s |
+| **ZMyHome** | กรมธนารักษ์ appraisal (govt), sold/rented prices | ~1s |
+| **PropertyHub** | CAM fee (ค่าส่วนกลาง), GraphQL structured data | ~2s |
+| **DDProperty** | Largest listing inventory (optional, needs Camoufox) | ~5s |
+
+### Confidence Levels
+- **HIGH**: 3+ sources agree within 15% → safe to use consensus
+- **MEDIUM**: 2 sources agree → usable with caution
+- **LOW**: 1 source only → cross-check manually before recommending
+- **NO DATA**: 0 sources found → AVOID the property (no liquidity)
+
+### NPA Discount Calculation
+```python
+from market_checker import check_market, npa_discount
+
+result = await check_market("project name", include_ddproperty=False)
+discount = npa_discount(npa_price_per_sqm, result)  # returns % below market
+# discount < 20% → does not pass Gate 2
+```
 
 ## Education Anchor Categories
 
@@ -119,13 +162,13 @@ These properties/patterns are confirmed traps from April 2026 research:
 
 | Pattern | Example | Why |
 |---|---|---|
-| Provider "discount" marketing | BAM "35% below appraisal" | Appraisals are 20-40% above market in secondary locations |
-| Premium projects at NPA | Park 24, Lumpini 24 (KBank) | NPA price ABOVE DDProperty listings |
+| Provider "discount" marketing | BAM "35% below appraisal" | Run `market-checker` — appraisals are 20-40% above market |
+| Premium projects at NPA | Park 24, Lumpini 24 (KBank) | `market-checker` shows NPA ABOVE consensus price |
 | Leasehold near universities | Triple Y สามย่าน (expires 2049) | 23 years left, banks won't lend, terminal value = 0 |
 | CU land properties | IDEO Q จุฬา-สามย่าน, properties near จุฬาฯ | Chulalongkorn University land is leasehold — verify before any offer |
 | Ultra-cheap old buildings | Monterey Place 1994, รื่นรมย์ 1997, T.N.B. 1997 | High yield on paper but no renters want old buildings, bank won't lend to future buyers |
 | Discount > 55% | Any NPA at 55%+ below market | Almost always hidden defects, juristic debt, or structural issues |
-| No-name micro projects | 5-unit buildings, unknown developers | Zero exit liquidity. No DDProperty presence = no buyers. |
+| No-name micro projects | 5-unit buildings, unknown developers | `market-checker` returns NO DATA = no buyers |
 
 ## NON-NEGOTIABLE: Always Ingest to KB
 
@@ -158,7 +201,7 @@ insert_document(
     description="Sukhumvit 77 condo sale prices April 2026",
     category="pricing",
     area="สุขุมวิท 77",
-    source="DDProperty"
+    source="DDProperty|Hipflat|ZMyHome|PropertyHub"
 )
 ```
 
@@ -186,7 +229,7 @@ When analyzing an NPA property, use this structure:
 ### GATE CHECK (run first, stop if any fails)
 - [ ] Freehold confirmed (NOT leasehold, or lease > 30 years)
 - [ ] Building age: [year built] — [X years old] — [PASS/FAIL vs 20-year cutoff]
-- [ ] NPA price vs DDProperty/Hipflat market: [NPA ฿/sqm] vs [Market ฿/sqm] = [X% discount] — [PASS ≥20% / FAIL]
+- [ ] NPA price vs market (run `market-checker`): [NPA ฿/sqm] vs [Consensus ฿/sqm] = [X% discount] — [PASS ≥20% / FAIL]
 - [ ] Title deed type: [โฉนด/นส.4จ = OK, นส.3 = REJECT]
 - [ ] NPA concentration in building: [X units NPA / Y total] = [Z%] — [PASS <8% / FAIL]
 - [ ] No structural notices from กรมโยธาธิการ: [confirmed/unknown]
@@ -203,8 +246,8 @@ When analyzing an NPA property, use this structure:
 - Building Size: [X total units]
 - Source: [BAM/SAM/JAM/KTB/KBank/LED] — Provider ID: [X]
 - NPA Price: THB [X] (THB [X]/sq.m)
-- Market Price: THB [X]/sq.m (source: [DDProperty/Hipflat URL])
-- Real Discount: [X%] below market (NOT provider appraisal)
+- Market Price: THB [X]/sq.m (source: market-checker consensus [confidence: HIGH/MEDIUM/LOW])
+- Real Discount: [X%] below market consensus (NOT provider appraisal)
 - BTS/MRT Tier: [A/B/C] — [station name] [X meters]
 
 ### Education Anchors (within 800m)
@@ -224,9 +267,9 @@ When analyzing an NPA property, use this structure:
 - [Risk 3 with specific data]
 
 ### Financial Analysis
-- Market comparable price: THB [X]/sq.m (source: [DDProperty/Hipflat])
-- Real discount vs market: [X%] — [how calculated]
-- Verified rental rate: THB [X]/mo (source: [DDProperty/Hipflat rental listings])
+- Market comparable price: THB [X]/sq.m (market-checker consensus, confidence: [HIGH/MEDIUM/LOW])
+- Real discount vs market: [X%] — consensus from [N] sources
+- Verified rental rate: THB [X]/mo (market-checker median from [N] sources)
 - Gross rental yield: [X%] = (rent × 12) / NPA price
 - Summer vacancy adjustment: [X months] → effective yield: [X%]
 - Renovation estimate: THB [X] ([X% of purchase price] — max 12%)
