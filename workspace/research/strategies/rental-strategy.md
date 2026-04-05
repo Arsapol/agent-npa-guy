@@ -243,7 +243,7 @@ GNHC = 1 - (NRY / GRY)
 ```
 Measures how much yield is consumed by friction costs.
 
-- **Expected range:** 25–40% haircut is normal in Bangkok (gross 7% → net 4.2–5.25%)
+- **Expected range:** 40–60% haircut is observed in Bangkok NPA cases (gross 10% → net 4–6%). The old expectation of 25–40% assumed higher-quality buildings with low CAM. In NPA condo context with small units, GNHC typically runs 50–65%.
 - **Threshold:** If GNHC > 50%, the cost structure is destroying the investment case. Walk away or renegotiate price.
 - **Data source:** Derived from M1 and M2
 - **Weight in scoring:** Informational only — inputs already in M2
@@ -354,25 +354,37 @@ Holding costs: same CAM + insurance + tax; agent fee 96,900 × 8% = 7,752; vacan
 
 ## 7. Scoring Scorecard
 
+**Pre-score hard gates (any fail = reject before scoring):**
+- M1 GRY < tier minimum → reject
+- M2 NRY < 1.5% (no leverage rescue possible) → reject
+- M2 NRY < 3% AND CoCR < tier minimum OR DSCR < 1.25 → reject
+- M5 DAS < 25 → reject
+- M6 CRLC < 3 → reject
+- M8 NPA concentration > 8% → reject (hard gate, no weight in score)
+
 | Metric | Weight | Formula | Reject Threshold |
 |---|---|---|---|
-| M1 Gross Rental Yield | 15% | per anchor type table above | < minimum for tier |
-| M2 Net Rental Yield | 20% | < 3% = reject | < 3% |
-| M5 Demand Anchor Score | 20% | 0–70 pts scale | < 40 pts |
+| M1 Gross Rental Yield | 15% | per anchor type table | < tier minimum |
+| M2 Net Rental Yield (or CoCR if leveraged) | 20% | NRY ≥ 3% OR CoCR ≥ tier min | NRY < 1.5% hard |
+| M5 Demand Anchor Score | 25% | 0–70 pts scale | < 25 pts hard, < 40 = penalty |
 | M6 Comparable Rental Listings | 10% | count active rent ads | < 3 |
-| M1 × Price Discount (yield × discount) | 10% | GRY × (discount%) | < 7% × 20% = 1.4 |
-| M9 Supply Pipeline Penalty | 5% | count new projects | penalty applied |
-| M7 Days-on-Market Proxy | 5% | days listed | > 60d = penalty |
-| M4 Price-to-Rent Multiple | 5% | < 20x | > 20x |
-| M11 Break-Even Holding Period | 5% | years | > 5 years |
-| M3 Rent-to-Market Gap | 5% | flag only | below local floor |
+| M1 × Price Discount | 10% | GRY × (discount%) | < GRY_min × 0.20 |
+| M9 Supply Pipeline Penalty | 5% | count new projects within 1km | > 3 projects = penalty |
+| M7 Days-on-Market Proxy | 5% | median listing age | > 60d = penalty |
+| M4 Price-to-Rent Multiple | 5% | PRM = price / (monthly_rent × 12) | > 20x |
+| M11 Break-Even Holding Period | 5% | years to recover acquisition costs | > 5 years |
 | **Total** | **100%** | | |
+
+Note: M8 (NPA concentration) and M3 (rent-to-market gap) are hard gates only — zero scoring weight.
+Note: M5 weight increased from 20% to 25% (absorbed M3/M8 weight). DAS is the primary demand signal.
 
 **Score interpretation:**
 - ≥ 75: Strong rental candidate
 - 55–74: Acceptable — proceed with manual demand verification
 - 40–54: Marginal — requires local agent confirmation + price negotiation
 - < 40: Reject
+
+**Cross-strategy cascade rule:** If flip screener score < 0.55 AND this rental score ≥ 55, output recommendation: "Flip rejected — evaluate as rental hold." The screener must run rental scoring on any flip reject before discarding the property entirely.
 
 ---
 
