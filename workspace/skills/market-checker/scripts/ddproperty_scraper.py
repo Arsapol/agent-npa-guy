@@ -76,7 +76,6 @@ REQUEST_DELAY = 0.5  # seconds between API requests
 
 # Concurrency settings
 DISCOVER_CONCURRENCY = 5  # concurrent page fetches in discover mode
-DISCOVER_LAUNCH_DELAY = 0.2  # seconds between launching new page fetches
 TARGETED_CONCURRENCY = 3  # concurrent project lookups in targeted mode
 PROGRESS_FILE = Path("/tmp/ddproperty_discover_progress.json")
 
@@ -994,7 +993,7 @@ DISCOVER_HEADERS = {
     "Accept-Language": "en-US,en;q=0.9",
 }
 
-DISCOVER_DELAY = 0.2  # seconds between launching concurrent page fetches
+DISCOVER_DELAY = 0.1  # seconds stagger between workers acquiring semaphore
 
 
 class CookieRefresh403(Exception):
@@ -1184,9 +1183,15 @@ def _parse_discovered_listing(
 def _upsert_discovered_batch(
     conn: psycopg.Connection,
     listings: list[DiscoveredListing],
-    stats: DiscoverStats,
-) -> None:
-    """Upsert a batch of discovered listings into the DB."""
+) -> tuple[int, int]:
+    """Upsert a batch of discovered listings into the DB.
+
+    Returns (projects_touched, listings_upserted) counts.
+    Thread-safe: does not mutate shared stats — caller applies counts.
+    """
+    projects_touched = 0
+    listings_upserted = 0
+
     # First, ensure minimal project rows exist for all project_ids
     project_ids_seen: set[int] = set()
     for listing in listings:
@@ -1202,7 +1207,7 @@ def _upsert_discovered_batch(
                 """,
                 (listing.project_id, listing.project_name),
             )
-            stats.projects_created += 1  # approximate — includes updates
+            projects_touched += 1
 
     # Upsert listings
     for listing in listings:
@@ -1249,7 +1254,9 @@ def _upsert_discovered_batch(
                 listing.full_address,
             ),
         )
-        stats.listings_upserted += 1
+        listings_upserted += 1
+
+    return projects_touched, listings_upserted
 
 
 def _save_progress(listing_type: str, last_page: int, build_id: str) -> None:
@@ -1380,20 +1387,37 @@ async def discover_listings(
     # Track if we hit a fatal error (404 = stale BUILD_ID)
     stop_event = asyncio.Event()
 
+    def _sync_upsert_batch(
+        page_batch: list[DiscoveredListing],
+    ) -> tuple[int, int]:
+        """Sync DB upsert — runs inside asyncio.to_thread to avoid blocking.
+
+        Returns (projects_touched, listings_upserted).
+        """
+        with psycopg.connect(DB_URL) as conn:
+            result = _upsert_discovered_batch(conn, page_batch)
+            conn.commit()
+        return result
+
     async def _fetch_and_upsert_page(
         client: httpx.AsyncClient,
         build_id: str,
         lt: str,
         page_num: int,
+        effective_max: int,
     ) -> tuple[int, bool]:
         """Fetch one page and upsert to DB. Returns (listing_count, is_empty).
 
         Coordinates with cookie_refreshing event to pause on 403.
+        DB writes run in a thread to avoid blocking the event loop.
         """
         if stop_event.is_set():
             return 0, True
 
         async with semaphore:
+            # Small stagger between concurrent workers
+            await asyncio.sleep(DISCOVER_DELAY)
+
             # Wait if cookies are being refreshed
             await cookie_refreshing.wait()
 
@@ -1431,24 +1455,34 @@ async def discover_listings(
                     page_batch.append(parsed)
 
             count = len(page_batch)
+            projects_touched = 0
             if page_batch:
-                with psycopg.connect(DB_URL) as conn:
-                    _upsert_discovered_batch(conn, page_batch, stats)
-                    conn.commit()
+                # Run sync DB write in a thread to avoid blocking event loop
+                projects_touched, _ = await asyncio.to_thread(
+                    _sync_upsert_batch, page_batch,
+                )
 
-            # Update committed page tracker + save progress
+            # Update stats + committed page tracker (single async context = safe)
             async with committed_lock:
+                stats.projects_created += projects_touched
+                stats.listings_upserted += count
+                stats.pages_fetched += 1
+                if lt == "sale":
+                    stats.sale_listings += count
+                else:
+                    stats.rent_listings += count
+                stats.total_listings += count
+
                 prev = committed_pages.get(lt, 0)
                 if page_num > prev:
                     committed_pages[lt] = page_num
                     _save_progress(lt, page_num, build_id)
 
-            stats.pages_fetched += 1
-            if lt == "sale":
-                stats.sale_listings += count
-            else:
-                stats.rent_listings += count
-            stats.total_listings += count
+            # Per-page progress
+            print(
+                f"  [DB] page {page_num}/{effective_max}: "
+                f"{count} listings saved (total: {stats.total_listings:,})"
+            )
 
             return count, len(raw_items) == 0
 
@@ -1525,17 +1559,24 @@ async def discover_listings(
                     if parsed:
                         page_batch.append(parsed)
 
+                page1_count = len(page_batch)
                 if page_batch:
-                    with psycopg.connect(DB_URL) as conn:
-                        _upsert_discovered_batch(conn, page_batch, stats)
-                        conn.commit()
+                    p_touched, _ = await asyncio.to_thread(
+                        _sync_upsert_batch, page_batch,
+                    )
+                    stats.projects_created += p_touched
+                    stats.listings_upserted += page1_count
                     if lt == "sale":
-                        stats.sale_listings += len(page_batch)
+                        stats.sale_listings += page1_count
                     else:
-                        stats.rent_listings += len(page_batch)
-                    stats.total_listings += len(page_batch)
+                        stats.rent_listings += page1_count
+                    stats.total_listings += page1_count
                 stats.pages_fetched += 1
                 _save_progress(lt, 1, build_id)
+                print(
+                    f"  [DB] page 1/{effective_max}: "
+                    f"{page1_count} listings saved (total: {stats.total_listings:,})"
+                )
 
                 pages_start = 2
             else:
@@ -1554,10 +1595,15 @@ async def discover_listings(
                 total_pages = pagination.get("totalPages", 1) or 1
                 result_count = page_data.get("resultCount", 0)
 
-                effective_max = min(total_pages, max_pages) if max_pages else total_pages
+                # When resuming, --limit means "fetch N more pages from resume point"
+                if max_pages:
+                    effective_max = min(total_pages, lt_start_page + max_pages - 1)
+                else:
+                    effective_max = total_pages
                 print(
                     f"  Total: {result_count:,} listings across {total_pages:,} pages "
-                    f"(resuming from page {lt_start_page})"
+                    f"(resuming from page {lt_start_page}, "
+                    f"up to page {effective_max})"
                 )
                 pages_start = lt_start_page
 
@@ -1571,19 +1617,21 @@ async def discover_listings(
                 f"({len(remaining_pages)} pages, {DISCOVER_CONCURRENCY} workers)"
             )
 
-            # Launch pages in batches with staggered delay
-            batch_size = DISCOVER_CONCURRENCY * 2  # pre-fetch buffer
+            # Fire all tasks at once — semaphore controls actual concurrency.
+            # Stagger is handled inside _fetch_and_upsert_page via DISCOVER_DELAY.
+            # Large batches (50 pages) keep the pipeline full without gather barriers.
+            batch_size = 50
             for batch_start in range(0, len(remaining_pages), batch_size):
                 if stop_event.is_set():
                     break
 
                 batch = remaining_pages[batch_start : batch_start + batch_size]
-                tasks = []
-                for page_num in batch:
-                    tasks.append(
-                        _fetch_and_upsert_page(client, build_id, lt, page_num)
+                tasks = [
+                    _fetch_and_upsert_page(
+                        client, build_id, lt, page_num, effective_max,
                     )
-                    await asyncio.sleep(DISCOVER_LAUNCH_DELAY)
+                    for page_num in batch
+                ]
 
                 results = await asyncio.gather(*tasks, return_exceptions=True)
 
@@ -1593,17 +1641,16 @@ async def discover_listings(
                         stats.errors += 1
                         print(f"  ERROR in batch: {r}")
 
-                # Progress report
+                # Batch summary
                 current_page = batch[-1] if batch else pages_start
-                if current_page % 50 == 0 or batch_start + batch_size >= len(remaining_pages):
-                    elapsed = (datetime.now() - started_at).total_seconds()
-                    rate = stats.pages_fetched / elapsed if elapsed > 0 else 0
-                    print(
-                        f"  [{lt}] page ~{current_page}/{effective_max} | "
-                        f"{stats.total_listings:,} listings | "
-                        f"{rate:.1f} pages/s | "
-                        f"errors={stats.errors}"
-                    )
+                elapsed = (datetime.now() - started_at).total_seconds()
+                rate = stats.pages_fetched / elapsed if elapsed > 0 else 0
+                print(
+                    f"  --- [{lt}] batch done ~{current_page}/{effective_max} | "
+                    f"{stats.total_listings:,} listings | "
+                    f"{rate:.1f} pages/s | "
+                    f"errors={stats.errors} ---"
+                )
 
     # Successful completion — clear progress file
     _clear_progress()

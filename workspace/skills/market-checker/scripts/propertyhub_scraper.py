@@ -57,9 +57,8 @@ _HEADERS = {
 CONCURRENCY = 10
 SEARCH_PAGE_SIZE = 50
 LISTING_PAGE_SIZE = 100
-BATCH_SIZE = 20
+DB_COMMIT_INTERVAL = 50  # commit to DB every N projects
 FRESHNESS_HOURS = 24
-STAGGER_DELAY = 0.1
 
 # Thai province names for discovery fallback
 _THAI_PROVINCES = [
@@ -206,10 +205,10 @@ class ProjectDetail(BaseModel):
     district_code: Optional[str] = Field(default=None, coerce_numbers_to_str=True)
     lat: Optional[float] = None
     lng: Optional[float] = None
-    completed_year: Optional[str] = None
-    total_units: Optional[str] = None
-    floors: Optional[str] = None
-    buildings: Optional[str] = None
+    completed_year: Optional[str] = Field(default=None, coerce_numbers_to_str=True)
+    total_units: Optional[str] = Field(default=None, coerce_numbers_to_str=True)
+    floors: Optional[str] = Field(default=None, coerce_numbers_to_str=True)
+    buildings: Optional[str] = Field(default=None, coerce_numbers_to_str=True)
     developer: Optional[str] = None
     utility_fee: Optional[str] = None
     facilities: Optional[dict] = Field(default_factory=dict)
@@ -908,8 +907,73 @@ def save_project_results(
     if change == "price_change":
         stats.price_changed += 1
 
-    conn.commit()
     stats.total_projects += 1
+
+
+async def _fetch_and_enqueue(
+    client: httpx.AsyncClient,
+    sem: asyncio.Semaphore,
+    project_id: str,
+    db_queue: asyncio.Queue,
+) -> None:
+    """Fetch one project and push its result onto the DB queue."""
+    result = await fetch_single_project(client, sem, project_id)
+    await db_queue.put(result)
+
+
+def _db_writer_sync(
+    db_queue: asyncio.Queue,
+    stats: ScrapeStats,
+    total: int,
+    loop: asyncio.AbstractEventLoop,
+) -> None:
+    """
+    Run in a dedicated thread. Drains the async DB queue, saving each
+    project immediately and committing every DB_COMMIT_INTERVAL projects.
+    """
+    uncommitted = 0
+    conn = psycopg.connect(DB_URL)
+
+    try:
+        while True:
+            # Block on the async queue from this thread
+            future = asyncio.run_coroutine_threadsafe(db_queue.get(), loop)
+            result: FetchResult = future.result()
+
+            # Sentinel: None means all fetches are done
+            if result is None:
+                break
+
+            try:
+                save_project_results(conn, result, stats)
+                uncommitted += 1
+            except Exception as exc:
+                print(f"  [error] DB save project {result.project_id}: {exc}")
+                try:
+                    conn.rollback()
+                except Exception:
+                    pass
+                stats.failed_count += 1
+
+            # Periodic commit + progress
+            if uncommitted >= DB_COMMIT_INTERVAL:
+                conn.commit()
+                print(
+                    f"  [DB] committed {stats.total_projects}/{total} projects, "
+                    f"{stats.total_listings} listings so far"
+                )
+                uncommitted = 0
+
+        # Final commit
+        if uncommitted > 0:
+            conn.commit()
+            print(
+                f"  [DB] committed {stats.total_projects}/{total} projects, "
+                f"{stats.total_listings} listings (final)"
+            )
+
+    finally:
+        conn.close()
 
 
 async def run_scraper(
@@ -966,44 +1030,31 @@ async def run_scraper(
         total = len(project_ids)
         print(f"\n[scrape] Processing {total} projects...\n")
 
-        # Process in batches: staggered fan-out, then save per batch
-        for batch_start in range(0, total, BATCH_SIZE):
-            batch = project_ids[batch_start : batch_start + BATCH_SIZE]
-            batch_num = batch_start // BATCH_SIZE + 1
+        # Single-shot concurrent fetch with semaphore gating + threaded DB writer
+        db_queue: asyncio.Queue = asyncio.Queue()
+        loop = asyncio.get_running_loop()
 
-            # Fan out with stagger delay — start each project 0.1s apart
-            async def _staggered_fetch(pid: str, idx: int) -> FetchResult:
-                if idx > 0:
-                    await asyncio.sleep(STAGGER_DELAY * idx)
-                return await fetch_single_project(client, sem, pid)
+        # Start the DB writer in a dedicated thread
+        writer_future = loop.run_in_executor(
+            None, _db_writer_sync, db_queue, stats, total, loop
+        )
 
-            fetch_tasks = [
-                _staggered_fetch(pid, i)
-                for i, pid in enumerate(batch)
-            ]
-            results = await asyncio.gather(*fetch_tasks, return_exceptions=True)
+        # Fan out ALL fetches — semaphore gates concurrency, no stagger needed
+        fetch_tasks = [
+            _fetch_and_enqueue(client, sem, pid, db_queue)
+            for pid in project_ids
+        ]
+        results = await asyncio.gather(*fetch_tasks, return_exceptions=True)
 
-            # Sequential DB save per batch — one connection, commit at end
-            try:
-                with psycopg.connect(DB_URL) as conn:
-                    for result in results:
-                        if isinstance(result, Exception):
-                            print(f"  [error] Batch {batch_num} fetch exception: {result}")
-                            stats.failed_count += 1
-                            continue
-                        save_project_results(conn, result, stats)
-            except Exception as exc:
-                print(f"  [error] Batch {batch_num} DB save failed: {exc}")
-                stats.failed_count += len(batch)
+        # Count fetch-level exceptions
+        for r in results:
+            if isinstance(r, Exception):
+                print(f"  [error] Fetch exception: {r}")
+                stats.failed_count += 1
 
-            processed = min(batch_start + BATCH_SIZE, total)
-            print(
-                f"  [batch {batch_num}] [{processed}/{total}] "
-                f"new={stats.new_projects} upd={stats.updated_projects} "
-                f"listings={stats.total_listings} "
-                f"price_chg={stats.price_changed} "
-                f"fail={stats.failed_count}"
-            )
+        # Signal writer to finish, then wait
+        await db_queue.put(None)
+        await writer_future
 
     # Log the run
     error_msg = None

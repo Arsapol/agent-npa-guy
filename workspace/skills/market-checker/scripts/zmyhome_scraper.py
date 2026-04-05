@@ -495,22 +495,58 @@ def _get_today_listing_count(listing_type: str, province_id: Optional[int]) -> i
         return row[0] if row else 0
 
 
-async def _fetch_page(
+
+def _save_page_to_db(
+    cards: list[ListingCard],
+    listing_type: str,
+    discover_source: str,
+) -> tuple[int, int]:
+    """Upsert a page of listings to DB synchronously. Returns (new, updated)."""
+    new = 0
+    updated = 0
+    with psycopg.connect(DB_URL) as conn:
+        for card in cards:
+            is_new = _upsert_discovered_listing(
+                conn, card, listing_type, discover_source
+            )
+            if is_new:
+                new += 1
+            else:
+                updated += 1
+        conn.commit()
+    return new, updated
+
+
+async def _fetch_and_save_page(
     aclient: httpx.AsyncClient,
     sem: asyncio.Semaphore,
     url: str,
     page: int,
     label: str,
-) -> tuple[int, list[ListingCard], Optional[str]]:
-    """Fetch a single browse page. Returns (page_num, cards, error_or_None)."""
+    listing_type: str,
+    discover_source: str,
+) -> tuple[int, int, int, int, Optional[str]]:
+    """Fetch a browse page and immediately save to DB.
+
+    Returns (page_num, card_count, new_count, updated_count, error_or_None).
+    DB write is offloaded to a thread to avoid blocking the event loop.
+    """
     async with sem:
         try:
             resp = await aclient.get(url)
             resp.raise_for_status()
             cards = parse_listing_cards(resp.text)
-            return (page, cards, None)
         except Exception as e:
-            return (page, [], str(e))
+            return (page, 0, 0, 0, str(e))
+
+    if not cards:
+        return (page, 0, 0, 0, None)
+
+    # Save to DB in a thread so it doesn't block async fetches
+    new, updated = await asyncio.to_thread(
+        _save_page_to_db, cards, listing_type, discover_source
+    )
+    return (page, len(cards), new, updated, None)
 
 
 async def _crawl_listing_type_async(
@@ -534,7 +570,6 @@ async def _crawl_listing_type_async(
     print(f"\n  Crawling {label} (starting page {start_page}) ...")
 
     # Strategy: launch pages in batches, detect empty pages to find the end.
-    # We probe in expanding batches: first batch finds total, then we know.
     page = start_page
     consecutive_empty = 0
     max_consecutive_empty = 3
@@ -552,19 +587,21 @@ async def _crawl_listing_type_async(
         tasks = []
         for p in range(page, batch_end):
             url = _build_browse_url(listing_type, p, province_id)
-            tasks.append(_fetch_page(aclient, sem, url, p, label))
-            await asyncio.sleep(DISCOVER_DELAY)
+            tasks.append(
+                _fetch_and_save_page(
+                    aclient, sem, url, p, label,
+                    listing_type, discover_source,
+                )
+            )
 
         if not tasks:
             break
 
-        results = await asyncio.gather(*tasks)
-
-        # Sort by page number to process in order for empty-page detection
-        results_sorted = sorted(results, key=lambda r: r[0])
-
+        # Process results as they complete (no waiting for full batch)
         should_stop = False
-        for p_num, cards, error in results_sorted:
+        for coro in asyncio.as_completed(tasks):
+            p_num, card_count, pg_new, pg_updated, error = await coro
+
             if error is not None:
                 stats.failed_pages += 1
                 print(f"    page {p_num} FAILED: {error}")
@@ -576,7 +613,7 @@ async def _crawl_listing_type_async(
 
             stats.pages_crawled += 1
 
-            if not cards:
+            if card_count == 0:
                 consecutive_empty += 1
                 stats.empty_pages += 1
                 if consecutive_empty >= max_consecutive_empty:
@@ -585,31 +622,17 @@ async def _crawl_listing_type_async(
                 continue
 
             consecutive_empty = 0
-            stats.listings_found += len(cards)
+            stats.listings_found += card_count
+            stats.new_count += pg_new
+            stats.updated_count += pg_updated
 
-            # Per-page DB upsert + commit
-            with psycopg.connect(DB_URL) as conn:
-                for card in cards:
-                    is_new = _upsert_discovered_listing(
-                        conn, card, listing_type, discover_source
-                    )
-                    if is_new:
-                        stats.new_count += 1
-                    else:
-                        stats.updated_count += 1
-                conn.commit()
+            print(
+                f"    [DB] page {p_num}: {card_count} listings saved "
+                f"(new={pg_new}, updated={pg_updated}, total: {stats.listings_found})"
+            )
 
         if should_stop:
             break
-
-        # Progress every 10 pages (based on highest page in batch)
-        highest_page = max(r[0] for r in results_sorted)
-        if highest_page % 10 < batch_size:
-            print(
-                f"    [{label}] page ~{highest_page}: "
-                f"{stats.listings_found} listings "
-                f"(new={stats.new_count}, updated={stats.updated_count})"
-            )
 
         page = batch_end
 
