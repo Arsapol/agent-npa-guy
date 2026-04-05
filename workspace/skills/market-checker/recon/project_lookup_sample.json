@@ -1,0 +1,814 @@
+{
+  "bed": {
+    "from": 1,
+    "to": 2
+  },
+  "bath": {
+    "from": 1,
+    "to": 2
+  },
+  "parking": {
+    "from": null,
+    "to": null
+  },
+  "floor_area": {
+    "from": {
+      "value": 34,
+      "unit": "Sqm"
+    },
+    "to": {
+      "value": 68,
+      "unit": "Sqm"
+    }
+  },
+  "unit_types": [
+    {
+      "id": 72399,
+      "name": "1 Bedroom Studio",
+      "building_ids": [
+        64684
+      ],
+      "bed": 1,
+      "bath": 1,
+      "study": null,
+      "property_type": {
+        "property_group": {
+          "code": "RES",
+          "name": "Residential "
+        },
+        "property_sub_group": {
+          "code": "N",
+          "name": "Condo"
+        },
+        "property_type": {
+          "code": "CONDO",
+          "name": "Condo"
+        }
+      },
+      "floor_area": {
+        "from": {
+          "value": 34,
+          "unit": "Sqm"
+        },
+        "to": {
+          "value": null,
+          "unit": "Sqm"
+        }
+      },
+      "land_area": {
+        "from": {
+          "value": null,
+          "unit": "Sqw"
+        },
+        "to": {
+          "value": null,
+          "unit": "Sqw"
+        }
+      },
+      "price": {
+        "from": {
+          "value": null,
+          "unit": "THB"
+        },
+        "to": {
+          "value": null,
+          "unit": "THB"
+        }
+      },
+      "total_units": null,
+      "remaining_unit": null,
+      "parking_spaces": null,
+      "number_of_floors": null,
+      "media": {
+        "owner_id": 116010,
+        "floorplans": [
+          {
+            "id": 111206508,
+            "ownerId": 116010,
+            "userId": 10,
+            "mediaClass": "ZUFP",
+            "mediaType": "IMAGE",
+            "statusCode": "ACT",
+            "caption": null,
+            "source": "ProjectNet",
+            "sortOrder": 111206508,
+            "url": "https://sg1-cdn.pgimgs.com/projectnet-unit/116010/ZUFP.111206508.R550X550.png",
+            "embedHtml": null,
+            "suspReason": null,
+            "isCover": false,
+            "bucketPath": "01/projectnet-unit/116010/ZUFP.111206508.png",
+            "pgUrls": {
+              "url": "https://sg1-cdn.pgimgs.com/projectnet-unit/116010/ZUFP.111206508.R550X550.png"
+            },
+            "ippUrls": {
+              "url": "https://ipp1-cdn.pgimgs.com/projectnet-unit/116010/ZUFP.111206508.R550X550.png"
+            }
+          }
+        ]
+      },
+      "price_range": null
+    },
+    {
+      "id": 72400,
+      "name": "1 Bedroom",
+      "building_ids": [
+        64684
+      ],
+      "bed": 1,
+      "bath": 1,
+      "study": 1,
+      "property_type": {
+        "property_group": {
+          "code": "RES",
+          "name": "Residential "
+        },
+        "property_sub_group": {
+          "code": "N",
+          "name": "Condo"
+        },
+        "property_type": {
+          "code": "CONDO",
+          "name": "Condo"
+        }
+      },
+      "floor_area": {
+        "from": {
+          "value": 40,
+          "unit": "Sqm"
+        },
+        "to": {
+          "value": null,
+          "unit": "Sqm"
+        }
+      },
+      "land_area": {
+        "from": {
+          "value": null,
+          "unit": "Sqw"
+        },
+        "to": {
+          "value": null,
+          "unit": "Sqw"
+        }
+      },
+      "price": {
+        "from": {
+          "value": null,
+          "unit": "THB"
+        },
+        "to": {
+          "value": null,
+          "unit": "THB"
+        }
+      },
+      "total_units": null,
+      "remaining_unit": null,
+      "parking_spaces": null,
+      "number_of_floors": null,
+      "media": {
+        "owner_id": 116012,
+        "floorplans": [
+          {
+            "id": 111206621,
+            "ownerId": 116012,
+            "userId": 10,
+            "mediaClass": "ZUFP",
+            "mediaType": "IMAGE",
+            "statusCode": "ACT",
+            "caption": null,
+            "source": "ProjectNet",
+            "sortOrder": 111206621,
+            "url": "https://sg1-cdn.pgimgs.com/projectnet-unit/116012/ZUFP.111206621.R550X550.png",
+            "embedHtml": null,
+            "suspReason": null,
+            "isCover": false,
+            "bucketPath": "21/projectnet-unit/116012/ZUFP.111206621.png",
+            "pgUrls": {
+              "url": "https://sg1-cdn.pgimgs.com/projectnet-unit/116012/ZUFP.111206621.R550X550.png"
+            },
+            "ippUrls": {
+              "url": "https://ipp1-cdn.pgimgs.com/projectnet-unit/116012/ZUFP.111206621.R550X550.png"
+            }
+          }
+        ]
+      },
+      "price_range": null
+    },
+    {
+      "id": 72401,
+      "name": "2 Bedroom",
+      "building_ids": [
+        64684
+      ],
+      "bed": 2,
+      "bath": 2,
+      "study": 1,
+      "property_type": {
+        "property_group": {
+          "code": "RES",
+          "name": "Residential "
+        },
+        "property_sub_group": {
+          "code": "N",
+          "name": "Condo"
+        },
+        "property_type": {
+          "code": "CONDO",
+          "name": "Condo"
+        }
+      },
+      "floor_area": {
+        "from": {
+          "value": 68,
+          "unit": "Sqm"
+        },
+        "to": {
+          "value": null,
+          "unit": "Sqm"
+        }
+      },
+      "land_area": {
+        "from": {
+          "value": null,
+          "unit": "Sqw"
+        },
+        "to": {
+          "value": null,
+          "unit": "Sqw"
+        }
+      },
+      "price": {
+        "from": {
+          "value": null,
+          "unit": "THB"
+        },
+        "to": {
+          "value": null,
+          "unit": "THB"
+        }
+      },
+      "total_units": null,
+      "remaining_unit": null,
+      "parking_spaces": null,
+      "number_of_floors": null,
+      "media": {
+        "owner_id": 116013,
+        "floorplans": [
+          {
+            "id": 111206656,
+            "ownerId": 116013,
+            "userId": 10,
+            "mediaClass": "ZUFP",
+            "mediaType": "IMAGE",
+            "statusCode": "ACT",
+            "caption": null,
+            "source": "ProjectNet",
+            "sortOrder": 111206656,
+            "url": "https://sg1-cdn.pgimgs.com/projectnet-unit/116013/ZUFP.111206656.R550X550.png",
+            "embedHtml": null,
+            "suspReason": null,
+            "isCover": false,
+            "bucketPath": "31/projectnet-unit/116013/ZUFP.111206656.png",
+            "pgUrls": {
+              "url": "https://sg1-cdn.pgimgs.com/projectnet-unit/116013/ZUFP.111206656.R550X550.png"
+            },
+            "ippUrls": {
+              "url": "https://ipp1-cdn.pgimgs.com/projectnet-unit/116013/ZUFP.111206656.R550X550.png"
+            }
+          }
+        ]
+      },
+      "price_range": null
+    }
+  ],
+  "description": "<h2><strong>เติมเต็มไลฟ์สไตล์ของคนรุ่นใหม่</strong><strong>Triple y residence</strong><strong>คอนโด ในโครงการสามย่านมิตรทาวน์</strong></h2> โครงการคอนโดมิเนียม Triple y residence คอนโดมิเนียม High Rise 33 ชั้น สร้างสรรค์โดย <a href=\"https://investor-th.goldenland.co.th/company_background.html\">บริษัทแผ่นดินทอง พร็อพเพอร์ตี้ ดีเวลลอปเม้นท์ จำกัด (มหาชน)</a> ตั้งอยู่หัวมุมถนนพระราม 4 ถนนพญาไท แขวงวังใหม่ เขตปทุมวัน เนื้อที่โครงการ 13 ไร่ 3 งาน 93 ตารางวา จำนวน 516 ยูนิตโดยมีพื้นที่ใช้สอย 34-68 ตารางเมตร ประกอบด้วย 1 Bedroom และ 2 Bedroom เป็นคอนโดมิเนียมรูปแบบสิทธิการเช่าระยะยาว 30 ปี ตั้งอยู่ในพื้นที่เดียวกัน กับโครงการ Mixed-use ขนาดใหญ่ “สามย่านมิตรทาวน์” ที่มีความอุดมสมบูรณ์ทั้งร้านค้า ร้านอาหารชั้นนำ <br/><br/>ทำเลที่ตั้งโครงการ ถือเป็นทำเลศักยภาพสูงใจกลางเมือง ตั้งอยู่จุดตัดของถนนพญาไท-ถนนสี่พระยา หรือตรงข้ามตึกจามจุรีแสควร์ สามารถเชื่อมต่อไปยังถนนเส้นหลักสายสำคัญได้หลากหลายเส้นทาง ใกล้ทางด่วนศรีรัช และทางด่วนมหานครเข้า-ออกเมืองสะดวก มาพร้อมแหล่งอำนวยความสะดวกครบครันมากมาย ทั้ง ห้างสรรพสินค้า ศูนย์การค้า สถานศึกษา โรงพยาบาล แหล่งงาน และสวนสาธารณะ เช่น Chamchuri Square , SilomComplex , Siam Center ,  <a href=\"https://chulalongkornhospital.go.th/kcmh\">โรงพยาบาลจุฬาลงกรณ์</a> , <a href=\"https://www.chula.ac.th\">จุฬาลงกรณ์มหาวิทยาลัย</a> และตลาดสามย่าน เป็นต้น<h3><strong>คอนโดมิเนียม </strong><strong>Triple y residence</strong><strong>มีหลากหลาย Type</strong><strong>ให้เลือก</strong></h3> ภายในโครงการมีจำนวน 516 ยูนิต จากเนื้อที่โครงการกว่า 13 ไร่ เป็นโครงการที่ออกแบบในสไตล์โมเดิร์น มาพร้อมส่วนกลางครบครันหลากหลายฟังก์ชั่น มีห้องให้เลือกถึง 3 Type ด้วยกัน ภายในมีการแบ่งพื้นที่ได้เป็นสัดส่วนดี และ มีมุมWindow Seat ให้นั่งชมวิวได้ด้วย<ul><li><strong>1</strong><strong> Bedroom</strong> ขนาดพื้นที่ใช้สอย 34.00 ตารางเมตร</li><li><strong>1</strong><strong> Bedroom</strong> ขนาดพื้นที่ใช้สอย 40.00 ตารางเมตร</li><li><strong>2</strong><strong> Bedrooms</strong> ขนาดพื้นที่ใช้สอย 68.00 ตารางเมตร</li></ul><h3><strong>การเดินทางมาสู่โครงการคอนโดมิเนียม </strong><strong>Triple y residence</strong></h3>โครงการตั้งอยู่ติดถนนพระราม4 ถือเป็นจุดเชื่อมต่อถนนสายสำคัญมากมาย จะเดินทางด้วยรถยนต์ส่วนตัว หรือรถสาธารณะ หรือหากอยู่นอกเมืองที่นี่ก็ใกล้กลับทางด่วน สามารถเลือกทางเดินได้ตามเส้นทางต่อไปนี้<ul><li>จากถนนพระราม 4 ระยะทาง 200 เมตร</li><li>จากถนนพญาไท ระยะทาง 3.7 กิโลเมตร</li><li>จากรถไฟฟ้า MRT สถานีสามย่าน ระยะทาง 120 เมตร</li><li>จากทางพิเศษศรีรัช ระยะทาง 6 กิโลเมตร</li><li>จากทางด่วนเฉลิมมหานคร ระยะทาง 3 กิโลเมตร</li></ul><h3><strong>สิ่งอำนวยความสะดวกภายในโครงการ</strong><strong>คอนโดมิเนียม</strong><strong>Triple y residence</strong></h3><ul><li><strong>Infinity pool</strong> สระว่ายน้ำไร้ขอบ ขนาด 25 เมตร</li><li><strong>Sky garden</strong> สวนลอยฟ้าบรรยากาศธรรมชาติ พร้อมชมวิวเมือง</li><li><strong>Sunken Seating zone</strong> ที่นั่งจมลึกแบบส่วนตัว</li><li><strong>Fitness </strong>มีเครื่องเล่นและอุปกรณ์ในการออกกำลังครบครัน</li><li><strong>Co-cooking lounge</strong> จัดกิจกรรมสังสรรค์แบบส่วนตัว พร้อมตู้ Locker เก็บอุปกรณ์</li><li><strong>Co-reading space</strong> พื้นที่นั่งสำหรับคนรักการอ่าน</li><li><strong>Rooftop laundromat</strong> พื้นที่ซักผ้าอัตโนมัติ</li><li><strong>Play zone</strong> ห้องกิจกรรม มีโต๊ะพูล และ โต๊ะปิงปอง ไว้ให้บริการ</li><li><strong>Access Card Control</strong> ระบบควบคุมการเข้า-ออกที่สะดวกสบายและปลอดภัย</li><li><strong>CCTV </strong>ติดตั้งกล้องวงจรปิดรอบโครงการและภายในโครงการ</li><li><strong>24 Hour Security</strong> มีเจ้าหน้าที่รักษาความปลอดภัยตลอด 24 ชั่วโมง</li></ul><h3><strong>แหล่งอำนวยความสะดวก ใกล้โครงการคอนโดมิเนียม</strong><strong>Triple y residence</strong></h3>การที่โครงการอยู่บนตึกสามย่านมิตรทาวน์ ก็เหมือนมีห้างตั้งอยู่ สภาพแวดล้อมรอบนอก ก็มีความอุดมสมบูรณ์ครบครันทั้ง สถานศึกษา ร้านค้า ร้านอาหาร เรื่องกาารคมนาคมก็มีให้หลากหลายเส้นทาง แถมยังใกล้ทางด่วน โดยแหล่งอำนวยความสะดวกใกล้โครงการที่น่าสนใจมีดังต่อไปนี้<h4><strong>ขนส่งสาธารณะ</strong></h4><ul><li>รถไฟฟ้า MRT สถานีสามย่าน ระยะทาง 120 เมตร</li></ul><h4><strong>สถานศึกษา</strong></h4><ul><li>จุฬาลงกรณ์มหาวิทยาลัย ระยะทาง 350 เมตร</li><li>โรงเรียนสาธิตจุฬาลงกรณ์มหาวิทยาลัย ระยะทาง 400 เมตร</li></ul><h4><strong>ห้างสรรพสินค้า</strong></h4><ul><li>Chamchuri Square ระยะทาง 350 เมตร</li><li>MBK Center ระยะทาง 1.2 กิโลเมตร</li><li>SilomComplex ระยะทาง 1.5 กิโลเมตร</li><li>Siam Center ระยะทาง 1.7 กิโลเมตร</li><li>Siam Discovery ระยะทาง 3.8 กิโลเมตร</li></ul><h4><strong>สถานพยาบาล</strong></h4><ul><li>โรงพยาบาลจุฬาลงกรณ์ ระยะทาง 1 กิโลเมตร</li></ul><h4><strong>อื่นๆ</strong></h4><ul><li>วัดหัวลำโพง ระยะทาง 260 เมตร</li><li>สนามกีฬาจุฬาลงกรณ์ ระยะทาง 750 เมตร</li><li>ตลาดสามย่าน ระยะทาง 800 เมตร</li><li>สถานีตำนวจนครบาลปมุมวัน ระยะทาง 900 เมตร</li><li>สวนลุมพินี ระยะทาง 7 กิโลเมตร</li></ul><h3><strong>เกี่ยวกับเจ้าของโครงการคอนโดมิเนียม</strong><strong>Triple y residence</strong></h3>บริษัทแผ่นดินทองพร็อพเพอร์ตี้ ดีเวลลอปเม้นท์ จำกัด (มหาชน) มีการประกอบธุรกิจพัฒนาอสังหาริมทรัพย์ โดยโครงสร้างรายได้ของบริษัทจะมีการพัฒนาอสังหาริมทรัพย์เพื่อการขาย อาทิเช่นจัดสรรบ้านและที่ดินพัฒนาโครงการที่อยู่อาศัยแนวราบ ของบ้านเดี่ยว บ้านแฝด และทาวน์เฮ้าส์ พร้อมการพัฒนาสาธารณูปโภคต่างๆ ในโครงการ ให้ครอบคลุมทุกระดับราคา ซึ่งโครงการนี้เป็นอีกหนึ่งโครงการติดถนนพระราม 4 ตอบโจทย์ไลฟ์สไตล์ของคนรุ่นใหม่ ย่านใจกลางเมือง โดยโครงการเริ่มก่อสร้างเสร็จในปี 2562<h3><strong>ยูนิตที่น่าสนใจในโครงการคอนโดมิเนียม </strong><strong>Triple y residence</strong></h3><ul><li>1 Bedroom ขนาดพื้นที่ใช้สอย 34 ตารางเมตร ราคา 4.9 ล้านบาท หรือ 148,484 บาท/ตารางเมตร</li><li>1 Bedroom ขนาดพื้นที่ใช้สอย 40 ตารางเมตร ราคา 5 ล้านบาท หรือ 125,000 บาท/ตารางเมตร</li><li>2 Bedrooms ขนาดพื้นที่ใช้สอย 68 ตารางเมตร ราคา 9 ล้านบาท หรือ 170,000 บาท/ตารางเมตร</li></ul><h3><strong>โครงการอื่น ๆ บริเวณใกล้เคียงโครงการคอนโดมิเนียม </strong><strong>Triple y residence</strong></h3><ul><li><a href=\"https://www.ddproperty.com/property/%E0%B8%94%E0%B9%88%E0%B8%A7%E0%B8%99-chamchuri-square-residence-%E0%B9%81%E0%B8%9A%E0%B8%9A-2%E0%B8%AB%E0%B9%89%E0%B8%AD%E0%B8%87%E0%B8%99%E0%B8%AD%E0%B8%99-1%E0%B8%AB%E0%B9%89%E0%B8%AD%E0%B8%87%E0%B8%99%E0%B9%89%E0%B8%B3-100-%E0%B8%95%E0%B8%A3-%E0%B8%A1-%E0%B8%8A%E0%B8%B1%E0%B9%89%E0%B8%99-11-%E0%B8%82%E0%B8%B2%E0%B8%A2-8-9-%E0%B8%A5%E0%B8%9A-line-0962215326-%E0%B8%84%E0%B8%B8%E0%B8%93-%E0%B9%84%E0%B8%82%E0%B9%88%E0%B9%80%E0%B8%88%E0%B8%B5%E0%B8%A2%E0%B8%A7-%E0%B8%82%E0%B8%B2%E0%B8%A2-8426894\">จามจุรี สแควร์ เรสซิเด้นส์</a></li><li><a href=\"https://www.ddproperty.com/property/%E0%B8%82%E0%B8%B2%E0%B8%A2-%E0%B8%84%E0%B8%AD%E0%B8%99%E0%B9%82%E0%B8%94-%E0%B9%84%E0%B8%AD%E0%B8%94%E0%B8%B5%E0%B9%82%E0%B8%AD-%E0%B8%84%E0%B8%B4%E0%B8%A7-%E0%B8%88%E0%B8%B8%E0%B8%AC%E0%B8%B2-%E0%B8%AA%E0%B8%B2%E0%B8%A1%E0%B8%A2%E0%B9%88%E0%B8%B2%E0%B8%99-%E0%B8%AA%E0%B8%B2%E0%B8%A1%E0%B8%A2%E0%B9%88%E0%B8%B2%E0%B8%99-%E0%B8%81%E0%B8%A3%E0%B8%B8%E0%B8%87%E0%B9%80%E0%B8%97%E0%B8%9E%E0%B8%A1%E0%B8%AB%E0%B8%B2%E0%B8%99%E0%B8%84%E0%B8%A3-c31011901-bangkok-citismart-%E0%B8%82%E0%B8%B2%E0%B8%A2-7588302\">ไอดีโอ คิว จุฬา – สามย่าน</a></li><li><a href=\"https://www.ddproperty.com/property/%E0%B9%81%E0%B8%AD%E0%B8%8A%E0%B8%95%E0%B8%B1%E0%B8%99-%E0%B8%88%E0%B8%B8%E0%B8%AC%E0%B8%B2-%E0%B8%AA%E0%B8%B5%E0%B8%A5%E0%B8%A1-vip-unit-63-%E0%B8%95%E0%B8%A3-%E0%B8%A1-2-%E0%B8%99%E0%B8%AD%E0%B8%99-2-%E0%B8%99%E0%B9%89%E0%B8%B3-jzp0149-%E0%B8%82%E0%B8%B2%E0%B8%A2-9626626\">แอชตัน จุฬา – สีลม</a></li></ul>",
+  "developer": {
+    "id": 4225,
+    "main_developer_id": 4225,
+    "name": "Golden Land Property Development - แผ่นดินทอง พร็อพเพอร์ตี้ ดีเวลลอปเม้นท์ จำกัด (มหาชน)",
+    "description": null,
+    "established_year": null,
+    "project_count": null,
+    "property_type": null,
+    "website_url": null,
+    "email": null,
+    "address": {
+      "id": 4225,
+      "street_no": null,
+      "street_name": null,
+      "localised_street_name": null,
+      "postal_code": null,
+      "country": "thailand",
+      "administrative_levels": {
+        "level1": null,
+        "level2": null,
+        "level3": null
+      }
+    },
+    "status": "active",
+    "media": {
+      "owner_id": 248256,
+      "logos": []
+    }
+  },
+  "developer_name": "Golden Land Property Development - แผ่นดินทอง พร็อพเพอร์ตี้ ดีเวลลอปเม้นท์ จำกัด (มหาชน)",
+  "id": 34797,
+  "name": "Triple Y Residence Samyan",
+  "property_id": 7006,
+  "nano_id": "1o97n7",
+  "new_project": false,
+  "completion_year": 2019,
+  "launch_year": 0,
+  "streetname": "Rama 4 Road",
+  "streetnumber": null,
+  "tenure": {
+    "code": "L",
+    "name": "Leasehold"
+  },
+  "tenure_code": "L",
+  "remaining_unit": null,
+  "bumi_discount": null,
+  "postcode": "10330",
+  "location": {
+    "lat": 13.734965092052569,
+    "lon": 100.52838647850422
+  },
+  "project_status": {
+    "code": "4TOP",
+    "name": "Completed"
+  },
+  "project_status_code": "4TOP",
+  "sales_status": {
+    "code": "",
+    "name": null
+  },
+  "sales_status_code": "",
+  "property_type_code": "CONDO",
+  "property_type_group": "N",
+  "adm_level1": "TH10",
+  "adm_level2": "TH1007",
+  "adm_level3": "TH100702",
+  "district_code": "TH1007",
+  "country": "thailand",
+  "localised_name": null,
+  "company_name": "Kasemsuppakdee - เกษมทรัพย์ภักดี จำกัด",
+  "timeline": {
+    "completion_date": {
+      "year": 2019,
+      "month": 9,
+      "day": 30
+    },
+    "launch_date": {
+      "year": 0,
+      "month": 0,
+      "day": 0
+    },
+    "en_bloc_date": {
+      "year": 0,
+      "month": 0,
+      "day": 0
+    },
+    "new_project_until": {
+      "year": 2020,
+      "month": 9,
+      "day": 30
+    },
+    "preview_date": {
+      "year": 0,
+      "month": 0,
+      "day": 0
+    },
+    "sold_out_date": {
+      "year": 0,
+      "month": 0,
+      "day": 0
+    }
+  },
+  "updated_at": "2024-03-27T18:43:17.000Z",
+  "created_at": "2019-09-30T04:52:42.000Z",
+  "maintenance_fee": {
+    "value": null,
+    "unit": "THB"
+  },
+  "starting_price": {
+    "value": 4490000,
+    "unit": "THB"
+  },
+  "max_price": {
+    "value": null,
+    "unit": "THB"
+  },
+  "project_land_area": {
+    "value": 5593,
+    "unit": "Sqw"
+  },
+  "price_per_unit_from": {
+    "value": null,
+    "unit": "Sqw",
+    "currency": "THB"
+  },
+  "total_units": 516,
+  "status": "active",
+  "government": {
+    "reference_id": null,
+    "reference_date": null
+  },
+  "buildings": [
+    {
+      "id": 64684,
+      "name": "Building A",
+      "total_floors": 33,
+      "completion_status": {
+        "code": "4TOP",
+        "name": "Completed"
+      },
+      "total_units": 516,
+      "address_id": 60284
+    }
+  ],
+  "facilities": [
+    {
+      "code": "CARPK",
+      "name": "Car Park"
+    },
+    {
+      "code": "COMMG",
+      "name": "Community Garden"
+    },
+    {
+      "code": "CTV",
+      "name": "CCTV"
+    },
+    {
+      "code": "FIT",
+      "name": "Fitness corner"
+    },
+    {
+      "code": "GAME",
+      "name": "Game room"
+    },
+    {
+      "code": "LAU",
+      "name": "Launderette"
+    },
+    {
+      "code": "LIB",
+      "name": "Library"
+    },
+    {
+      "code": "LLBY",
+      "name": "Lift lobby"
+    },
+    {
+      "code": "LOU",
+      "name": "Lounge"
+    },
+    {
+      "code": "MEET",
+      "name": "Meeting room"
+    },
+    {
+      "code": "PAVI",
+      "name": "Pavillion"
+    },
+    {
+      "code": "RT",
+      "name": "Roof Terrace"
+    },
+    {
+      "code": "SEC",
+      "name": "24 hours security"
+    },
+    {
+      "code": "SWI",
+      "name": "Swimming pool"
+    }
+  ],
+  "addresses": [
+    {
+      "country": "thailand",
+      "estateCode": null,
+      "externalId": "627245",
+      "streetName": "Rama 4 Road",
+      "streetNumber": null,
+      "postalCode": "10330"
+    }
+  ],
+  "key_points": [
+    {
+      "id": 17445,
+      "project_id": 34797,
+      "description": "Close to MRT Samyan station",
+      "descriptions": {
+        "en": "Close to MRT Samyan station",
+        "th": "ใกล้กับสถานีรถไฟฟ้าใต้ดินสามย่าน"
+      }
+    }
+  ],
+  "showroom": {
+    "showroom_address": {
+      "en": null,
+      "th": null
+    },
+    "localised_showroom_address": null
+  },
+  "title_code": {
+    "code": null
+  },
+  "land_title_type": {
+    "code": null
+  },
+  "media": {
+    "owner_id": 116006,
+    "photos": [
+      {
+        "id": 111206276,
+        "ownerId": 116006,
+        "userId": 10,
+        "mediaClass": "ZPPHO",
+        "mediaType": "IMAGE",
+        "statusCode": "ACT",
+        "caption": null,
+        "source": "ProjectNet",
+        "sortOrder": 111206271,
+        "url": "https://sg1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206276.R550X550.jpg",
+        "embedHtml": null,
+        "suspReason": null,
+        "isCover": false,
+        "bucketPath": "60/projectnet-project/116006/ZPPHO.111206276.jpg",
+        "pgUrls": {
+          "url": "https://sg1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206276.R550X550.jpg",
+          "V150": "https://sg1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206276.R150X150.jpg",
+          "V550": "https://sg1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206276.R550X550.jpg",
+          "V800": "https://sg1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206276.R800X800.jpg"
+        },
+        "ippUrls": {
+          "url": "https://ipp1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206276.R550X550.jpg",
+          "V150": "https://ipp1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206276.R150X150.jpg",
+          "V550": "https://ipp1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206276.R550X550.jpg",
+          "V800": "https://ipp1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206276.R800X800.jpg"
+        },
+        "V150": "https://sg1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206276.R150X150.jpg",
+        "V550": "https://sg1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206276.R550X550.jpg",
+        "V800": "https://sg1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206276.R800X800.jpg"
+      },
+      {
+        "id": 111206275,
+        "ownerId": 116006,
+        "userId": 10,
+        "mediaClass": "ZPPHO",
+        "mediaType": "IMAGE",
+        "statusCode": "ACT",
+        "caption": null,
+        "source": "ProjectNet",
+        "sortOrder": 111206272,
+        "url": "https://sg1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206275.R550X550.jpg",
+        "embedHtml": null,
+        "suspReason": null,
+        "isCover": false,
+        "bucketPath": "60/projectnet-project/116006/ZPPHO.111206275.jpg",
+        "pgUrls": {
+          "url": "https://sg1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206275.R550X550.jpg",
+          "V150": "https://sg1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206275.R150X150.jpg",
+          "V550": "https://sg1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206275.R550X550.jpg",
+          "V800": "https://sg1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206275.R800X800.jpg"
+        },
+        "ippUrls": {
+          "url": "https://ipp1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206275.R550X550.jpg",
+          "V150": "https://ipp1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206275.R150X150.jpg",
+          "V550": "https://ipp1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206275.R550X550.jpg",
+          "V800": "https://ipp1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206275.R800X800.jpg"
+        },
+        "V150": "https://sg1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206275.R150X150.jpg",
+        "V550": "https://sg1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206275.R550X550.jpg",
+        "V800": "https://sg1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206275.R800X800.jpg"
+      },
+      {
+        "id": 111206273,
+        "ownerId": 116006,
+        "userId": 10,
+        "mediaClass": "ZPPHO",
+        "mediaType": "IMAGE",
+        "statusCode": "ACT",
+        "caption": null,
+        "source": "ProjectNet",
+        "sortOrder": 111206273,
+        "url": "https://sg1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206273.R550X550.jpg",
+        "embedHtml": null,
+        "suspReason": null,
+        "isCover": false,
+        "bucketPath": "60/projectnet-project/116006/ZPPHO.111206273.jpg",
+        "pgUrls": {
+          "url": "https://sg1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206273.R550X550.jpg",
+          "V150": "https://sg1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206273.R150X150.jpg",
+          "V550": "https://sg1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206273.R550X550.jpg",
+          "V800": "https://sg1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206273.R800X800.jpg"
+        },
+        "ippUrls": {
+          "url": "https://ipp1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206273.R550X550.jpg",
+          "V150": "https://ipp1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206273.R150X150.jpg",
+          "V550": "https://ipp1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206273.R550X550.jpg",
+          "V800": "https://ipp1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206273.R800X800.jpg"
+        },
+        "V150": "https://sg1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206273.R150X150.jpg",
+        "V550": "https://sg1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206273.R550X550.jpg",
+        "V800": "https://sg1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206273.R800X800.jpg"
+      },
+      {
+        "id": 111206272,
+        "ownerId": 116006,
+        "userId": 10,
+        "mediaClass": "ZPPHO",
+        "mediaType": "IMAGE",
+        "statusCode": "ACT",
+        "caption": null,
+        "source": "ProjectNet",
+        "sortOrder": 111206274,
+        "url": "https://sg1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206272.R550X550.jpg",
+        "embedHtml": null,
+        "suspReason": null,
+        "isCover": false,
+        "bucketPath": "60/projectnet-project/116006/ZPPHO.111206272.jpg",
+        "pgUrls": {
+          "url": "https://sg1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206272.R550X550.jpg",
+          "V150": "https://sg1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206272.R150X150.jpg",
+          "V550": "https://sg1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206272.R550X550.jpg",
+          "V800": "https://sg1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206272.R800X800.jpg"
+        },
+        "ippUrls": {
+          "url": "https://ipp1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206272.R550X550.jpg",
+          "V150": "https://ipp1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206272.R150X150.jpg",
+          "V550": "https://ipp1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206272.R550X550.jpg",
+          "V800": "https://ipp1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206272.R800X800.jpg"
+        },
+        "V150": "https://sg1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206272.R150X150.jpg",
+        "V550": "https://sg1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206272.R550X550.jpg",
+        "V800": "https://sg1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206272.R800X800.jpg"
+      },
+      {
+        "id": 111206274,
+        "ownerId": 116006,
+        "userId": 10,
+        "mediaClass": "ZPPHO",
+        "mediaType": "IMAGE",
+        "statusCode": "ACT",
+        "caption": null,
+        "source": "ProjectNet",
+        "sortOrder": 111206275,
+        "url": "https://sg1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206274.R550X550.jpg",
+        "embedHtml": null,
+        "suspReason": null,
+        "isCover": false,
+        "bucketPath": "60/projectnet-project/116006/ZPPHO.111206274.jpg",
+        "pgUrls": {
+          "url": "https://sg1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206274.R550X550.jpg",
+          "V150": "https://sg1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206274.R150X150.jpg",
+          "V550": "https://sg1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206274.R550X550.jpg",
+          "V800": "https://sg1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206274.R800X800.jpg"
+        },
+        "ippUrls": {
+          "url": "https://ipp1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206274.R550X550.jpg",
+          "V150": "https://ipp1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206274.R150X150.jpg",
+          "V550": "https://ipp1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206274.R550X550.jpg",
+          "V800": "https://ipp1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206274.R800X800.jpg"
+        },
+        "V150": "https://sg1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206274.R150X150.jpg",
+        "V550": "https://sg1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206274.R550X550.jpg",
+        "V800": "https://sg1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206274.R800X800.jpg"
+      },
+      {
+        "id": 111206271,
+        "ownerId": 116006,
+        "userId": 10,
+        "mediaClass": "ZPPHO",
+        "mediaType": "IMAGE",
+        "statusCode": "ACT",
+        "caption": null,
+        "source": "ProjectNet",
+        "sortOrder": 111206276,
+        "url": "https://sg1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206271.R550X550.jpg",
+        "embedHtml": null,
+        "suspReason": null,
+        "isCover": false,
+        "bucketPath": "60/projectnet-project/116006/ZPPHO.111206271.jpg",
+        "pgUrls": {
+          "url": "https://sg1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206271.R550X550.jpg",
+          "V150": "https://sg1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206271.R150X150.jpg",
+          "V550": "https://sg1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206271.R550X550.jpg",
+          "V800": "https://sg1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206271.R800X800.jpg"
+        },
+        "ippUrls": {
+          "url": "https://ipp1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206271.R550X550.jpg",
+          "V150": "https://ipp1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206271.R150X150.jpg",
+          "V550": "https://ipp1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206271.R550X550.jpg",
+          "V800": "https://ipp1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206271.R800X800.jpg"
+        },
+        "V150": "https://sg1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206271.R150X150.jpg",
+        "V550": "https://sg1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206271.R550X550.jpg",
+        "V800": "https://sg1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206271.R800X800.jpg"
+      },
+      {
+        "id": 111206551,
+        "ownerId": 116006,
+        "userId": 10,
+        "mediaClass": "ZPPHO",
+        "mediaType": "IMAGE",
+        "statusCode": "ACT",
+        "caption": null,
+        "source": "ProjectNet",
+        "sortOrder": 111206551,
+        "url": "https://sg1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206551.R550X550.jpg",
+        "embedHtml": null,
+        "suspReason": null,
+        "isCover": false,
+        "bucketPath": "60/projectnet-project/116006/ZPPHO.111206551.jpg",
+        "pgUrls": {
+          "url": "https://sg1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206551.R550X550.jpg",
+          "V150": "https://sg1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206551.R150X150.jpg",
+          "V550": "https://sg1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206551.R550X550.jpg",
+          "V800": "https://sg1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206551.R800X800.jpg"
+        },
+        "ippUrls": {
+          "url": "https://ipp1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206551.R550X550.jpg",
+          "V150": "https://ipp1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206551.R150X150.jpg",
+          "V550": "https://ipp1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206551.R550X550.jpg",
+          "V800": "https://ipp1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206551.R800X800.jpg"
+        },
+        "V150": "https://sg1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206551.R150X150.jpg",
+        "V550": "https://sg1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206551.R550X550.jpg",
+        "V800": "https://sg1-cdn.pgimgs.com/projectnet-project/116006/ZPPHO.111206551.R800X800.jpg"
+      }
+    ],
+    "siteplans": [
+      {
+        "id": 111206282,
+        "ownerId": 116006,
+        "userId": 10,
+        "mediaClass": "ZPSPL",
+        "mediaType": "IMAGE",
+        "statusCode": "ACT",
+        "caption": null,
+        "source": "ProjectNet",
+        "sortOrder": 111206282,
+        "url": "https://sg1-cdn.pgimgs.com/projectnet-project/116006/ZPSPL.111206282.R550X550.jpg",
+        "embedHtml": null,
+        "suspReason": null,
+        "isCover": false,
+        "bucketPath": "60/projectnet-project/116006/ZPSPL.111206282.jpg",
+        "pgUrls": {
+          "url": "https://sg1-cdn.pgimgs.com/projectnet-project/116006/ZPSPL.111206282.R550X550.jpg"
+        },
+        "ippUrls": {
+          "url": "https://ipp1-cdn.pgimgs.com/projectnet-project/116006/ZPSPL.111206282.R550X550.jpg"
+        }
+      },
+      {
+        "id": 111206283,
+        "ownerId": 116006,
+        "userId": 10,
+        "mediaClass": "ZPSPL",
+        "mediaType": "IMAGE",
+        "statusCode": "ACT",
+        "caption": null,
+        "source": "ProjectNet",
+        "sortOrder": 111206283,
+        "url": "https://sg1-cdn.pgimgs.com/projectnet-project/116006/ZPSPL.111206283.R550X550.jpg",
+        "embedHtml": null,
+        "suspReason": null,
+        "isCover": false,
+        "bucketPath": "60/projectnet-project/116006/ZPSPL.111206283.jpg",
+        "pgUrls": {
+          "url": "https://sg1-cdn.pgimgs.com/projectnet-project/116006/ZPSPL.111206283.R550X550.jpg"
+        },
+        "ippUrls": {
+          "url": "https://ipp1-cdn.pgimgs.com/projectnet-project/116006/ZPSPL.111206283.R550X550.jpg"
+        }
+      }
+    ],
+    "logos": []
+  },
+  "derived_info": {
+    "total_floors": 33,
+    "total_units": 516,
+    "property_type": {
+      "property_group": {
+        "code": "RES",
+        "name": "Residential "
+      },
+      "property_sub_group": {
+        "code": "N",
+        "name": "Condo"
+      },
+      "property_type": {
+        "code": "CONDO",
+        "name": "Condo"
+      }
+    },
+    "buildings_count": 1
+  },
+  "media_api_url": "http://media.guruestate.com/v1/media?region=sg&media_class=ZPPHO,ZDPHO,ZUPHO,ZPMOV,ZDMOV,ZUMOV,ZPTOU,ZDTOU,ZUTOU,ZPLOG,ZDLOG,ZPSPL,ZUFP,ZPDOC,ZDDOC,ZUDOC&owner_id=116006",
+  "ipp_description": null,
+  "legacy_ipp_id": null,
+  "ipp_source": false,
+  "encryptedCenter": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzeW1iaW9zaXMiLCJpYXQiOjE3NzUzNzA2MzMsImV4cCI6MTc3NjU4MDIzMywiY2VudGVyIjp7ImxhdCI6MTMuNzM0OTY1MDkyMDUyNTY5LCJsbmciOjEwMC41MjgzODY0Nzg1MDQyMn19.YwCEEymueGGAsoSmni2iuwmdIG674aAtCRVbv2FEXOQ"
+}

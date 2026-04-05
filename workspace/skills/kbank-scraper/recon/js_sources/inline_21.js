@@ -1,0 +1,1 @@
+RegisterSod("core.js", "\u002f_layouts\u002f15\u002fcore.js?rev=74F6aH9287K5hiLGz3pxCg\u00253D\u00253DTAG0");RegisterSodDep("core.js", "strings.js");

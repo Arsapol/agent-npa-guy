@@ -1,0 +1,1 @@
+RegisterSod("sp.res.resx", "\u002f_layouts\u002f15\u002f1033\u002fsp.res.js?rev=FnWveYddVjlqQYS2ZBOOzA\u00253D\u00253DTAG0");

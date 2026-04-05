@@ -1,0 +1,37 @@
+{
+  "$schema": "https://code.claude.com/schemas/hooks.json",
+  "_comment": "Copy the hooks you want into your project's .claude/settings.json under the 'hooks' key",
+
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "command": "bash hooks/post-edit.sh \"$CLAUDE_FILE_PATH\"",
+        "description": "Run lint and type check after file edits"
+      },
+      {
+        "matcher": "Bash",
+        "command": "bash hooks/auto-commit-check.sh",
+        "description": "Check for uncommitted changes after bash commands"
+      }
+    ],
+    "TeammateIdle": [
+      {
+        "command": "bash hooks/teammate-idle.sh",
+        "description": "Verify teammate completed their work before going idle"
+      }
+    ],
+    "TaskCompleted": [
+      {
+        "command": "bash hooks/task-completed.sh",
+        "description": "Validate task completion against acceptance criteria"
+      }
+    ],
+    "Stop": [
+      {
+        "command": "bash hooks/stop-gate.sh",
+        "description": "Prevent premature completion — verify tests pass before stopping"
+      }
+    ]
+  }
+}

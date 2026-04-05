@@ -1,0 +1,50 @@
+{
+  "feature": "Example Feature",
+  "branchName": "feature/example",
+  "description": "A template PRD. Replace with your actual feature description.",
+  "stories": [
+    {
+      "id": "story-001",
+      "title": "Design API contracts",
+      "description": "Define REST API endpoints, request/response schemas, and shared types",
+      "priority": 1,
+      "passes": false,
+      "acceptance_criteria": [
+        "All endpoints documented in shared-contracts.md",
+        "Request and response schemas defined for each endpoint",
+        "Shared TypeScript interfaces defined"
+      ],
+      "track": "creative",
+      "dependencies": []
+    },
+    {
+      "id": "story-002",
+      "title": "Implement data model",
+      "description": "Create database schema and migrations per the contracts",
+      "priority": 2,
+      "passes": false,
+      "acceptance_criteria": [
+        "Migration runs successfully",
+        "Schema matches shared-contracts.md exactly",
+        "Seed data script works"
+      ],
+      "track": "mechanical",
+      "dependencies": ["story-001"]
+    },
+    {
+      "id": "story-003",
+      "title": "Integration tests pass",
+      "description": "Verify all stories work together end-to-end",
+      "priority": 99,
+      "passes": false,
+      "acceptance_criteria": [
+        "All unit tests pass",
+        "All integration tests pass",
+        "TypeScript compiles with zero errors",
+        "Lint passes with zero warnings"
+      ],
+      "track": "mechanical",
+      "dependencies": ["story-001", "story-002"]
+    }
+  ]
+}

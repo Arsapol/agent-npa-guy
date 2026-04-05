@@ -1,0 +1,22 @@
+{
+  "https://www.ddproperty.com/api/consumer/autocomplete?q=inspire+place&locale=en&region=th": {
+    "status": 405,
+    "body": "{\"error\":{\"message\":\"Please use POST method\"}}"
+  },
+  "https://www.ddproperty.com/api/consumer/autocomplete?q=15+sukhumvit&locale=en&region=th": {
+    "status": 405,
+    "body": "{\"error\":{\"message\":\"Please use POST method\"}}"
+  },
+  "https://www.ddproperty.com/api/consumer/condo-directory/search?keyword=inspire+place&locale=en&region=th": {
+    "status": 500,
+    "body": "{\"error\":{\"message\":\"Error: There was a problem fetching projects\"}}"
+  },
+  "https://www.ddproperty.com/api/consumer/search-with-filter/mrt-items?region=th&locale=en": {
+    "status": 200,
+    "body": "[{\"id\":\"N-E\",\"color\":\"#73C34B\",\"name\":\"BTS Sukhumvit Line\",\"sortOrder\":1,\"stations\":[{\"id\":\"N24\",\"poiId\":\"2634\",\"name\":\"N24 Khu Khot BTS\",\"colors\":[\"#73C34B\"],\"location\":{\"latitude\":13.9323462,\"longitude\":100.6444373}},{\"id\":\"N23\",\"poiId\":\"2635\",\"name\":\"N23 Yaek Kor Por Aor BTS\",\"colors\":[\"#73C34B\"],\"location\":{\"latitude\":13.9249882,\"longitude\":100.6236873}},{\"id\":\"N22\",\"poiId\":\"2636\",\"name\":\"N22 Royal Thai Air Force Museum BTS\",\"colors\":[\"#73C34B\"],\"location\":{\"latitude\":13.9198718,\"longitude\":100.6204891}},{\"id\":\"N21\",\"poiId\":\"2637\",\"name\":\"N21 Bhumibol Adulyadej Hospital BTS\",\"colors\":[\"#73C34B\"],\"location\":{\"latitude\":13.9107272,\"longitude\":100.6152343}},{\"id\":\"N20\",\"poiId\":\"2638\",\"name\":\"N20 Saphan Mai BTS\",\"colors\":[\"#73C34B\"],\"location\":{\"latitude\":13.8919129,\"longitude\":100.5980912}},{\"id\":\"N19\",\"poiId\":\"2639\",\"name\":\"N19 Sai Yud BTS\",\"colors\":[\"#73C34B\"],\"location\":{\"latitude\":13.8876461,\"longitude\":100.6039239}},{\"id\":\"N18\",\"poiId\":\"2640\",\"name\":\"N18 Phahon Yothin 59 BTS\",\"colors\":[\"#73C34B\"],\"location\":{\"latitude\":13.8824592,\"longitude\":100.5985773}},{\"id\":\"N17/PK16\",\"poiId\":\"2641\",\"name\":\"N17 Wat Phra Sri Mahathat BTS\",\"colors\":[\"#73C34B\",\"#E56DB1\"],\"location\":{\"latitude\":13.875278,\"longitude\":100.596667}},{\"id\":\"N16\",\"poiId\":\"2642\",\"name\":\"N16 11th Infantry Regiment BTS\",\"colors\":[\"#73C34B\"],\"location\":{\"latitude\":13.8675332,\"longitude\":100.5897513}},{\"id\":\"N15\",\"poiId\":\"2643\",\"name\":\"N15 Bang Bua BTS\",\"colors\":[\"#73C34B\"],\"location\":{\"latitude\":13.855556,\"longitude\":100.583333}},{\"id\":\"N14\",\"poiId\":\"2644\",\"name\":\"N14 Royal Forest Department BTS\",\"colors\":[\"#73C34B\"],\"location\":{\"latitude\":13.8505634,\"longitude\":100.5817864}},{\"id\":\"N13\",\"poiId\":\"2645\",\"name\":\"N13 Kasetsart University BTS\",\"colors\":[\"#73C34B\"],\"location\":{\"latitude\":13.8421706,\"longitude\":100.5773757}},{\"id\":\"N12\",\"poiId\":\"2646\",\"name\":\"N12 Sena Nikhom BTS\",\"colors\":[\"#73C34B\"],\"location\":{\"latitude\":13.836389,\"longitude\":100.573611}},{\"id\":\"N11\",\"poiId\":\"2647\",\"name\":\"N11 Ratchayothin "
+  },
+  "https://www.ddproperty.com/api/consumer/search-with-filter/location-items?region=th&locale=en&q=sukhumvit": {
+    "status": 500,
+    "body": "{\"error\":{\"message\":\"TypeError: Cannot read properties of undefined (reading 'toLowerCase')\"}}"
+  }
+}

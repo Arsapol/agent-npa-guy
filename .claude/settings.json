@@ -1,0 +1,46 @@
+{
+    "hooks": {
+        "PostToolUse": [
+            {
+                "matcher": "Edit|Write",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "bash hooks/post-edit.sh \"$CLAUDE_FILE_PATH\""
+                    }
+                ]
+            },
+            {
+                "matcher": "Bash",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "bash hooks/auto-commit-check.sh"
+                    }
+                ]
+            }
+        ],
+        "TeammateIdle": [
+            {
+                "matcher": "",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "bash hooks/teammate-idle.sh"
+                    }
+                ]
+            }
+        ],
+        "TaskCompleted": [
+            {
+                "matcher": "",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "bash hooks/task-completed.sh"
+                    }
+                ]
+            }
+        ]
+    }
+}

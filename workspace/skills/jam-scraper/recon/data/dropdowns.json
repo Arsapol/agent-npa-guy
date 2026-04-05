@@ -1,0 +1,950 @@
+{
+  "company": {
+    "status": 200,
+    "data": [
+      {
+        "Company_Code": 1,
+        "Company_TH": "บ้าน บ้าน พร็อพเพอร์ตี้",
+        "Company_EN": "BaanBaanProperty",
+        "Logo": "https://picture.jjpropertythai.com/JJ/Company/07-02-2026-309504.png",
+        "Image_Topic_Active_Company": "https://picture.jjpropertythai.com/JJ/Company/01-06-2024-853884.png",
+        "Image_Topic_Company": "https://picture.jjpropertythai.com/JJ/Company/01-06-2024-892596.png",
+        "Address": "187 อาคาร์เจมาร์ท ถนนรามคำแหง ",
+        "Address_EN": null,
+        "District": "แขวงราษฏร์พัฒนา เขตสะพานสูง ",
+        "Province": "กรุงเทพมหานคร ",
+        "Postcode": "10240",
+        "Company_Tel": "028387777",
+        "Company_Email": null,
+        "Status": true,
+        "Save_date": "2024-02-06T13:18:16.667Z",
+        "Save_by": "6206822",
+        "Update_date": "2026-02-07T03:44:14.000Z",
+        "Update_by": "jasset864@gmail.com",
+        "About": "บ้านมือสอง ทาวน์โฮม คอนโดมิเนียม อาคารพาณิชย์ \nทำเลดี มีที่ J JProperty Thai",
+        "About_EN": null,
+        "isMyCompany": true,
+        "Code": "JMT",
+        "Interval_Soldout": "30",
+        "Percent_KYC": 0,
+        "line_official": null,
+        "Description": null,
+        "Description_EN": null,
+        "Title": null,
+        "Title_EN": null,
+        "contracts": [
+          {
+            "ID_Company_Contracts": 1,
+            "Company_Code": "1",
+            "Title_TH": "JAM - ขายบ้าน คอนโด ทาวน์โฮม พร้อมอยู่",
+            "Title_EN": "J Asset Management ",
+            "Link": "https://www.facebook.com/jassetmanagement/",
+            "Image": "https://picture.jjpropertythai.com/JJ/Company/01-06-2024-883966.png",
+            "Status": true,
+            "Save_Date": "2024-02-21T12:05:43.703Z",
+            "Save_By": null,
+            "Update_date": "2026-02-07T03:44:14.000Z",
+            "Update_by": "jasset864@gmail.com"
+          },
+          {
+            "ID_Company_Contracts": 2,
+            "Company_Code": "1",
+            "Title_TH": "JJ Property Thai",
+            "Title_EN": "JJ Property Thai บ้านมือสองพร้อมอยู่",
+            "Link": "https://www.facebook.com/JJPropertyThai",
+            "Image": "https://picture.jjpropertythai.com/JJ/Company/26-06-2024-672029.png",
+            "Status": true,
+            "Save_Date": "2024-02-21T12:05:53.280Z",
+            "Save_By": null,
+            "Update_date": "2026-02-07T03:44:14.000Z",
+            "Update_by": "jasset864@gmail.com"
+          },
+          {
+            "ID_Company_Contracts": 10,
+            "Company_Code": "1",
+            "Title_TH": "JJ Property Thai บ้านมือสองพร้อมอยู่",
+            "Title_EN": "JJ Property Thai บ้านมือสองพร้อมอยู่",
+            "Link": "https://lin.ee/Mqzb2UD",
+            "Image": "https://picture.jjpropertythai.com/JJ/Company/26-06-2024-268210.png",
+            "Status": true,
+            "Save_Date": "2024-06-26T11:16:39.327Z",
+            "Save_By": null,
+            "Update_date": "2026-02-07T03:44:14.000Z",
+            "Update_by": "jasset864@gmail.com"
+          },
+          {
+            "ID_Company_Contracts": 11,
+            "Company_Code": "1",
+            "Title_TH": "เรื่องบ้านๆ By J Asset Management",
+            "Title_EN": "เรื่องบ้านๆ By J Asset Management",
+            "Link": "https://www.youtube.com/@byjassetmanagement2833",
+            "Image": "https://picture.jjpropertythai.com/JJ/Company/26-06-2024-219860.png",
+            "Status": true,
+            "Save_Date": "2024-06-26T11:19:33.597Z",
+            "Save_By": null,
+            "Update_date": "2026-02-07T03:44:14.000Z",
+            "Update_by": "jasset864@gmail.com"
+          }
+        ]
+      },
+      {
+        "Company_Code": 2,
+        "Company_TH": "กสิกร",
+        "Company_EN": "KProperty",
+        "Logo": "https://picture.jjpropertythai.com/JJ/Company/23-04-2024-134006.png",
+        "Image_Topic_Active_Company": "https://picture.jjpropertythai.com/JJ/Company/01-06-2024-534953.png",
+        "Image_Topic_Company": "https://picture.jjpropertythai.com/JJ/Company/01-06-2024-761963.png",
+        "Address": "400/22 ถนนพหลโยธิน",
+        "Address_EN": null,
+        "District": "แขวงสามเสนใน เขตพญาไท",
+        "Province": "กรุงเทพมหานคร",
+        "Postcode": "10400",
+        "Company_Tel": "099-999-9999",
+        "Company_Email": "examKBMail@gmail.com",
+        "Status": true,
+        "Save_date": "2024-02-15T13:46:36.000Z",
+        "Save_by": "Ad@ad12345",
+        "Update_date": "2024-06-01T09:19:50.000Z",
+        "Update_by": "AdminJJ",
+        "About": "กสิกร KProperty",
+        "About_EN": "Kasikorn KProperty",
+        "isMyCompany": false,
+        "Code": "KBANK",
+        "Interval_Soldout": "30",
+        "Percent_KYC": 0,
+        "line_official": null,
+        "Description": null,
+        "Description_EN": null,
+        "Title": null,
+        "Title_EN": null,
+        "contracts": [
+          {
+            "ID_Company_Contracts": 4,
+            "Company_Code": "2",
+            "Title_TH": "FB",
+            "Title_EN": "321",
+            "Link": "432",
+            "Image": "https://picture.jjpropertythai.com/JJ/Company/05-04-2024-588880.png",
+            "Status": true,
+            "Save_Date": "2024-02-25T19:16:05.847Z",
+            "Save_By": null,
+            "Update_date": "2024-06-01T09:19:50.000Z",
+            "Update_by": "AdminJJ"
+          },
+          {
+            "ID_Company_Contracts": 5,
+            "Company_Code": "2",
+            "Title_TH": "KB",
+            "Title_EN": "435",
+            "Link": "567",
+            "Image": "https://picture.jjpropertythai.com/JJ/Company/05-04-2024-601703.png",
+            "Status": true,
+            "Save_Date": "2024-02-26T00:49:04.987Z",
+            "Save_By": null,
+            "Update_date": "2024-06-01T09:19:50.000Z",
+            "Update_by": "AdminJJ"
+          },
+          {
+            "ID_Company_Contracts": 6,
+            "Company_Code": "2",
+            "Title_TH": "AS",
+            "Title_EN": "123",
+            "Link": "321",
+            "Image": "https://picture.jjpropertythai.com/JJ/Company/05-04-2024-47863.png",
+            "Status": true,
+            "Save_Date": "2024-02-26T11:26:23.977Z",
+            "Save_By": null,
+            "Update_date": "2024-06-01T09:19:50.000Z",
+            "Update_by": "AdminJJ"
+          }
+        ]
+      },
+      {
+        "Company_Code": 3,
+        "Company_TH": "บริษัท บาเนีย(ประเทศไทย)",
+        "Company_EN": "Baania",
+        "Logo": "https://picture.jjpropertythai.com/JJ/Company/09-05-2024-591460.png",
+        "Image_Topic_Active_Company": "https://picture.jjpropertythai.com/JJ/Company/01-06-2024-831217.png",
+        "Image_Topic_Company": "https://picture.jjpropertythai.com/JJ/Company/01-06-2024-3890.png",
+        "Address": "สำนักงาน (กรุงเทพฯ) บริษัท บาเนีย(ประเทศไทย)\r\nอาคารจีทาวเวอร์ ชั้น 33 เลขที่ 9 ถนนพระราม 9",
+        "Address_EN": null,
+        "District": "แขวงห้วยขวาง เขตห้วยขวาง",
+        "Province": "กรุงเทพมหานคร",
+        "Postcode": "10310",
+        "Company_Tel": "097-998-0402",
+        "Company_Email": "admin@baania.com",
+        "Status": true,
+        "Save_date": "2024-04-27T00:00:00.000Z",
+        "Save_by": "6206822",
+        "Update_date": "2024-06-01T09:19:55.000Z",
+        "Update_by": "AdminJJ",
+        "About": "บาเนีย (ประเทศไทย) ได้รวบรวมชุดข้อมูลในทุกมิติของธุรกิจอสังหาริมทรัพย์ในประเทศไทย ทั้งอุปสงค์ อุปทาน ทำเล ข้อมูลผู้บริโภค ข้อมูลโครงการอสังหาริมทรัพย์ทั่วประเทศ รวมถึงแนวโน้มและปัจจัยที่มีผลกระทบต่อตลาดอสังหาริมทรัพย์ในประเทศไทย",
+        "About_EN": "Baania (Thailand) has compiled various information, whether the demand and supply data market, consumer behaviour information of projects across the country including factors affecting the Real Estate market in Thailand.",
+        "isMyCompany": false,
+        "Code": null,
+        "Interval_Soldout": "30",
+        "Percent_KYC": 0,
+        "line_official": null,
+        "Description": null,
+        "Description_EN": null,
+        "Title": null,
+        "Title_EN": null,
+        "contracts": [
+          {
+            "ID_Company_Contracts": 7,
+            "Company_Code": "3",
+            "Title_TH": "Facebook : Baania.com ",
+            "Title_EN": "Facebook : Baania.com ",
+            "Link": "https://www.facebook.com/Baania.Official",
+            "Image": "https://picture.jjpropertythai.com/JJ/Company/01-06-2024-618039.jpg",
+            "Status": true,
+            "Save_Date": "2024-06-01T11:21:53.477Z",
+            "Save_By": null,
+            "Update_date": "2024-06-01T09:19:55.000Z",
+            "Update_by": "AdminJJ"
+          },
+          {
+            "ID_Company_Contracts": 8,
+            "Company_Code": "3",
+            "Title_TH": "Website : https://www.baania.com/",
+            "Title_EN": "Website : https://www.baania.com/",
+            "Link": "https://www.baania.com/",
+            "Image": "https://picture.jjpropertythai.com/JJ/Company/01-06-2024-997744.jpg",
+            "Status": true,
+            "Save_Date": "2024-06-01T11:21:53.493Z",
+            "Save_By": null,
+            "Update_date": "2024-06-01T09:19:55.000Z",
+            "Update_by": "AdminJJ"
+          }
+        ]
+      },
+      {
+        "Company_Code": 4,
+        "Company_TH": "เอเจนท์ แจม",
+        "Company_EN": "Agent JAM",
+        "Logo": "https://picture.jjpropertythai.com/JJ/Company/03-04-2025-382918.png",
+        "Image_Topic_Active_Company": null,
+        "Image_Topic_Company": null,
+        "Address": "187 อาคารเจมาร์ท ชั้น 4 ถนนรามคำแหง",
+        "Address_EN": null,
+        "District": "เขตสะพานสูง แขวงราษฎร์พัฒนา",
+        "Province": "กรุงเทพมหานคร",
+        "Postcode": "10240",
+        "Company_Tel": "028387777",
+        "Company_Email": "-",
+        "Status": true,
+        "Save_date": "2024-06-21T10:55:03.000Z",
+        "Save_by": "jasset864@gmail.com",
+        "Update_date": "2025-04-03T14:11:20.000Z",
+        "Update_by": "Manager",
+        "About": "-",
+        "About_EN": "-",
+        "isMyCompany": false,
+        "Code": null,
+        "Interval_Soldout": null,
+        "Percent_KYC": 0,
+        "line_official": null,
+        "Description": null,
+        "Description_EN": null,
+        "Title": null,
+        "Title_EN": null,
+        "contracts": [
+          {
+            "ID_Company_Contracts": 9,
+            "Company_Code": "4",
+            "Title_TH": "Line@",
+            "Title_EN": "Line@",
+            "Link": "https://lin.ee/d8ozZji",
+            "Image": "https://picture.jjpropertythai.com/JJ/Company/21-06-2024-664912.png",
+            "Status": true,
+            "Save_Date": "2024-06-21T17:55:26.867Z",
+            "Save_By": null,
+            "Update_date": "2025-04-03T14:11:20.000Z",
+            "Update_by": "Manager"
+          }
+        ]
+      },
+      {
+        "Company_Code": 5,
+        "Company_TH": "JGS",
+        "Company_EN": "JGS",
+        "Logo": null,
+        "Image_Topic_Active_Company": null,
+        "Image_Topic_Company": "https://a-us.storyblok.com/f/1006159/1679x804/43cf64b901/home-solar.png/m/1675x0",
+        "Address": null,
+        "Address_EN": null,
+        "District": null,
+        "Province": null,
+        "Postcode": null,
+        "Company_Tel": null,
+        "Company_Email": null,
+        "Status": false,
+        "Save_date": null,
+        "Save_by": null,
+        "Update_date": null,
+        "Update_by": null,
+        "About": "JGS Synergy Power เป็นบริษัทร่วมทุนระหว่างบริษัทกันกุล, เจมาร์ทและซิงเกอร์ประเทศไทยซึ่งมีจุดประสงค์เพื่อขยายตลาด  Solar Rooftop Solution สำหรับไซส์ครัวเรือนและธุรกิจ ขนาดเล็กถึงกลางให้เติบโตด้วยโซลูชั่นภายใต้แนว คิด “Make Energy Affordable พลังงานสะอาด..ไซส์ไหนก็เป็นเจ้าของ ได้” พร้อมเดินหน้าจำหน่ายสินค้ากลุ่มพลังงานทดแทนเพื่อต่อ ยอดเมกะเทรนด์ Net-Zero Carbon ของประเทศv",
+        "About_EN": null,
+        "isMyCompany": false,
+        "Code": null,
+        "Interval_Soldout": null,
+        "Percent_KYC": null,
+        "line_official": null,
+        "Description": "<p> \tsadasdasdกฟหกหฟ&nbsp; </p> <p> \tฟหฟห </p> <p> \tฟห </p> <p> \tก </p> <p> \t&nbsp; </p> <p> \tหฟ </p> <p> \tกฟห </p> <p> \tกฟหกฟหกฟหก </p> <p> \tฟหก </p> <p> \tฟห </p> <p> \tกฟห </p> <p> \tกฟ </p> <p> \tหก </p> <p> \tฟหกฟหกฟหกฟกฟห </p>",
+        "Description_EN": null,
+        "Title": "บริการ Solar Rooftop Solution จาก JGS Synergy Power",
+        "Title_EN": null,
+        "contracts": []
+      }
+    ]
+  },
+  "typeAsset": {
+    "status": 200,
+    "data": [
+      {
+        "Type_Asset_Code": 1,
+        "Type_Asset_Icon": "https://picture.jjpropertythai.com/JJ/logo/typeAsset/home.png",
+        "Type_Asset_Icon_Hover": "https://picture.jjpropertythai.com/JJ/TypeAsset/24-04-2024-54080.png",
+        "Type_Asset_TH": "บ้านเดี่ยว",
+        "Type_Asset_EN": "Detached house",
+        "Status": true,
+        "Save_date": "2024-02-06T13:26:19.227Z",
+        "Save_by": "6206822",
+        "Update_date": "2024-04-24T13:42:30.000Z",
+        "Update_by": "Admin@admin.com",
+        "Type_Asset_Icon_Web": "https://picture.jjpropertythai.com/JJ/logo/typeAsset/home.png"
+      },
+      {
+        "Type_Asset_Code": 2,
+        "Type_Asset_Icon": "https://picture.jjpropertythai.com/JJ/logo/typeAsset/condo.png",
+        "Type_Asset_Icon_Hover": "https://picture.jjpropertythai.com/JJ/TypeAsset/24-04-2024-503761.png",
+        "Type_Asset_TH": "คอนโดมิเนียม",
+        "Type_Asset_EN": "Condominium",
+        "Status": true,
+        "Save_date": "2024-02-06T13:26:19.227Z",
+        "Save_by": "6206822",
+        "Update_date": "2024-04-24T13:43:04.000Z",
+        "Update_by": "Admin@admin.com",
+        "Type_Asset_Icon_Web": "https://picture.jjpropertythai.com/JJ/logo/typeAsset/condo.png"
+      },
+      {
+        "Type_Asset_Code": 3,
+        "Type_Asset_Icon": "https://picture.jjpropertythai.com/JJ/logo/typeAsset/town.png",
+        "Type_Asset_Icon_Hover": "https://picture.jjpropertythai.com/JJ/TypeAsset/24-04-2024-938588.png",
+        "Type_Asset_TH": "ทาวน์โฮม",
+        "Type_Asset_EN": "Townhome",
+        "Status": true,
+        "Save_date": "2024-02-06T13:26:19.227Z",
+        "Save_by": "6206822",
+        "Update_date": "2024-04-24T13:43:11.000Z",
+        "Update_by": "Admin@admin.com",
+        "Type_Asset_Icon_Web": "https://picture.jjpropertythai.com/JJ/logo/typeAsset/town.png"
+      },
+      {
+        "Type_Asset_Code": 4,
+        "Type_Asset_Icon": "https://picture.jjpropertythai.com/JJ/logo/typeAsset/town.png",
+        "Type_Asset_Icon_Hover": "https://picture.jjpropertythai.com/JJ/TypeAsset/24-04-2024-398536.png",
+        "Type_Asset_TH": "อาคารพาณิชย์",
+        "Type_Asset_EN": "Commercial ",
+        "Status": true,
+        "Save_date": "2024-02-06T13:26:19.227Z",
+        "Save_by": "6206822",
+        "Update_date": "2024-04-24T13:43:33.000Z",
+        "Update_by": "Admin@admin.com",
+        "Type_Asset_Icon_Web": "https://picture.jjpropertythai.com/JJ/logo/typeAsset/town.png"
+      },
+      {
+        "Type_Asset_Code": 5,
+        "Type_Asset_Icon": "https://picture.jjpropertythai.com/JJ/logo/typeAsset/din.png",
+        "Type_Asset_Icon_Hover": "https://picture.jjpropertythai.com/JJ/TypeAsset/24-04-2024-413029.png",
+        "Type_Asset_TH": "ที่ดิน",
+        "Type_Asset_EN": "Wasteland",
+        "Status": true,
+        "Save_date": "2024-02-15T15:11:21.000Z",
+        "Save_by": "Ad@ad12345",
+        "Update_date": "2024-04-24T13:43:42.000Z",
+        "Update_by": "Admin@admin.com",
+        "Type_Asset_Icon_Web": "https://picture.jjpropertythai.com/JJ/logo/typeAsset/din.png"
+      }
+    ]
+  },
+  "typeSell": {
+    "status": 200,
+    "data": [
+      {
+        "Type_Sale_Code": "3",
+        "Type_Sale_Icon": "https://picture.jjpropertythai.com/JJ/TypeSale/18-02-2024-493168.png",
+        "Type_Sale_TH": "ขาย/เช่า",
+        "Type_Sale_EN": "Buy/Rent",
+        "Status": true,
+        "Number": 1,
+        "Rate_Str": 0,
+        "Rate_End": 150000000
+      },
+      {
+        "Type_Sale_Code": "1",
+        "Type_Sale_Icon": "https://picture.jjpropertythai.com/JJ/TypeSale/04-04-2024-593954.png",
+        "Type_Sale_TH": "เช่า",
+        "Type_Sale_EN": "Rent",
+        "Status": true,
+        "Number": 2,
+        "Rate_Str": 0,
+        "Rate_End": 30000000
+      },
+      {
+        "Type_Sale_Code": "2",
+        "Type_Sale_Icon": "https://picture.jjpropertythai.com/JJ/TypeSale/18-02-2024-217042.jpg",
+        "Type_Sale_TH": "ขาย",
+        "Type_Sale_EN": "Buy",
+        "Status": true,
+        "Number": 3,
+        "Rate_Str": 0,
+        "Rate_End": 250000000
+      }
+    ]
+  },
+  "province": {
+    "status": 200,
+    "data": [
+      {
+        "PROVINCE_ID": 1,
+        "PROVINCE_CODE": 10,
+        "PROVINCE_NAME": "กรุงเทพมหานคร",
+        "PROVINCE_NAME_EN": "Bangkok",
+        "GEO_ID": 2
+      },
+      {
+        "PROVINCE_ID": 2,
+        "PROVINCE_CODE": 11,
+        "PROVINCE_NAME": "สมุทรปราการ",
+        "PROVINCE_NAME_EN": "Samut Prakan",
+        "GEO_ID": 2
+      },
+      {
+        "PROVINCE_ID": 3,
+        "PROVINCE_CODE": 12,
+        "PROVINCE_NAME": "นนทบุรี",
+        "PROVINCE_NAME_EN": "Nonthaburi",
+        "GEO_ID": 2
+      },
+      {
+        "PROVINCE_ID": 4,
+        "PROVINCE_CODE": 13,
+        "PROVINCE_NAME": "ปทุมธานี",
+        "PROVINCE_NAME_EN": "Pathum Thani",
+        "GEO_ID": 2
+      },
+      {
+        "PROVINCE_ID": 5,
+        "PROVINCE_CODE": 14,
+        "PROVINCE_NAME": "พระนครศรีอยุธยา",
+        "PROVINCE_NAME_EN": "Phra Nakhon Si Ayutthaya",
+        "GEO_ID": 2
+      },
+      {
+        "PROVINCE_ID": 6,
+        "PROVINCE_CODE": 15,
+        "PROVINCE_NAME": "อ่างทอง",
+        "PROVINCE_NAME_EN": "Ang Thong",
+        "GEO_ID": 2
+      },
+      {
+        "PROVINCE_ID": 7,
+        "PROVINCE_CODE": 16,
+        "PROVINCE_NAME": "ลพบุรี",
+        "PROVINCE_NAME_EN": "Lopburi",
+        "GEO_ID": 2
+      },
+      {
+        "PROVINCE_ID": 8,
+        "PROVINCE_CODE": 17,
+        "PROVINCE_NAME": "สิงห์บุรี",
+        "PROVINCE_NAME_EN": "Sing Buri",
+        "GEO_ID": 2
+      },
+      {
+        "PROVINCE_ID": 9,
+        "PROVINCE_CODE": 18,
+        "PROVINCE_NAME": "ชัยนาท",
+        "PROVINCE_NAME_EN": "Chai Nat",
+        "GEO_ID": 2
+      },
+      {
+        "PROVINCE_ID": 10,
+        "PROVINCE_CODE": 19,
+        "PROVINCE_NAME": "สระบุรี",
+        "PROVINCE_NAME_EN": "Saraburi",
+        "GEO_ID": 2
+      },
+      {
+        "PROVINCE_ID": 11,
+        "PROVINCE_CODE": 20,
+        "PROVINCE_NAME": "ชลบุรี",
+        "PROVINCE_NAME_EN": "Chonburi",
+        "GEO_ID": 5
+      },
+      {
+        "PROVINCE_ID": 12,
+        "PROVINCE_CODE": 21,
+        "PROVINCE_NAME": "ระยอง",
+        "PROVINCE_NAME_EN": "Rayong",
+        "GEO_ID": 5
+      },
+      {
+        "PROVINCE_ID": 13,
+        "PROVINCE_CODE": 22,
+        "PROVINCE_NAME": "จันทบุรี",
+        "PROVINCE_NAME_EN": "Chanthaburi",
+        "GEO_ID": 5
+      },
+      {
+        "PROVINCE_ID": 14,
+        "PROVINCE_CODE": 23,
+        "PROVINCE_NAME": "ตราด",
+        "PROVINCE_NAME_EN": "Trat",
+        "GEO_ID": 5
+      },
+      {
+        "PROVINCE_ID": 15,
+        "PROVINCE_CODE": 24,
+        "PROVINCE_NAME": "ฉะเชิงเทรา",
+        "PROVINCE_NAME_EN": "Chachoengsao",
+        "GEO_ID": 5
+      },
+      {
+        "PROVINCE_ID": 16,
+        "PROVINCE_CODE": 25,
+        "PROVINCE_NAME": "ปราจีนบุรี",
+        "PROVINCE_NAME_EN": "Prachinburi",
+        "GEO_ID": 5
+      },
+      {
+        "PROVINCE_ID": 17,
+        "PROVINCE_CODE": 26,
+        "PROVINCE_NAME": "นครนายก",
+        "PROVINCE_NAME_EN": "Nakhon Nayok",
+        "GEO_ID": 2
+      },
+      {
+        "PROVINCE_ID": 18,
+        "PROVINCE_CODE": 27,
+        "PROVINCE_NAME": "สระแก้ว",
+        "PROVINCE_NAME_EN": "Sa Kaeo",
+        "GEO_ID": 5
+      },
+      {
+        "PROVINCE_ID": 19,
+        "PROVINCE_CODE": 30,
+        "PROVINCE_NAME": "นครราชสีมา",
+        "PROVINCE_NAME_EN": "Nakhon Ratchasima",
+        "GEO_ID": 3
+      },
+      {
+        "PROVINCE_ID": 20,
+        "PROVINCE_CODE": 31,
+        "PROVINCE_NAME": "บุรีรัมย์",
+        "PROVINCE_NAME_EN": "Buriram",
+        "GEO_ID": 3
+      },
+      {
+        "PROVINCE_ID": 21,
+        "PROVINCE_CODE": 32,
+        "PROVINCE_NAME": "สุรินทร์",
+        "PROVINCE_NAME_EN": "Surin",
+        "GEO_ID": 3
+      },
+      {
+        "PROVINCE_ID": 22,
+        "PROVINCE_CODE": 33,
+        "PROVINCE_NAME": "ศรีสะเกษ",
+        "PROVINCE_NAME_EN": "Sisaket",
+        "GEO_ID": 3
+      },
+      {
+        "PROVINCE_ID": 23,
+        "PROVINCE_CODE": 34,
+        "PROVINCE_NAME": "อุบลราชธานี",
+        "PROVINCE_NAME_EN": "Ubon Ratchathani",
+        "GEO_ID": 3
+      },
+      {
+        "PROVINCE_ID": 24,
+        "PROVINCE_CODE": 35,
+        "PROVINCE_NAME": "ยโสธร",
+        "PROVINCE_NAME_EN": "Yasothon",
+        "GEO_ID": 3
+      },
+      {
+        "PROVINCE_ID": 25,
+        "PROVINCE_CODE": 36,
+        "PROVINCE_NAME": "ชัยภูมิ",
+        "PROVINCE_NAME_EN": "Chaiyaphum",
+        "GEO_ID": 3
+      },
+      {
+        "PROVINCE_ID": 26,
+        "PROVINCE_CODE": 37,
+        "PROVINCE_NAME": "อำนาจเจริญ",
+        "PROVINCE_NAME_EN": "Amnat Charoen",
+        "GEO_ID": 3
+      },
+      {
+        "PROVINCE_ID": 27,
+        "PROVINCE_CODE": 39,
+        "PROVINCE_NAME": "หนองบัวลำภู",
+        "PROVINCE_NAME_EN": "Nong Bua Lamphu",
+        "GEO_ID": 3
+      },
+      {
+        "PROVINCE_ID": 28,
+        "PROVINCE_CODE": 40,
+        "PROVINCE_NAME": "ขอนแก่น",
+        "PROVINCE_NAME_EN": "Khon Kaen",
+        "GEO_ID": 3
+      },
+      {
+        "PROVINCE_ID": 29,
+        "PROVINCE_CODE": 41,
+        "PROVINCE_NAME": "อุดรธานี",
+        "PROVINCE_NAME_EN": "Udon Thani",
+        "GEO_ID": 3
+      },
+      {
+        "PROVINCE_ID": 30,
+        "PROVINCE_CODE": 42,
+        "PROVINCE_NAME": "เลย",
+        "PROVINCE_NAME_EN": "Loei",
+        "GEO_ID": 3
+      },
+      {
+        "PROVINCE_ID": 31,
+        "PROVINCE_CODE": 43,
+        "PROVINCE_NAME": "หนองคาย",
+        "PROVINCE_NAME_EN": "Nong Khai",
+        "GEO_ID": 3
+      },
+      {
+        "PROVINCE_ID": 32,
+        "PROVINCE_CODE": 44,
+        "PROVINCE_NAME": "มหาสารคาม",
+        "PROVINCE_NAME_EN": "Maha Sarakham",
+        "GEO_ID": 3
+      },
+      {
+        "PROVINCE_ID": 33,
+        "PROVINCE_CODE": 45,
+        "PROVINCE_NAME": "ร้อยเอ็ด",
+        "PROVINCE_NAME_EN": "Roi Et",
+        "GEO_ID": 3
+      },
+      {
+        "PROVINCE_ID": 34,
+        "PROVINCE_CODE": 46,
+        "PROVINCE_NAME": "กาฬสินธุ์",
+        "PROVINCE_NAME_EN": "Kalasin",
+        "GEO_ID": 3
+      },
+      {
+        "PROVINCE_ID": 35,
+        "PROVINCE_CODE": 47,
+        "PROVINCE_NAME": "สกลนคร",
+        "PROVINCE_NAME_EN": "Sakon Nakhon",
+        "GEO_ID": 3
+      },
+      {
+        "PROVINCE_ID": 36,
+        "PROVINCE_CODE": 48,
+        "PROVINCE_NAME": "นครพนม",
+        "PROVINCE_NAME_EN": "Nakhon Phanom",
+        "GEO_ID": 3
+      },
+      {
+        "PROVINCE_ID": 37,
+        "PROVINCE_CODE": 49,
+        "PROVINCE_NAME": "มุกดาหาร",
+        "PROVINCE_NAME_EN": "Mukdahan",
+        "GEO_ID": 3
+      },
+      {
+        "PROVINCE_ID": 38,
+        "PROVINCE_CODE": 50,
+        "PROVINCE_NAME": "เชียงใหม่",
+        "PROVINCE_NAME_EN": "Chiang Mai",
+        "GEO_ID": 1
+      },
+      {
+        "PROVINCE_ID": 39,
+        "PROVINCE_CODE": 51,
+        "PROVINCE_NAME": "ลำพูน",
+        "PROVINCE_NAME_EN": "Lamphun",
+        "GEO_ID": 1
+      },
+      {
+        "PROVINCE_ID": 40,
+        "PROVINCE_CODE": 52,
+        "PROVINCE_NAME": "ลำปาง",
+        "PROVINCE_NAME_EN": "Lampang",
+        "GEO_ID": 1
+      },
+      {
+        "PROVINCE_ID": 41,
+        "PROVINCE_CODE": 53,
+        "PROVINCE_NAME": "อุตรดิตถ์",
+        "PROVINCE_NAME_EN": "Uttaradit",
+        "GEO_ID": 1
+      },
+      {
+        "PROVINCE_ID": 42,
+        "PROVINCE_CODE": 54,
+        "PROVINCE_NAME": "แพร่",
+        "PROVINCE_NAME_EN": "Phrae",
+        "GEO_ID": 1
+      },
+      {
+        "PROVINCE_ID": 43,
+        "PROVINCE_CODE": 55,
+        "PROVINCE_NAME": "น่าน",
+        "PROVINCE_NAME_EN": "Nan",
+        "GEO_ID": 1
+      },
+      {
+        "PROVINCE_ID": 44,
+        "PROVINCE_CODE": 56,
+        "PROVINCE_NAME": "พะเยา",
+        "PROVINCE_NAME_EN": "Phayao",
+        "GEO_ID": 1
+      },
+      {
+        "PROVINCE_ID": 45,
+        "PROVINCE_CODE": 57,
+        "PROVINCE_NAME": "เชียงราย",
+        "PROVINCE_NAME_EN": "Chiang Rai",
+        "GEO_ID": 1
+      },
+      {
+        "PROVINCE_ID": 46,
+        "PROVINCE_CODE": 58,
+        "PROVINCE_NAME": "แม่ฮ่องสอน",
+        "PROVINCE_NAME_EN": "Mae Hong Son",
+        "GEO_ID": 1
+      },
+      {
+        "PROVINCE_ID": 47,
+        "PROVINCE_CODE": 60,
+        "PROVINCE_NAME": "นครสวรรค์",
+        "PROVINCE_NAME_EN": "Nakhon Sawan",
+        "GEO_ID": 2
+      },
+      {
+        "PROVINCE_ID": 48,
+        "PROVINCE_CODE": 61,
+        "PROVINCE_NAME": "อุทัยธานี",
+        "PROVINCE_NAME_EN": "Uthai Thani",
+        "GEO_ID": 2
+      },
+      {
+        "PROVINCE_ID": 49,
+        "PROVINCE_CODE": 62,
+        "PROVINCE_NAME": "กำแพงเพชร",
+        "PROVINCE_NAME_EN": "Kamphaeng Phet",
+        "GEO_ID": 2
+      },
+      {
+        "PROVINCE_ID": 50,
+        "PROVINCE_CODE": 63,
+        "PROVINCE_NAME": "ตาก",
+        "PROVINCE_NAME_EN": "Tak",
+        "GEO_ID": 4
+      },
+      {
+        "PROVINCE_ID": 51,
+        "PROVINCE_CODE": 64,
+        "PROVINCE_NAME": "สุโขทัย",
+        "PROVINCE_NAME_EN": "Sukhothai",
+        "GEO_ID": 2
+      },
+      {
+        "PROVINCE_ID": 52,
+        "PROVINCE_CODE": 65,
+        "PROVINCE_NAME": "พิษณุโลก",
+        "PROVINCE_NAME_EN": "Phitsanulok",
+        "GEO_ID": 2
+      },
+      {
+        "PROVINCE_ID": 53,
+        "PROVINCE_CODE": 66,
+        "PROVINCE_NAME": "พิจิตร",
+        "PROVINCE_NAME_EN": "Phichit",
+        "GEO_ID": 2
+      },
+      {
+        "PROVINCE_ID": 54,
+        "PROVINCE_CODE": 67,
+        "PROVINCE_NAME": "เพชรบูรณ์",
+        "PROVINCE_NAME_EN": "Phetchabun",
+        "GEO_ID": 2
+      },
+      {
+        "PROVINCE_ID": 55,
+        "PROVINCE_CODE": 70,
+        "PROVINCE_NAME": "ราชบุรี",
+        "PROVINCE_NAME_EN": "Ratchaburi",
+        "GEO_ID": 4
+      },
+      {
+        "PROVINCE_ID": 56,
+        "PROVINCE_CODE": 71,
+        "PROVINCE_NAME": "กาญจนบุรี",
+        "PROVINCE_NAME_EN": "Kanchanaburi",
+        "GEO_ID": 4
+      },
+      {
+        "PROVINCE_ID": 57,
+        "PROVINCE_CODE": 72,
+        "PROVINCE_NAME": "สุพรรณบุรี",
+        "PROVINCE_NAME_EN": "Suphan Buri",
+        "GEO_ID": 2
+      },
+      {
+        "PROVINCE_ID": 58,
+        "PROVINCE_CODE": 73,
+        "PROVINCE_NAME": "นครปฐม",
+        "PROVINCE_NAME_EN": "Nakhon Pathom",
+        "GEO_ID": 2
+      },
+      {
+        "PROVINCE_ID": 59,
+        "PROVINCE_CODE": 74,
+        "PROVINCE_NAME": "สมุทรสาคร",
+        "PROVINCE_NAME_EN": "Samut Sakhon",
+        "GEO_ID": 2
+      },
+      {
+        "PROVINCE_ID": 60,
+        "PROVINCE_CODE": 75,
+        "PROVINCE_NAME": "สมุทรสงคราม",
+        "PROVINCE_NAME_EN": "Samut Songkhram",
+        "GEO_ID": 2
+      },
+      {
+        "PROVINCE_ID": 61,
+        "PROVINCE_CODE": 76,
+        "PROVINCE_NAME": "เพชรบุรี",
+        "PROVINCE_NAME_EN": "Phetchaburi",
+        "GEO_ID": 4
+      },
+      {
+        "PROVINCE_ID": 62,
+        "PROVINCE_CODE": 77,
+        "PROVINCE_NAME": "ประจวบคีรีขันธ์",
+        "PROVINCE_NAME_EN": "Prachuap Khiri Khan",
+        "GEO_ID": 4
+      },
+      {
+        "PROVINCE_ID": 63,
+        "PROVINCE_CODE": 80,
+        "PROVINCE_NAME": "นครศรีธรรมราช",
+        "PROVINCE_NAME_EN": "Nakhon Si Thammarat",
+        "GEO_ID": 6
+      },
+      {
+        "PROVINCE_ID": 64,
+        "PROVINCE_CODE": 81,
+        "PROVINCE_NAME": "กระบี่",
+        "PROVINCE_NAME_EN": "Krabi",
+        "GEO_ID": 6
+      },
+      {
+        "PROVINCE_ID": 65,
+        "PROVINCE_CODE": 82,
+        "PROVINCE_NAME": "พังงา",
+        "PROVINCE_NAME_EN": "Phang Nga",
+        "GEO_ID": 6
+      },
+      {
+        "PROVINCE_ID": 66,
+        "PROVINCE_CODE": 83,
+        "PROVINCE_NAME": "ภูเก็ต",
+        "PROVINCE_NAME_EN": "Phuket",
+        "GEO_ID": 6
+      },
+      {
+        "PROVINCE_ID": 67,
+        "PROVINCE_CODE": 84,
+        "PROVINCE_NAME": "สุราษฎร์ธานี",
+        "PROVINCE_NAME_EN": "Surat Thani",
+        "GEO_ID": 6
+      },
+      {
+        "PROVINCE_ID": 68,
+        "PROVINCE_CODE": 85,
+        "PROVINCE_NAME": "ระนอง",
+        "PROVINCE_NAME_EN": "Ranong",
+        "GEO_ID": 6
+      },
+      {
+        "PROVINCE_ID": 69,
+        "PROVINCE_CODE": 86,
+        "PROVINCE_NAME": "ชุมพร",
+        "PROVINCE_NAME_EN": "Chumphon",
+        "GEO_ID": 6
+      },
+      {
+        "PROVINCE_ID": 70,
+        "PROVINCE_CODE": 90,
+        "PROVINCE_NAME": "สงขลา",
+        "PROVINCE_NAME_EN": "Songkhla",
+        "GEO_ID": 6
+      },
+      {
+        "PROVINCE_ID": 71,
+        "PROVINCE_CODE": 91,
+        "PROVINCE_NAME": "สตูล",
+        "PROVINCE_NAME_EN": "Satun",
+        "GEO_ID": 6
+      },
+      {
+        "PROVINCE_ID": 72,
+        "PROVINCE_CODE": 92,
+        "PROVINCE_NAME": "ตรัง",
+        "PROVINCE_NAME_EN": "Trang",
+        "GEO_ID": 6
+      },
+      {
+        "PROVINCE_ID": 73,
+        "PROVINCE_CODE": 93,
+        "PROVINCE_NAME": "พัทลุง",
+        "PROVINCE_NAME_EN": "Phatthalung",
+        "GEO_ID": 6
+      },
+      {
+        "PROVINCE_ID": 74,
+        "PROVINCE_CODE": 94,
+        "PROVINCE_NAME": "ปัตตานี",
+        "PROVINCE_NAME_EN": "Pattani",
+        "GEO_ID": 6
+      },
+      {
+        "PROVINCE_ID": 75,
+        "PROVINCE_CODE": 95,
+        "PROVINCE_NAME": "ยะลา",
+        "PROVINCE_NAME_EN": "Yala",
+        "GEO_ID": 6
+      },
+      {
+        "PROVINCE_ID": 76,
+        "PROVINCE_CODE": 96,
+        "PROVINCE_NAME": "นราธิวาส",
+        "PROVINCE_NAME_EN": "Narathiwat",
+        "GEO_ID": 6
+      },
+      {
+        "PROVINCE_ID": 77,
+        "PROVINCE_CODE": 38,
+        "PROVINCE_NAME": "บึงกาฬ",
+        "PROVINCE_NAME_EN": "Bueng Kan",
+        "GEO_ID": 3
+      }
+    ]
+  }
+}

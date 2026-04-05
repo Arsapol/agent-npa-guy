@@ -1,0 +1,1 @@
+RegisterSod("sp.runtime.js", "\u002f_layouts\u002f15\u002fsp.runtime.js?rev=Gy\u00252FY\u00252F8R9iRR8gH3eA4Dm3g\u00253D\u00253DTAG0");RegisterSodDep("sp.runtime.js", "sp.res.resx");

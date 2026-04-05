@@ -1,0 +1,29 @@
+Traceback (most recent call last):
+  File "/Users/arsapolm/.nanobot-npa-guy/workspace/skills/jam-scraper/scripts/scraper.py", line 421, in <module>
+    asyncio.run(main(
+    ~~~~~~~~~~~^^^^^^
+        limit=args.limit,
+        ^^^^^^^^^^^^^^^^^
+        create_tables_only=args.create_tables,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        province_ids=args.provinces,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ))
+    ^^
+  File "/opt/anaconda3/lib/python3.13/asyncio/runners.py", line 195, in run
+    return runner.run(main)
+           ~~~~~~~~~~^^^^^^
+  File "/opt/anaconda3/lib/python3.13/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/opt/anaconda3/lib/python3.13/asyncio/base_events.py", line 725, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "/Users/arsapolm/.nanobot-npa-guy/workspace/skills/jam-scraper/scripts/scraper.py", line 399, in main
+    counts = save_to_db(properties, list(range(total_fails)), started_at)
+  File "/Users/arsapolm/.nanobot-npa-guy/workspace/skills/jam-scraper/scripts/scraper.py", line 347, in save_to_db
+    counts = upsert_properties(session, batch)
+  File "/Users/arsapolm/.nanobot-npa-guy/workspace/skills/jam-scraper/scripts/database.py", line 150, in upsert_properties
+    already_recorded = prev_hist is not None and prev_hist.scraped_at >= recent_cutoff
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: can't compare offset-naive and offset-aware datetimes

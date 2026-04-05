@@ -1,0 +1,1 @@
+$(function(){$(".card").each(function(){var a=$(this),b=a.find(".code-number").text();a.find(".pxtm-click-linkClick").attr("title",b)})});

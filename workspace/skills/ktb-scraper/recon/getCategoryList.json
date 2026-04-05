@@ -1,0 +1,106 @@
+[
+  {
+    "cateNo": 1,
+    "cateName": "ที่ดินเปล่า"
+  },
+  {
+    "cateNo": 2,
+    "cateName": "ที่ดินพร้อมสิ่งปลูกสร้าง"
+  },
+  {
+    "cateNo": 3,
+    "cateName": "บ้านเดี่ยว"
+  },
+  {
+    "cateNo": 4,
+    "cateName": "บ้านแฝด"
+  },
+  {
+    "cateNo": 5,
+    "cateName": "ทาวน์เฮ้าส์"
+  },
+  {
+    "cateNo": 6,
+    "cateName": "ห้องแถว"
+  },
+  {
+    "cateNo": 7,
+    "cateName": "ตึกแถว"
+  },
+  {
+    "cateNo": 11,
+    "cateName": "คอนโดมิเนียม/อาคารชุด"
+  },
+  {
+    "cateNo": 12,
+    "cateName": "หอพัก/อพาร์ทเมนท์"
+  },
+  {
+    "cateNo": 15,
+    "cateName": "อาคารพาณิชย์"
+  },
+  {
+    "cateNo": 16,
+    "cateName": "อาคารสำนักงาน"
+  },
+  {
+    "cateNo": 17,
+    "cateName": "อาคารชุดสำนักงาน"
+  },
+  {
+    "cateNo": 19,
+    "cateName": "ศูนย์บริการ/โชว์รูม/ปั้มน้ำมัน"
+  },
+  {
+    "cateNo": 21,
+    "cateName": "โรงแรม"
+  },
+  {
+    "cateNo": 22,
+    "cateName": "โรงพยาบาล"
+  },
+  {
+    "cateNo": 24,
+    "cateName": "โรงงาน"
+  },
+  {
+    "cateNo": 25,
+    "cateName": "โกดัง"
+  },
+  {
+    "cateNo": 26,
+    "cateName": "เครื่องจักร"
+  },
+  {
+    "cateNo": 28,
+    "cateName": "สิทธิการเช่า/สนามกอล์ฟ"
+  },
+  {
+    "cateNo": 31,
+    "cateName": "ที่ดินเพื่อการเกษตร"
+  },
+  {
+    "cateNo": 32,
+    "cateName": "ที่ดินเพื่ออุตสาหกรรม"
+  },
+  {
+    "cateNo": 33,
+    "cateName": "ที่ดินพัฒนา"
+  },
+  {
+    "cateNo": 99,
+    "cateName": "อื่นๆ"
+  },
+  {
+    "cateNo": 34,
+    "cateName": "โฮมออฟฟิศ"
+  },
+  {
+    "cateNo": 35,
+    "cateName": "โรงสี"
+  },
+  {
+    "cateNo": 36,
+    "cateName": "ทาวน์โฮม"
+  }
+]

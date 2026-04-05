@@ -1,0 +1,172 @@
+{
+  "network_requests": [],
+  "api_calls": [
+    {
+      "url": "https://cdn.pgimgs.com/marketplace-web/_next/static/eSYGxg6TJlYl4EPdcSFiR/_clientMiddlewareManifest.json",
+      "method": "GET",
+      "resource_type": "fetch",
+      "headers": {
+        "accept": "*/*",
+        "origin": "https://www.ddproperty.com",
+        "referer": "https://www.ddproperty.com/"
+      },
+      "post_data": null
+    },
+    {
+      "url": "https://www.ddproperty.com/cdn-cgi/challenge-platform/h/b/jsd/oneshot/625261456364/0.20651798415817502:1775369561:Z6pwXatFIkCg0a-4c0uA-qU65UEgI02tLiEWOBsrlkE/9e76736cccf7d02a",
+      "method": "POST",
+      "resource_type": "xhr",
+      "headers": {
+        "accept": "*/*",
+        "content-type": "text/plain;charset=UTF-8",
+        "origin": "https://www.ddproperty.com",
+        "referer": "https://www.ddproperty.com/en/property-for-sale?search=15+sukhumvit+residences"
+      },
+      "post_data": "G8fO-TyYlBxmmUkxBmrB5ymmrXfr3rUOCLeOl9r7OhkljkIU4tr$OGkTLIrorMMr9tIcrtnlwjrBkl1kWUPfyhhUqfrqZZU7er3+MKBrLwrfYehtm0UCrbJ0aKqLRXerQgdOkf7YnTFQ284rri2+f9gICrc+Pck68O++byrV51toKVXz9TckwTSOr5HURw4N52jrl3Hry4rVfsHOxZN+dBfHs0xY8679XHla8y4rlRtrr4KkGVgABxPryXM7GUGyfCrr2FLwxlfrlbjGrbfZ5Tr98cC5fzhooT4ryZt9rcHZi5lSmc4Zgrgd17VHp9rrBZXtJAqLDrrRNA9NnrYOFrh5fRfrCqSKns9BTgfr5OJIQTG2CwdFldHfgTF7TbI0eqqCapeeFD1TxEOrCndq8reeZyF4$ereOq3sJB$JYVcckqTiTR7Q5qqQkps7RbgTroVYIyfhI-$MyHKgEKbOrm76y9BUDV7qHt562L2M20ASZVQZHLB20G2rxUfJlktUEG5pkYerOJquZYIF7ErWcGkJeac27zgAO8cTC0dm$KkCiGgpcacw1q$QJ6F01eQ3eKlD5ryn3RfJ7F63s41FSXMSMXg2dfDM0DFrqTGPlgtnZlT8g1AcjpV-$SjOsIOjIsyxf7UFrKYxbVnYnVxeTKX-ngH0ujnHI16BA+gpyJJjhi+j8KK+R$suGcJML-phd7r2yszkle9OaBn-uG$N7Ht67XOuFo77FHFwJVyeGXoFKnKtHDqHog7O3oUUQO6Fw1NFCbIxo2eqzz$$xZtOkHCN1YMiNeewJQ$jFG-pixrZnWrc-AGRetrqJC5AzKmCAgX7C8V9FB7QJrk2qK8Z1-P3ay9l+FATdXFn1lm4fVlgt1Sy8f1ZMlNAZT84fjlfKteTgkeny9F719C$VMXIzOnl+FeDdoCCJVrh2rqfB7g6TXAnJrVgKMCl7aJm6ZYdyGRbUCHewJrV7e2rtknKsr-Hy8B1q959ZTTi5Ok6UopYxbke4y5F7sjbnZS6CqEQT9eVA2wez2w9BzYKQJUj-f9OcxyZOT+CXERmyZiLgF9UPCl+zrIbJkeETwOjUFU8Pn3LtwUFoZKB4J8ixYXgYI4kiiIgai1gr7AgeZnx5H7rHyfecrgBOVKkBZ-n4B9fi1w98$BhgOtyDMwy8i5WwkeBTxfkUqrIU1EJnK9ct4rwTtVR5ST8ZOTxrhLEAtXnZyXAEoyXT1hErrgc$CBQRYQg114yBsNyRy2AZfY81KUXexWM5nMznFnm4yIkEdcBrI+1IysMjj2MdlFF4xrtkQ1cBrTxslZSMFFUMCmhQYdsQPHKS9-fFo+Pplmx9Oai5-DzrehAoYx849C4eigfU-fHBFF5rlHawUBxUz6B7UWggChYxZEPxUBzbxxSYkutr$dDyfay0iftO1KEPdYKLrnxxbrAz+zAjbc0O4ZLkYf7pnzuSlmN7EOdIrwOFQCVdd1YMWdOI7adDMEXFFFiyTkjeKM0m$SVE5erVKtqpWTDLzOmDUUBZDfeN3DqKM+xK8+MSnlDpDYlywFlcNSLpqyrVF9rxrM2+uh3+wuCwQLHlnGnUzrnc6gCgVr9OWSwlrCOrOQcGSkxFC4KM5kxkD1AOa3mZEHOkAibtaT-de3rr0KOgOJRwCa2FiOs6YlX-fZnV1Uxa-AX5g9YneOS5XPm2a4oxmiUXZd1Dys-noLw9CfTBOiMYxAXIzJYQieTyTCf7Lrck1R98CljqVY2OilsUcGnQ5tAzVdCWdFFnmcLRTrc7czZhTh9Ust2kHo0T-RyVUBCjRfVj9mV0lwksOfr7rMTzOffL0JxHXcgUa54FQuAV0Z-kCTTFdrJlQrs1Ur$enTihjB8OprA3qrf9s9gOwCn1FKuGVfrlTTK9C-kwbGYlmoINHY5tFcb8y0rP4e5O61iQz1zQ5$F95M0HmLargf5AGB1ZXb8JAHgE-5hQYcMOYgCAq+C-karE5TwFKxC5HPqlE-frriHCrgqZeFliwyYrFCkBfrlZGr5xTqZqXJLl1SxC3yKceSoHqxzZilBsg9fx-+7yfYDbMQ+Z9XkoX139RM5lUswrin4ZJLGKTk$Qny8$qCW5TllUUq5FbMbxn$R--81yCy4TRcLq8JNHb+0QfUrAlZRhTYXFIeMPBrAZZzbsBDZwr2$zhb1ZSOIR7i4BrlPEiDGn98GeHO8EDByeFxHgfK189LikNIGyb2FKhoVrtQZ5nnIFUk4LyMsxkm55ngFcJcI-AXmqYfkAsu1CKjiwC-lRx7P6QBjng6biIR3HsrgAGwlpHR6d-tSL918liUnhr0mUif1cikf2rexZRokolUwpHsuTqTwR2g7LEzElqQrsGhzIsu-0HtBr8M7M89ymfN0YQCMDlRKCK6HQmXmrqTPBrW0EOcyTjmuHjrG1sKXILlwgOAFQ2TIeh8IfTrKeF$n2Y3Fll-X1rekinOleJ5mC4MLVF0wLBGQrCkVRbOGUjNCZ3eB0lQ-sMkQ6tnDIr219wp2oe43eY5T8y7-B-bhrZZli0EB4roaVIkO2o25zH7ZjjSfxEJrOTjoggODfOEseVmZIVTRexF4NtloJkzsG3akWAdGMF3Hpf9tILoOVyHnYy4$sUhzkXyFG+3DYeRUzAjdYc45eO9H5r8tlK6Q0zVj7bdILO3uGIOC1mnVsn1BIZWPe+hTxd3XoWBrkio213KlygCf$1dxwim0BKo2PHwzhNF4MkGP-ESMO9LVRCj9mETT9mlPHOHOaHIloghGMtKzEzq-Oki6mR0xQt1ZTD8Iw4w+hBXj8tlp8Ic-8q36MkAahJUZSzCZhzO6pKXZU2Z2sYzEytJ3OxpVSeQ9jCUi$UCaOQ$Q7F1qWbRrpjrWetLjytHLm98CYCO7mEz$nZc5UIRfElrkFTPQCY4w$Y66zs3-PrByQlM0Ro2sAFrlmxmp6CDC9xgOhBM0gCei8SpxutNTQwHU7rjrCUEekyecd8osgVkcZO784WioyZgNuU3QoekHIJnUi33iHk5$1JBCQPJfB$sc7xu5wT4gFBXe38MyHq2-J6$2PbYTrShjxFeQX0yMgpEjD$-BKEayh7EZHRP0ouj3VlZn93exd73C5T$c7IsFhB5PyeKoohFUtIXxnE$SC-AFRHU-7rXjx3TLl-PhrZrD96OgiJHyq6dI-4hGu7EIYAtW5EK6x5dsRtVdJRPHkRgHFBXnkw1WfpHIG+1nnXNre9ca$wM$OsQoLi3Oaa17cZ4dYdifr-s+ugpVRuJYJ5OMXLghtFhdHQiMOSdghChzn3pK0JQ9y7hiZ$u+QWtYLl43FUb-gh4+jz-wSpHRntnD3+0iNaF3gSF-5rKwbk6SxTdM$Ib0RusJBOB6t$ByIjzn5RaqEPXcLOw-8pDEWFe7+7br2VFTjrL2SRIoO4Fr-a$CZiNr0oRUasGVie3K8keUxK8$2yefoQglp77ydN0hdaulpGAZMQKh8-kKkebqnFdyzfHKxxrdAHe$1B8ZO4dhWeUVgteeO5qarViVOyeVNar$rjNhCCkFjGPlhHxt+Fei29CY-y2Z-t29-FEUnxFrD-DhtG240sdxW$kC5fLF5kKi8GOIrld78Br-OiNx$Bpi$UBiVFVett$$+fd9C$oHe7K9eDKh8lyoYFzexQfoOCxF7ZOKjaVUaGMUBeByAleNIN6UO9PQ9$RQZiEfMK$xJ7ebWHOeC4fHx74yrJC7RruqxUnUOrafn+8rgZclOfL79rNKbkpYH9afOCWN5HHeew2auqDqz9fCaFeq+t0xiF6KfsNK2ausEHOFCk9z1BGHuZ+zrDnTcFFK6tDHD79z7Q8hjhGZsGPULoO46iaQHe4NMqUQCZsy8fb40YHy3s9G$B4Q54GiN$+ogGdhdtjBelLoRHknnO79g327yeCx+7enPKAoWlCBrCUFe9OGPFjsbyKFExC7GonJJ9+46xkUO69HOUaQkTafpqZGk1kcj$Ow-7q-RleoZiHH1F0rwFCzWiul2FObdlOXseI1Ak3an+89t9OKLUO4LZckgLHfHHs9brMYPzlQf7HFeHI1dFDtnrWGMKFlkSI1p9OYHhnqMyhYrP$K6q5YQ-Tenkna8D80hr8cQkCwOmB$RQLYCEOWrRCzbGeQftOhroSttKgXEN4C$FrcCwIccY8rf9ZHE-RYkQnETYf7b9rph$IgStUVgZbY+Q$fLKfOZfOYfNulk8gqWUaYI5OFIErXFcCW+$RyMsO-OlkcaepfgRplSUgdaZza5enKnn2kwsKZ8ircC3X4XqZs8LPysFsYb7gfOqe2g$eXirS$+hd9II6BUNrEntEzZZcHW-kB6leye$1rf46Ua-Oc3$gnH46xnRgY7zb-uymMasuriftHOhdtUzIKaVYNxkbQ4KxxCrUeBqZl-$kPmGXj8CX0eBXTX1dYbYfrW-fVgMgb-G0fusOtZoNGhzdNf4fU+kUk9ZpGorcfcS0BW4rbxZ6KFOIBCgOT1ozo-ljKxzLFPVi7f9F+pinf7rKa0FEe$rNKxKeEO$$$ny8Ir9tkCotUatUZU9UywFBdUr$zDHst3FeB$l$rWsGKgTkc$rnYn-yG3qMqNecyewJzJfJUwNI$phR46eq$JBlm8TaeBNfHesCdol8V-Qf-RCCsYnlSVrgC6UOKuCsoYPmfX8O1Ti8iNY+KHiPVZCeR-enKc3-4-4EKFYqQnJm5co4YCMgSaHaYFRGCZ72srLf6dHxqfAbKUk+KZheEhtRIJalTeyFuTUwaAYXE2BmXJQCcQHUhGUxYGeHHf+glL9ZFEzkRn11Ku9-KgWmjp$k7p9Ja5irjNFZI9Z7hGqeLUYCyAysflOQSxHfgeqn8fLe+LVZrOeI88Mat8enkqzr0f1oVOi8eH751XSVsDkh7ePe6HNUeCYPCMUiGiU09kfStDHYdLoRFu4IpuhFDJhzeCymnz-HrPGfdZqxslwwB5jNqht$Y+Z345i5+GfeYPl1KBRakIgsh97kPj7eu+lgPmni6gWRCrLO4CDnkm6PyghR73qbguex-kKhNpaVCZ7ig6KfuY1$Kds0oNNul8JpBGFENEim0lSnTBc49mgDzJtsarrIogBrSxk0lEKwTCn9RLyU4fGMrCB6-OtZYCmlOIa97+q2fJhpC6Nf$524q5Soi6FsyLZCu9mN9MNefnCn-t4IdQQgqWC7a$YFgB5FERHbLO-zrwoZFCZp$R$8VOM8BOB85nGwTPV2VR4GUaBziIGnjOlheT6-zs87sJQnYWBluI$ROE-RwX2ZZZhidFlNZnhdeXTAfS-GNfeT+rsWye20of1fPeWux812qPUGHgLelgSei8i$YY2efbtE4VQJrPqmQJrk3wleUicfi$auNHhGGPFztzZUG67-i8ofgSyBMjLBgluEanK8VOBGqeJCV4CwZm8VCPUwqegf7drgfmWVx7V2eRUaFFNoucceWcW64xUgD6ZmxB5bGPkFSVBk9WNNisb+e9I5Q1eZ9a7JVYKZt8aZo5b3tVHBDWGRrSOjbs+skCG4Q5ldxCBrCeVR0$FElRW9cC8HCi48LaNBXTTaibOfke$bOuas53MFOOhdsGQ7y8F5txYCuMtjBWoZGakX+IPahdHLzMUgnZIKFe$mpiDn-Oo2Ge$KrNaqZONuregeTzH89ZygNQtNGtZfRga5+RN5OweiD3dQZUqlXCQTJM$RxQ2RFnVBwdV0QI6O$u4o1Od2tUyY0$rWobSoFPoZ$4n44Tm+Geqf+FnfdZKPxwdFMKU9q3A4EqBfROUWH8FcjT8EHesXdQyPBldaKjif0L7qGeko39ERoYZ8eT35IsA89CKfXkTeUBmyEZFw5wMNrVectaxwYpFRdFkse1PyAOR2V8ApZefuV4PL44tUHLrWHLViQ8i8N7noWRIMzwmt3Gs8oV+gN643Ji9onxCdlhh6e+ZsmtcSWp7b8AnAmOtt2-oZzk54uVAXE9WGFt5+iFpRoSgZQSAlEedxfNfOBLU1jRogo4oNzgWY+gOK9pCj42$KGKBUGjRObCAesCIUi7Y5FnUou1QFIt+3AYKQxSyHNtBGlStU-KeZzjXerWUoRZbGi$sM-LT2fgzjtVoNhg+RfLOD47kwdS72PZrc$kBhQga35mYiT0xH4mm56s28+C0wN2zSquruKfJin3roZQKAT2Q7TcZA2LzMDJ-HJZx9nU2fSr6dCbJHVfjLWhk5dYcnTaeb20iokolKf5TyLyenKUYy3+$oqoUONoBOskSJZ25kAR296CWRmkkeoCcCbHygB8$E78TOk10wotLs5QuN4fsGxs0OsYfcY1bs8gT2PI8ATbmM7cgSq0QBI94WBrNOHiC71s04L-H-ZnrHPF+pzY5393zOzome2axSLukZYflw+GTi8oRn82IPB6JImbR6LiBMy1Dze4B$gk0M4VoPZnC6mtRfEHCAAew7JenUgx78rdyl3x-toRtX+rBpqew6B3+Go4RLN2SLW85p7GetTQEONR0y3OdLWHEaZh-drWVAA3L$XMZbL29bP0jR0HFGudtAGmnUR6H8eJtYJGVg7CC9C5shrc46oZaM9CUnC$ZTm7I94LIuZ0gClzkmcDeUYJWeJaC9ZLQ046+DZOlO9R1CYki8q3b$CnICFogOU2SHEyIsayEyiHhgIAx7GMxsb3ayjZ7cJH7FPHxtG$082Ue6$o+wbpR5fijRYtUJBBM920iggeERMalD-Vqs4VJ7ZUticcRcggQnswdWaAmxT5o2ClmMXF4G99$JyCWBb8ky83C9dGY+icD-xtydhhhpkuqLq$uP+HDcp2litw8kpM4VH068YHn-Sq8eUwsnknhTR5zS5dfSV-jRzk2gwzKfl22q7G1HGJMHCjz-nhUzoNsG7Hy$ee6Li34tM8$XwD70dKejCj1UIr-ORJhdQ0MfWbRMw6n4BluoOgcKxHOJt6meeY08FmcCIktk+GHNiQIjQF0Y6wetRxJSoarVHjdFATsUGMSfHErOeUQnL1P2wISLNeQLd2yqrc-9GuXEyBPKKAZpwG4x9CBsnxXBYnyGbs2zjZ3r2rRl10u0LFw3doqmfgG-qTszALT-mUqgT2i8cUE3mg6kJK27$G6Z0$4GC2RgxCZbeCYk99Wr9kJnZC1Z-2VMgSfcee0Oi3q4V2Pjk5L-LzYPUaBlL712ZyTe4oow7C1smRw-76n4pMh1MKTaBZIFAMhqCxdoYGVT39tpB5UwCZkqARxQBKdFd41KP0fjs0ejMBhsRcohru14cCbCwOFQ1PeQJHzaRx+dFFNnGeYwhRswpoXnfQjNxkQFTY5Uh3I5kDYW-wdqVMl2HKgCZ5pf5podWjd59y1oruyy6894w-HzyHZUHLSLS4eGKxNgdxMT0uOWldQUmc-fjnZtozX4T+pILcTSsGqZxbIWR4$I3HS0WRRopnrnidJYRNPS+MUzPxQnAxYT3Xko3h18i$hPxKejjED$Egw+wETg3Nm-S98Hqm0CnEfon3Bqcy9ZjJTP9tYneiuGMeecYoMAD2n5ICso8RpJ9lNK2rW7RrHA2SUzfp6RHLfw2y8X5iNfYqDq8G$SSdy8o-FyQ70Clu+ynOCsIVkBey7uKg6fWGkW6HSBfBhlF01RsUVi++ByJjnlrZrxrp2isMn78Z9y4RxsKQUwqi8RgZrRDZWdXyG50g$ifihs+4ObEhgj5rce5mkHE7CyuRK2rX1TIUQ8GuwdxlsJzx$uQ0QoRVy59sdbOz6MmauipV00xqsp2bf6lHxgXWqk$NZ$Ml75$WVuBVon3-$eoTe97z0-S7uKo9gVyxXnxrkPZLZ4X5JacJXhhokdSIOLYpHYYGfpZ3W+L0FEFrey5+gygrDXbffFqZ1uqx7A7UZxmiP13F4eZXdB1MkWO8Gf8m$ZoEVrIZsTbeq$m406knZ0a0gh2xiBOSoZnw3rpXQBkpCJrPeGVWIAj$nhk5j1XuVIYkyOKUKdX5rVHmTtLGI-jHYL3G$lYaZktGWHJBm$QFxzaOQUH2Cl6BkebPJFIeAz$3c8lrfOdJHif2ECwmUA2KC8u27HFLOHeoJdPTrmGT3PliOCVVZ7A15IfoZyKOT9fAK1hQzsO8BsrNte3Z3HjrQIcCOyUObFlVdBJTT-yBkwjsoOA0RQwyUO0e9gCFJrrKlErERhCemxClh77e5msRrLOAUFYDfZa-L9DAAKqtYrRfdfouM-QZyARHnlShQGC2ynTrojKQ-txnr-x$ouf1kVraXPnJreTfP8oM9LqlyogM5rnxQAAyZTxcZg1e95V2ifOwOwgWagZ10CffOg9gWmZzKyqOMhOHg6uOiVAy3J+1OeT5JXM6Ui2Af+3qejbo82W7ZOkPKXz$xSkMMXCoiy3CuxDQNrckL4zXemyFzj7kA$gMaf9hCOGp-7Kgj7J8JtEA8GCZkdYMaQCl00XA+g3m2yxMi7T+O9kngHLrZ-Ckhe$gbmFuwZOoJ4nsggOJ5f6C41PfxwsXH$1AyK1ZFDkRMKOyuC-ypnnO7SmpHuxpVmg1Fybr5fsyknEXY8Ef14O0e-TMAlOUYkp9qkLrErUwq8VjoWKz7SS18TlMjhj1tCORarY+lHyAyKJ-AJXQEJTrQT5nArk7KTJTrVUBf11X6amiECKT3JngIFZLKUCSl+JcbgCdChXw6JSUrOKC-czFlmRFn8VAiVPGyh9xsnuZV$CT6o-M9CgDohoakVKs$E0J$FzuoRCqr3Tf$sAoeYNMqAAxJJ1yfFHIsyfslkTekPCcfZAoOIK85VMe9T7blROwJSVOIAFtRZMuckJ7fKq59xyArLfLFl8uOf2VNUM865ajK8Zgy+xWJPApC+bgyBa9bQowkiNIVG9-Kpni8VwlmaifG9WcK37cq8yYlCxABaCln$ZlTPrlAJAA1VqQNpJkdwrVFkriIe4MYdZQr4hIW8Z2oLKarf2l8+gB0rXw7q4nm8epCkGYIiekImkSoCXrt1tqgl89hrfw-iZd1d7IflTioG2CRT3VROZOZnlj1eBKf5zxXxH-5MYrislYG2K8MuxAn53iX$5aQAAy5yY3uEso-3KTd1nEIfX1RemK5O$QI8PRiBoclDyTrcrDrFnrernRkcqk1Par43GBr+mlkBBe4oFIMfK1eO25oRCfloId7gkUTzQlcK2-aqYroIrfCpVrlmHOeYF4ex4KTrNQK4QfXGEPnQkwnRXffGtg4OqnAkp3n6ik9XKoI+LCQkfWrVY9cRSkoC78$ZTzlmzEGRSFOPgQSd3M02TXOAinskrTPWyHrl5Bwyz3RtTrK5twCwtHCuQheh1mgh8NCroI124yiFNDCfrZrzQ8grrZQirXOaIY3xSVlKGAqnVSp5y3MssmbBkAr+lUcJ1PVJctB84fdfC8Jm7QJJRp0CVjQGaf8GUn3q7kZsOx8yqxtR3$VmuJ-7tGX7Qntzlq0GIFJ33kqYIiXxoylX7rKmuDM+T6dKlzw$f1khQQmy3lMkl47kl49q58QI7zIX3dsIJI-rKIEry3zRWxQjqotg8bBeNOY9NyW1r5tMxifsxFrzlJCpIJTy2J1r3VeffjCpKIITH-t+kCaZdVAlG83V4U$R9A-ornYnr1Dei74x1nwVy2G81f1WZLPSYbVsmdCfI99rBlrAXgIsf00ulmHO1ffr+JHHlwzR4XdnhRf7Vr2mqpfefAX76GSxiQHLJIhRGRMTI8OwrHcODxNB69dRYYhTeStN-yxhPzLQFxSt2h0ly10fH37CY3Xllpr8tIONnCUr59ycbO2axygTZJwlC6VwbiiYr2Cxgq4nyf0lirgmTpOG2+mlRG9ygrdr-OhQyAxWZoJ5ygnusFQKZThTw$pZ30BdT9dgFEG7k7Mt4rd1kHVkskMe59jZOlxUeVtRMefUwOcrulerMXgWhCxmOw7y8$INQftxBOaOJXLjQbqerC8qMJkBTdZdXKBxjUYr3TIZq2CLiHeufLBtOGRf+1wZsrMT8nh8rxb3XVUOc88IggX1ar6UU8hmekgT7ZLfeZB2WVInFrEe$fRMYQomyYa4-Z2BsqQGf2csjgzk9e0A4DQVq2RuAIQ8gUkg+xrAnM50HAaelFFbFcrzTjEZtWxeUZBLEXzAH2Vl1Z8LUJXxot1GTaHZt15m42I8jia1nbMPQLQ2qHZsbe5MH846xI6VIAfWfsq7CqCOTnq-ufCj9bfzlFHb-cMWTcnVExmyZZXmlO$8YsWssNfYIzf2A7m5j1Z-OCXRILQHxwscndUtR0elF1ibaZufVRd2zCj5l1R6MxwoRlcECrOObUPrqLHM9eLZZDMlFnUtMAM1oZDMdQIUiKZoa4ZJnqGV7NflxOf5Hgu9oRVkg7FmUIiqTPRV87BAZ-8cpblVF86-bAZ4gfXV7zh-BMo-ZHOfQ2$Q2KV82UnrehItYydZYZ1BgOG-GB5SsTck3D9kR7Q+g-x-qUkk599Ij2Ha$EkUZSIT2ocs+yOeHXotQZ++ik21HQTIcriJLHlkVSqRTMYtfV155LHd1U2eTmHnZAPUMBF0qmlmy+ZEH6QwU$TEGauJn8$51s9lE7HoEDr6Ux0$i2SID-wk+5AZ9XEmTmx$ld53AVSocFAZr06QTGNFays0yFUKCe0ew25yV5dBHOyjCg2klR0EUTBH7iWCIw1V2MoiD9Kt96JmXDXMXg6z5EMHt8YiU5DNdsjae8Xr4QTO8Jw1A5oAWMMbU6awMEHo-14UrFaM50PaUE0Hf+$HCsgEshLwUPrf$Qo6-aC$IcmQ1$4sdEHLg30WTPG7gIjIceErdIzRG85-O1qx0UQeAzMeYedZMU88OOlwg4HJnNB8e4pzcj2gJ-a0-3YfxjE5HFy9TjAzAec+Dak5eg4lIHsCCl1n8jCWTLwlEHtnT5SORDrwfsOUPYE9tQT1AB1+MCfi9VWT5pkXocHpn9ZFNCNr$dUF1EYwmX3IihdUaLRxfLFKsH3okyigzlgQnMzI6ura54gnK9Yt4xE9Nrp0lmqjib1KVci+OH8Kbe8R1yAT5HD9SRZ6xesptdUu9AJ4wmFWN5Yeh532QdVqsRik0lmUo42g8WskH46m0Wx2jqdNROZIcJZVr-9ItnHSdnhqq1-1OuRUO5w6gZLmnaRzmU2Dl2-VmgrIBJGmTJqqBmFH9z90LjNP4gjZa9AtGVbWZgm5I3YiYOA5dU-V+BagEn6GTMOdk6gl4re6LwmAtggZ04-9GFQ+AQtmlay-NfY9nEaCjTF0il6RQIbF02Kk2ZnXG91k9kgRFUzmM7VaEFMm4TBrk6fsL2iGg5F-JQMGQ1soG2lTG-t6-QOUFtgbsXHtGWQM$4G+bsBzHrOR+GKH5yybMo6IRbdlUmznaZe6TsTuiLq-Qqi3rdRs0Ftg3HuZ3V$IeLzaUIWa5JG0RcuHp5beM7zMh3AJkcg309iDMx3AJacjSF9QhMwafGiLV131POHgoXUFmg13OEH6asWLtMn$sRi8HSeQ-tJm7sTiXHZZSK7k2kf1z-UsZWqN8lc-u-tGyZjEQQ2l0I55T7wwMQU22HzE9GGAFY+7jtsqMsHyplmNRmLHKioH+Z1DJPgUamb1HDspdkzK3RWz+BUriu2P2MaYutGc5+86$Uh9kbHHnfoE75moLQutGZXOuroEGWb5PUcjAJYk2GH9idGfoU7tqmpaOu$Gd5dKkqmpHfu9GqjmU7u6pseEK$d55Kiumxs6ZR$gi2Wa92C9DiDfB48laKE702ELGRi3WzVgVKjihssigPFjE3Xjbcp7iPatJ+PXCnt04YX+qs2y03bG0y5n+zaEuFCnQpYKV+at9uF1io0BSC0O4C90EE70tic$Ft+u0MuR0iTyh-JmdFxuM0+4I-NW5u365bHmwnPH3o-tsyQ2FwubQlUJUzupBAYdVZR+2fwL9r0o1kVkr9qKb7Y2jmDq8wN9p18MJzNFU8UX-lyfrrr4JN0KO+pBX0exTjh-Me+O9X4QULCxubOlOVnzZeREj16zR70XNOfNAgzETht9YFaMUKndnZWV+B+rVedm9qI03LfjRZRPzM2bdBi81Ck1V5yk-QxbyRjFnAfXLeuAXkr99Ar8P+AHfoTC8GgJFJ71p9LOHWlYU8o9funhy2aKOrrrCknle9fNVyT9OOk1EYrm9OlAO+nTnaRyfUjqb1FFGeN4g0yFGATzA8fB8y5GF1iPzCR8hec2oBo8rCrlnHr9fkrrFI1dk-LrfrryZC8fm9FMZ6qBw139oEl01bKj7qzlaVg$5rb9WpG1jn88$1JoK1ryrrrGATKDxC139GfiilRKLx5r7enOCQoZnkrmIsnb8zCGUf8kHrGD$RUeyz1ZJM7meLfJbxb7AOzSbrrFtko-yeLx9zX1r9JrMKsrQXWYrmyAFuzCFXkNerrUgle1g+eXnCByhEMnfALOoBiixkr-fFAAp7$K0ryibrxrikSnreJTcYeyYPkmQVUxbOabYBkVlclGy9tC8LsokR-eZly17JukyloC6FPGyzGpkMqKCCEIs-0mHo7k69KTH+b+rMerfn7CroSZ1kVmDFUD5hrDbDp0Iyefr4YOf7W1RnYnh5x3r+9FxKlNFZOC6y+uFrlrYgbO9LrkyLxQrQrGR9OleyFrX8ylKNhcO0BKfJyWrr8J8o+y2CDF$er19k0Nf8GSgaps6G7hx7US6ADFh8gV791VqOQPWh5lGxAT6gHwgTam9JrryTe80VOeTPOJxxBVD770NXNukqcVA7gT47G+uprzS1CWEM9BK27JnFeCrrK8ArgErOrrU8MxrriwcRmrlruXQ89rCpGI5+tF3fXlU0cedKpOrraRJGrr"
+    },
+    {
+      "type": "response",
+      "url": "https://www.ddproperty.com/cdn-cgi/challenge-platform/h/b/jsd/oneshot/625261456364/0.20651798415817502:1775369561:Z6pwXatFIkCg0a-4c0uA-qU65UEgI02tLiEWOBsrlkE/9e76736cccf7d02a",
+      "status": 200,
+      "body_preview": "[non-json: text/plain; charset=UTF-8]"
+    },
+    {
+      "type": "response",
+      "url": "https://cdn.pgimgs.com/marketplace-web/_next/static/eSYGxg6TJlYl4EPdcSFiR/_clientMiddlewareManifest.json",
+      "status": 200,
+      "body_preview": "[{\"regexp\": \"^(?:\\\\/(_next\\\\/data\\\\/[^/]{1,}))?(?:\\\\/((?!api|_next\\\\/static|_next\\\\/image|favicon.ico|robots.txt).*))(\\\\.json)?[\\\\/#\\\\?]?$\", \"originalSource\": \"/((?!api|_next/static|_next/image|favicon.ico|robots.txt).*)\"}, {\"regexp\": \"^(?:\\\\/(_next\\\\/data\\\\/[^/]{1,}))?\\\\/api\\\\/core\\\\/users\\\\/verify-and-update-mobile(\\\\.json)?[\\\\/#\\\\?]?$\", \"originalSource\": \"/api/core/users/verify-and-update-mobile\"}, {\"regexp\": \"^(?:\\\\/(_next\\\\/data\\\\/[^/]{1,}))?\\\\/api\\\\/core\\\\/users\\\\/password\\\\/set(\\\\.json)?[\\\\/#\\\\?]?$\", \"originalSource\": \"/api/core/users/password/set\"}, {\"regexp\": \"^(?:\\\\/(_next\\\\/data\\\\/[^/]{1,}))?\\\\/api\\\\/core\\\\/users\\\\/get-self-info(\\\\.json)?[\\\\/#\\\\?]?$\", \"originalSource\": \"/api/core/users/get-self-info\"}, {\"regexp\": \"^(?:\\\\/(_next\\\\/data\\\\/[^/]{1,}))?\\\\/api\\\\/consumer\\\\/ask-guru\\\\/questions\\\\/me(\\\\.json)?[\\\\/#\\\\?]?$\", \"originalSource\": \"/api/consumer/ask-guru/questions/me\"}, {\"regexp\": \"^(?:\\\\/(_next\\\\/data\\\\/[^/]{1,}))?\\\\/api\\\\/consumer\\\\/ask-guru\\\\/questions(\\\\.json)?[\\\\/#\\\\?]?$\", \"originalSource\": \"/api/consumer/ask-guru/questions\"}, {\"regexp\": \"^(?:\\\\/(_next\\\\/data\\\\/[^/]{1,}))?\\\\/api\\\\/consumer\\\\/enquiry\\\\/whatsapp-url(\\\\.json)?[\\\\/#\\\\?]?$\", \"originalSource\": \"/api/consumer/enquiry/whatsapp-url\"}, {\"regexp\": \"^(?:\\\\/(_next\\\\/data\\\\/[^/]{1,}))?\\\\/api\\\\/consumer\\\\/enquiry\\\\/notifications(\\\\.json)?[\\\\/#\\\\?]?$\", \"originalSource\": \"/api/consumer/enquiry/notifications\"}, {\"regexp\": \"^(?:\\\\/(_next\\\\/data\\\\/[^/]{1,}))?\\\\/api\\\\/consumer\\\\/enquiry\\\\/token(\\\\.json)?[\\\\/#\\\\?]?$\", \"originalSource\": \"/api/consumer/enquiry/token\"}, {\"regexp\": \"^(?:\\\\/(_next\\\\/data\\\\/[^/]{1,}))?\\\\/api\\\\/consumer\\\\/listings\\\\/report(\\\\.json)?[\\\\/#\\\\?]?$\", \"originalSource\": \"/api/consumer/listings/report\"}, {\"regexp\": \"^(?:\\\\/(_next\\\\/data\\\\/[^/]{1,}))?\\\\/api\\\\/consumer\\\\/listings\\\\/shortlist(\\\\.json)?[\\\\/#\\\\?]?$\", \"originalSource\": \"/api/consumer/listings/shortlist\"}, {\"regexp\": \"^(?:\\\\/(_next\\\\/data\\\\/[^/]{1,}))?\\\\/api\\\\/consumer\\\\/listings\\\\/hide(\\\\.json)?[\\\\/#\\\\?]?$\", \"originalSource"
+    },
+    {
+      "url": "https://www.ddproperty.com/api/consumer/search-with-filter/mrt-items?region=th&locale=en",
+      "method": "GET",
+      "resource_type": "xhr",
+      "headers": {
+        "accept": "application/json, text/plain, */*",
+        "referer": "https://www.ddproperty.com/en/property-for-sale?search=15+sukhumvit+residences"
+      },
+      "post_data": null
+    },
+    {
+      "type": "response",
+      "url": "https://www.ddproperty.com/api/consumer/search-with-filter/mrt-items?region=th&locale=en",
+      "status": 200,
+      "body_preview": "[{\"id\": \"N-E\", \"color\": \"#73C34B\", \"name\": \"BTS Sukhumvit Line\", \"sortOrder\": 1, \"stations\": [{\"id\": \"N24\", \"poiId\": \"2634\", \"name\": \"N24 Khu Khot BTS\", \"colors\": [\"#73C34B\"], \"location\": {\"latitude\": 13.9323462, \"longitude\": 100.6444373}}, {\"id\": \"N23\", \"poiId\": \"2635\", \"name\": \"N23 Yaek Kor Por Aor BTS\", \"colors\": [\"#73C34B\"], \"location\": {\"latitude\": 13.9249882, \"longitude\": 100.6236873}}, {\"id\": \"N22\", \"poiId\": \"2636\", \"name\": \"N22 Royal Thai Air Force Museum BTS\", \"colors\": [\"#73C34B\"], \"location\": {\"latitude\": 13.9198718, \"longitude\": 100.6204891}}, {\"id\": \"N21\", \"poiId\": \"2637\", \"name\": \"N21 Bhumibol Adulyadej Hospital BTS\", \"colors\": [\"#73C34B\"], \"location\": {\"latitude\": 13.9107272, \"longitude\": 100.6152343}}, {\"id\": \"N20\", \"poiId\": \"2638\", \"name\": \"N20 Saphan Mai BTS\", \"colors\": [\"#73C34B\"], \"location\": {\"latitude\": 13.8919129, \"longitude\": 100.5980912}}, {\"id\": \"N19\", \"poiId\": \"2639\", \"name\": \"N19 Sai Yud BTS\", \"colors\": [\"#73C34B\"], \"location\": {\"latitude\": 13.8876461, \"longitude\": 100.6039239}}, {\"id\": \"N18\", \"poiId\": \"2640\", \"name\": \"N18 Phahon Yothin 59 BTS\", \"colors\": [\"#73C34B\"], \"location\": {\"latitude\": 13.8824592, \"longitude\": 100.5985773}}, {\"id\": \"N17/PK16\", \"poiId\": \"2641\", \"name\": \"N17 Wat Phra Sri Mahathat BTS\", \"colors\": [\"#73C34B\", \"#E56DB1\"], \"location\": {\"latitude\": 13.875278, \"longitude\": 100.596667}}, {\"id\": \"N16\", \"poiId\": \"2642\", \"name\": \"N16 11th Infantry Regiment BTS\", \"colors\": [\"#73C34B\"], \"location\": {\"latitude\": 13.8675332, \"longitude\": 100.5897513}}, {\"id\": \"N15\", \"poiId\": \"2643\", \"name\": \"N15 Bang Bua BTS\", \"colors\": [\"#73C34B\"], \"location\": {\"latitude\": 13.855556, \"longitude\": 100.583333}}, {\"id\": \"N14\", \"poiId\": \"2644\", \"name\": \"N14 Royal Forest Department BTS\", \"colors\": [\"#73C34B\"], \"location\": {\"latitude\": 13.8505634, \"longitude\": 100.5817864}}, {\"id\": \"N13\", \"poiId\": \"2645\", \"name\": \"N13 Kasetsart University BTS\", \"colors\": [\"#73C34B\"], \"location\": {\"latitude\": 13.8421706, \"longitude\": 100.5773757}}, {\"id\": \"N12\", \"poiId\""
+    },
+    {
+      "url": "https://www.gstatic.com/youtube/img/lottie/subscribe_action/subscribe_action_container_dark_v5.json",
+      "method": "GET",
+      "resource_type": "xhr",
+      "headers": {
+        "accept": "*/*",
+        "origin": "https://www.youtube.com",
+        "referer": "https://www.youtube.com/"
+      },
+      "post_data": null
+    },
+    {
+      "url": "https://www.gstatic.com/youtube/img/lottie/subscribe_action/subscribe_action_sparkles_dark_v4.json",
+      "method": "GET",
+      "resource_type": "xhr",
+      "headers": {
+        "accept": "*/*",
+        "origin": "https://www.youtube.com",
+        "referer": "https://www.youtube.com/"
+      },
+      "post_data": null
+    },
+    {
+      "type": "response",
+      "url": "https://www.gstatic.com/youtube/img/lottie/subscribe_action/subscribe_action_container_dark_v5.json",
+      "status": 200,
+      "body_preview": "{\"v\": \"5.7.11\", \"meta\": {\"g\": \"LottieFiles AE \", \"a\": \"\", \"k\": \"\", \"d\": \"\", \"tc\": \"\"}, \"fr\": 60, \"ip\": 0, \"op\": 85, \"w\": 180, \"h\": 96, \"nm\": \"Subscribe_Background_001_20240709_dark\", \"ddd\": 0, \"assets\": [], \"layers\": [{\"ddd\": 0, \"ind\": 1, \"ty\": 4, \"nm\": \"ALPHA2\", \"td\": 1, \"sr\": 1, \"ks\": {\"o\": {\"a\": 1, \"k\": [{\"i\": {\"x\": [0.6], \"y\": [1]}, \"o\": {\"x\": [0.167], \"y\": [0]}, \"t\": 10, \"s\": [0]}, {\"i\": {\"x\": [0.6], \"y\": [1]}, \"o\": {\"x\": [0.2], \"y\": [0]}, \"t\": 21, \"s\": [100]}, {\"i\": {\"x\": [0.6], \"y\": [1]}, \"o\": {\"x\": [0.2], \"y\": [0]}, \"t\": 25, \"s\": [100]}, {\"t\": 81, \"s\": [0]}], \"ix\": 11}, \"r\": {\"a\": 0, \"k\": 0, \"ix\": 10}, \"p\": {\"a\": 0, \"k\": [90, 48, 0], \"ix\": 2}, \"a\": {\"a\": 0, \"k\": [0, 0, 0], \"ix\": 1}, \"s\": {\"a\": 0, \"k\": [100, 100, 100], \"ix\": 6}}, \"ao\": 0, \"shapes\": [{\"ty\": \"rc\", \"d\": 1, \"s\": {\"a\": 0, \"k\": [262, 108], \"ix\": 2}, \"p\": {\"a\": 0, \"k\": [0, 0], \"ix\": 3}, \"r\": {\"a\": 0, \"k\": 100, \"ix\": 4}, \"nm\": \"1\", \"mn\": \"ADBE Vector Shape - Rect\", \"hd\": false}, {\"ty\": \"gf\", \"o\": {\"a\": 0, \"k\": 100, \"ix\": 10}, \"r\": 1, \"bm\": 0, \"g\": {\"p\": 2, \"k\": {\"a\": 0, \"k\": [0, 1, 1, 1, 1, 0, 0, 0], \"ix\": 9}}, \"s\": {\"a\": 0, \"k\": [-90, 48], \"ix\": 5}, \"e\": {\"a\": 0, \"k\": [90, -48], \"ix\": 6}, \"t\": 1, \"nm\": \"GF\", \"mn\": \"ADBE Vector Graphic - G-Fill\", \"hd\": false}], \"ip\": 0, \"op\": 85, \"st\": 0, \"bm\": 0}, {\"ddd\": 0, \"ind\": 2, \"ty\": 4, \"nm\": \"2\", \"tt\": 1, \"sr\": 1, \"ks\": {\"o\": {\"a\": 1, \"k\": [{\"i\": {\"x\": [0.667], \"y\": [1]}, \"o\": {\"x\": [0.333], \"y\": [0]}, \"t\": 21, \"s\": [100]}, {\"t\": 38, \"s\": [0]}], \"ix\": 11}, \"r\": {\"a\": 0, \"k\": 0, \"ix\": 10}, \"p\": {\"a\": 0, \"k\": [90, 48, 0], \"ix\": 2}, \"a\": {\"a\": 0, \"k\": [0, 0, 0], \"ix\": 1}, \"s\": {\"a\": 0, \"k\": [620, 120, 100], \"ix\": 6}}, \"ao\": 0, \"shapes\": [{\"ty\": \"rc\", \"d\": 1, \"s\": {\"a\": 0, \"k\": [100, 150], \"ix\": 2}, \"p\": {\"a\": 0, \"k\": [0, 0], \"ix\": 3}, \"r\": {\"a\": 0, \"k\": 0, \"ix\": 4}, \"nm\": \"1\", \"mn\": \"ADBE Vector Shape - Rect\", \"hd\": false}, {\"ty\": \"fl\", \"c\": {\"a\": 0, \"k\": [1, 0.152941182256, 0.568627476692, 1], \"ix\": 4}, \"o\": {\"a\": 0, \"k\": 100, \"ix\": 5}, \"r\": 1, \"bm\": 0, \"nm\": "
+    },
+    {
+      "type": "response",
+      "url": "https://www.gstatic.com/youtube/img/lottie/subscribe_action/subscribe_action_sparkles_dark_v4.json",
+      "status": 200,
+      "body_preview": "{\"v\": \"4.8.0\", \"meta\": {\"g\": \"LottieFiles AE \", \"a\": \"\", \"k\": \"\", \"d\": \"\", \"tc\": \"\"}, \"fr\": 60, \"ip\": 0, \"op\": 125, \"w\": 180, \"h\": 96, \"nm\": \"Subscribe_Sparkle_001_20240605_dark\", \"ddd\": 0, \"assets\": [], \"layers\": [{\"ddd\": 0, \"ind\": 1, \"ty\": 4, \"nm\": \"star1\", \"sr\": 1, \"ks\": {\"o\": {\"a\": 1, \"k\": [{\"i\": {\"x\": [0.6], \"y\": [1]}, \"o\": {\"x\": [0.2], \"y\": [0]}, \"t\": 46, \"s\": [100]}, {\"t\": 52, \"s\": [0]}], \"ix\": 11}, \"r\": {\"a\": 0, \"k\": 0, \"ix\": 10}, \"p\": {\"a\": 1, \"k\": [{\"i\": {\"x\": 0, \"y\": 1}, \"o\": {\"x\": 0.05, \"y\": 0}, \"t\": 22, \"s\": [152.389, 60.006, 0], \"to\": [1.792, 0.708, 0], \"ti\": [-1.792, -0.708, 0]}, {\"t\": 46, \"s\": [163.139, 64.256, 0]}], \"ix\": 2}, \"a\": {\"a\": 0, \"k\": [0, 0, 0], \"ix\": 1}, \"s\": {\"a\": 1, \"k\": [{\"i\": {\"x\": [0, 0, 0.833], \"y\": [1, 1, 1]}, \"o\": {\"x\": [0.05, 0.05, 0.167], \"y\": [0, 0, 0]}, \"t\": 22, \"s\": [0, 0, 100]}, {\"t\": 46, \"s\": [100, 100, 100]}], \"ix\": 6}}, \"ao\": 0, \"shapes\": [{\"ty\": \"sr\", \"sy\": 1, \"d\": 1, \"pt\": {\"a\": 0, \"k\": 4, \"ix\": 3}, \"p\": {\"a\": 0, \"k\": [0, 0], \"ix\": 4}, \"r\": {\"a\": 0, \"k\": 0, \"ix\": 5}, \"ir\": {\"a\": 0, \"k\": 4, \"ix\": 6}, \"is\": {\"a\": 0, \"k\": 0, \"ix\": 8}, \"or\": {\"a\": 0, \"k\": 12, \"ix\": 7}, \"os\": {\"a\": 0, \"k\": 0, \"ix\": 9}, \"ix\": 1, \"nm\": \"1\", \"mn\": \"ADBE Vector Shape - Star\", \"hd\": false}, {\"ty\": \"st\", \"c\": {\"a\": 0, \"k\": [0, 0, 0, 1], \"ix\": 3}, \"o\": {\"a\": 0, \"k\": 100, \"ix\": 4}, \"w\": {\"a\": 0, \"k\": 1, \"ix\": 5}, \"lc\": 1, \"lj\": 1, \"ml\": 4, \"bm\": 0, \"nm\": \"S\", \"mn\": \"ADBE Vector Graphic - Stroke\", \"hd\": false}, {\"ty\": \"fl\", \"c\": {\"a\": 1, \"k\": [{\"i\": {\"x\": [0.652], \"y\": [1]}, \"o\": {\"x\": [0.304], \"y\": [47.062]}, \"t\": 31, \"s\": [1, 0.152941182256, 0.568627476692, 1]}, {\"t\": 41, \"s\": [1, 0, 0.20000000298, 1]}], \"ix\": 4}, \"o\": {\"a\": 0, \"k\": 100, \"ix\": 5}, \"r\": 1, \"bm\": 0, \"nm\": \"F\", \"mn\": \"ADBE Vector Graphic - Fill\", \"hd\": false}], \"ip\": 22, \"op\": 53, \"st\": -98, \"bm\": 0}, {\"ddd\": 0, \"ind\": 2, \"ty\": 4, \"nm\": \"circle1\", \"sr\": 1, \"ks\": {\"o\": {\"a\": 1, \"k\": [{\"i\": {\"x\": [0.6], \"y\": [1]}, \"o\": {\"x\": [0.2], \"y\": [0]}, \"t\": 36, \"s\": [100]}, {\"t\": 42, \"s\": [0]}], "
+    },
+    {
+      "url": "https://jnn-pa.googleapis.com/$rpc/google.internal.waa.v1.Waa/GenerateIT",
+      "method": "POST",
+      "resource_type": "xhr",
+      "headers": {
+        "accept": "*/*",
+        "content-type": "application/json+protobuf",
+        "origin": "https://www.youtube.com",
+        "referer": "https://www.youtube.com/"
+      },
+      "post_data": "[\"O43z0dpjhgX20SCx4KAo\",\"$FYo5iu5RAAYznTwbE53eWd-DE1eCiYSnAEABEArZ1DzG5cxrGHOIAhpfMbPP2InSbw6rqZ7KGhpHHneN7FUapJrspiTVljSRXPSoFgCuUg1ds5K9bLAOX5D3ngAAAEvOAAAAA_QBB-IAUieuTnGrJlMtitrsPz7aKsU7vRBrWK1BdTthW8TgnjGO6D3jqDWaz23YJUBEWvh2Emmqw_wpQ4LUcRcomqhcano9umNLJfd6IAZG7b8zVF7ZE-8FBF-GnhndsmVwLgG4Tx3c6JlQv65VvIqtDhKksByBZHn78qG60xiGbvkgsd4RZ-5YbrbpJIaCsQwBGqqsEIvOPw1bTXg25BkhTEqyADrWgApXSEtOKGM1NvAuM-WjVQorYYuKBvQwR0jAhUuNnVvqP5NWsgJGqSGzH5pQXF9OAuLLANi9vZ6w1UAUcOv2bXO73EqT_XwIYTSaBsDLF8Y2mzNxbC5-w3IKtoV7itkSbFi2NDhrYrSqr9sgtwMTy8W7WDsmfW9oHjmGvaXvaevYH-VGDQB5bsPGYU8yo5jjSr1O0pdboWXh-XBru-Yx6BXxTLyZ3DBX8Z1l8MsU2EH3xJcReQBa2AqIyv60m-P4zNmAFinJucZZmSKRf_g1oQfbrWR8p3GvAYwQjozlIdMwwxjcttApTWEs6aCZ1tkDRcctgjiZ7uUaOvhE5XHT__wVa2VguK_59vhMkmspzjOKoHBjOFEiOEEqMOY3Yt-5Fpx3cgY30YdyAjbvVTKEtUay2cp9cwRjZ8qO8E9rfngvNGG9wf4TzNF7VyXkb4ytPosmz2aXI2CryYNEFrkefJz_VJsOs_c_y_DJBwQ3HU-208kW5J6c7SR56RqebAvdrL3gZ9ZU4XMFSXVCygUqHa2-lY5V6wDvTqGTi8Wtv-dXvlKBd9Qh0m1FEVg_F1jQSYbCdfJ5Yg3wkUisk82-sM_ch4JeIkOcTiDa-SLHiMPJfWiecehOH_y3DRMUWDp2jZV8V1Ofthku1E_2fLXF5JNMMwqRKZ2zhmiS5FgvrhdJx5zEa7KdqQBill84hUNhi8SXDF1RAQ3SCMP5ADb6-HlT19eWH4Tj9qiN9r0eyNeKjaiF7B8RXY2baqvSa0uBLjGishzi-umwDNIU_gZ2MrBQVRAWvDC44Tj6erMHiEIsNd3ZPkrHZpdbonQtL2IBUMccjOz03zWI-GqtrLkEt8bnc6iD7bPS8MMnJfzY9hCJHgXsrTVZA-0spsDPxeKN_RpwR6vZiUEmDP61gklblmeI0amCMaZqIMDlafY6HrwwT5yje2dnUHtKOc0Ggmr4vp4XK30k42Zmo4IXuVSDAkOllJob1bTlMo5f2FunA-vkw5XU01etPfO8IKQgPVjWrq72RcVfx_EScIO7pwH2IOMVakQGrxD6opT_LzwcqMTY_XA2p1Xg5uslEDqY86bqIIOa-iJ3HSL5-rulIqj0sAvSzNyWnUZwfi9X_ZlYQnzUKW-Z2bZQZb2p0jJnIHNlW4pb60wZPuPHwn0-ylQVVWe5RGB5dXkNxcsxMDSBPL1dyfbet2sL2uS1DPcIk6t0gjWTRK9lmQjBICqLE4hRmGINZUYlm4Re80_WT7G7c6xfM5-CM3VaEkua403UpWOkU0SqZaIKMTNA00fKjW47wOs97VrB6CsbkZaf16MmRNlNEmUJhlCCbO8DKkMPVSzVLnE3pLEfDEzoe1e7ZoY4pEu8E22h6ksbjB89tSQu9VOPClQ\"]"
+    },
+    {
+      "url": "https://www.gstatic.com/youtube/img/icons/mweb/youtube_fill/logo/v2/67px.svg",
+      "method": "GET",
+      "resource_type": "fetch",
+      "headers": {
+        "accept": "*/*",
+        "referer": "https://www.youtube.com/",
+        "origin": "https://www.youtube.com"
+      },
+      "post_data": null
+    },
+    {
+      "type": "response",
+      "url": "https://www.gstatic.com/youtube/img/icons/mweb/youtube_fill/logo/v2/67px.svg",
+      "status": 200,
+      "body_preview": "[non-json: image/svg+xml]"
+    },
+    {
+      "type": "response",
+      "url": "https://jnn-pa.googleapis.com/$rpc/google.internal.waa.v1.Waa/GenerateIT",
+      "status": 200,
+      "body_preview": "[\"4VRiRJ1/rdVzweFyMjlUKwzsbej2ceUthPQtym7RCsbS6WzQAcWUTBLeEMFvEOQmiehUDe+UqHiETRew\", 43200, 100]"
+    }
+  ],
+  "js_files": [
+    "https://www.ddproperty.com/cdn-cgi/challenge-platform/scripts/jsd/main.js",
+    "https://www.ddproperty.com/cdn-cgi/challenge-platform/h/b/scripts/jsd/625261456364/main.js?"
+  ],
+  "cookies": [
+    {
+      "name": "pgutid",
+      "domain": "www.ddproperty.com"
+    },
+    {
+      "name": "sixpack_client_id",
+      "domain": "www.ddproperty.com"
+    },
+    {
+      "name": "_cfuvid",
+      "domain": ".ddproperty.com"
+    },
+    {
+      "name": "_dd_s",
+      "domain": "www.ddproperty.com"
+    },
+    {
+      "name": "cf_clearance",
+      "domain": ".ddproperty.com"
+    },
+    {
+      "name": "__cf_bm",
+      "domain": ".ddproperty.com"
+    },
+    {
+      "name": "YSC",
+      "domain": ".youtube.com"
+    },
+    {
+      "name": "VISITOR_INFO1_LIVE",
+      "domain": ".youtube.com"
+    },
+    {
+      "name": "VISITOR_PRIVACY_METADATA",
+      "domain": ".youtube.com"
+    },
+    {
+      "name": "__Secure-ROLLOUT_TOKEN",
+      "domain": ".youtube.com"
+    }
+  ],
+  "page_title": "Houses for Sale, Apr 2026"
+}

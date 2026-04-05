@@ -1,0 +1,1 @@
+document.cookie="first_visit_fired\x3d1; path\x3d/";
