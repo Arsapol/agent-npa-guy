@@ -364,16 +364,62 @@ deal_confidence = LOG10(max(comparable_count, 1)) * 10  # scale 0–20+
 
 ---
 
+## Financial Health Check (Pre-Score Universal Gates)
+
+Run before any strategy scoring. Any REJECT = stop, do not score.
+
+| Gate | Condition | Result |
+|---|---|---|
+| G1: IRR vs opportunity cost | IRR base case < 16% | FLAG `BELOW_OPPORTUNITY_COST` |
+| G2: IRR timeline sensitivity | IRR at 2× hold < 16% | FLAG `TIMELINE_SENSITIVE` |
+| G3: Entry discount vs exit costs | entry_discount < (exit_costs_pct + 10%) | REJECT `INSUFFICIENT_DISCOUNT` |
+| G4: Leverage check | flip_horizon < 24mo → force cash | FLAG `CASH_ONLY` if mortgage attempted |
+| G5: Exit price floor | post_reno_exit_price < 3.5M THB | REJECT quick flip; redirect to rental |
+
+**G3 formula:**
+```
+exit_costs_pct = acquisition_costs (2-3%) + SBT (3.3%) + WHT (3%) + holding_costs (~3-5%)
+             ≈ 11.3–14.3% total
+entry_discount must exceed exit_costs_pct + 10% buffer
+minimum entry_discount = ~22–25% absolute floor (below this, no strategy works)
+```
+
+**G4 leverage math:** Mortgage on a 9-month quick flip: setup 1–2% + SBT 3.3% + WHT 3% + 3 months mortgage payments at 3.5% on 70% LTV ≈ 8–9% overhead. To hit 20% net margin you need ~29% gross discount purely to cover costs before any profit. Cash-only is the only viable quick flip structure.
+
+---
+
+## Dual-Strategy Cascade (Cross-Strategy Interaction)
+
+A failed flip is NOT an automatic reject. Run rental check if:
+- `absorption_rate > 45 months` (too slow for flip exit) AND
+- `demand_anchor_score >= 40` (structural rental demand exists)
+
+```python
+if flip_score < 0.55:
+    rental_score = run_rental_score(property)
+    if rental_score >= 55:
+        recommend = "RENTAL (flip market too slow; strong demand anchor)"
+    else:
+        recommend = "REJECT"
+elif flip_score >= 0.55 and rental_score >= 55:
+    recommend = "DUAL: Rent 2-3yr → flip at cycle recovery 2027-2028"
+    note = "Tier A, DAS ≥ 40, GRY ≥ threshold — both strategies viable"
+elif flip_score >= 0.55 and rental_score < 55:
+    recommend = "FLIP (insufficient rental demand anchor for dual play)"
+```
+
+---
+
 ## Summary Scoring Matrix
 
 | Metric | Weight | Quick Flip | Medium Hold | Reno Flip |
 |---|---|---|---|---|
-| M1: Entry Discount | 25% | ≥35% | ≥25% | ≥30% |
+| M1: Entry Discount (vs listed×0.92) | 25% | ≥40% | ≥40% | ≥35% |
 | M2: Absorption Rate | 20% | ≤30mo | ≤45mo | ≤60mo |
 | M3: Price Momentum | 15% | ≥0% | ≥-2% | ≥-2% |
 | M4: Listing Velocity | 10% | <90d | <180d | <210d |
-| M5: Buyer Pool | 10% | >3M THB | any | any |
-| M8: Net Profit Score | 20% | ≥15% margin | ≥20% margin | ≥18% margin |
+| M5: Buyer Pool + exit floor | 10% | exit ≥3.5M THB | any | any |
+| M8: Net Profit + IRR | 20% | ≥20% margin, ≥20% IRR | ≥35–65% margin, ≥15% IRR | ≥22% margin, ≥15% IRR |
 
 **Gate checks (must pass before scoring):**
 - Comparable count ≥ 2 (M10)
