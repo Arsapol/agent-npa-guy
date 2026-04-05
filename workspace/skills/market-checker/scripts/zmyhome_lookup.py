@@ -33,14 +33,16 @@ BASE = "https://zmyhome.com"
 
 class ListingCard(BaseModel):
     property_id: str
-    price_thb: Optional[int]
-    price_psm: Optional[int]
-    size_sqm: Optional[float]
-    bedrooms: Optional[str]
-    bathrooms: Optional[str]
-    floor: Optional[str]
-    direction: Optional[str]
-    broker_ok: Optional[bool]
+    project_id: Optional[str] = None
+    project_name: Optional[str] = None
+    price_thb: Optional[int] = None
+    price_psm: Optional[int] = None
+    size_sqm: Optional[float] = None
+    bedrooms: Optional[str] = None
+    bathrooms: Optional[str] = None
+    floor: Optional[str] = None
+    direction: Optional[str] = None
+    broker_ok: Optional[bool] = None
 
 
 class ProjectSummary(BaseModel):
@@ -129,6 +131,17 @@ def parse_listing_cards(html: str) -> list[ListingCard]:
         link = article.css_first('a[href^="/property/"]')
         prop_id = link.attrs["href"].split("/")[-1] if link else ""
 
+        # Extract project info from project link
+        proj_link = article.css_first('a[href*="/project/"]')
+        proj_id = None
+        proj_name = None
+        if proj_link:
+            href = proj_link.attrs.get("href", "")
+            # href like /project/V663 or https://zmyhome.com/project/V663
+            parts = href.rstrip("/").split("/")
+            proj_id = parts[-1] if parts else None
+            proj_name = proj_link.text(strip=True) or None
+
         price_node = article.css_first(".card-property__price-room--priceRoom")
         price_raw = price_node.text(strip=True) if price_node else ""
         price_thb, price_psm = parse_price_raw(price_raw)
@@ -149,6 +162,8 @@ def parse_listing_cards(html: str) -> list[ListingCard]:
         cards.append(
             ListingCard(
                 property_id=prop_id,
+                project_id=proj_id,
+                project_name=proj_name,
                 price_thb=price_thb,
                 price_psm=price_psm,
                 size_sqm=size_sqm,

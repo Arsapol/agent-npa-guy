@@ -418,6 +418,24 @@ def _build_browse_url(
     return f"{BASE}/{listing_type}/condo?page={page}&per-page={per_page}"
 
 
+def _upsert_discovered_project(
+    conn: psycopg.Connection,
+    project_id: str,
+    project_name: str,
+) -> None:
+    """Create a minimal project record from discover mode if it doesn't exist."""
+    if not project_id or not project_name:
+        return
+    conn.execute(
+        """
+        INSERT INTO zmyhome_projects (id, name, first_seen_at, last_scraped_at)
+        VALUES (%s, %s, now(), now())
+        ON CONFLICT (id) DO NOTHING
+        """,
+        (project_id, project_name),
+    )
+
+
 def _upsert_discovered_listing(
     conn: psycopg.Connection,
     card: ListingCard,
@@ -437,13 +455,14 @@ def _upsert_discovered_listing(
             discover_source,
             first_seen_at, last_scraped_at, is_active
         ) VALUES (
-            %s, NULL, %s,
+            %s, %s, %s,
             %s, %s, %s,
             %s, %s, %s, %s, %s,
             %s,
             now(), now(), true
         )
         ON CONFLICT (property_id) DO UPDATE SET
+            project_id      = COALESCE(EXCLUDED.project_id, zmyhome_listings.project_id),
             listing_type    = EXCLUDED.listing_type,
             price_thb       = EXCLUDED.price_thb,
             price_psm       = EXCLUDED.price_psm,
@@ -460,6 +479,7 @@ def _upsert_discovered_listing(
         """,
         (
             card.property_id,
+            card.project_id,
             listing_type,
             card.price_thb,
             card.price_psm,
@@ -505,6 +525,15 @@ def _save_page_to_db(
     new = 0
     updated = 0
     with psycopg.connect(DB_URL) as conn:
+        # Batch-upsert projects first (deduplicated within page)
+        seen_projects: set[str] = set()
+        for card in cards:
+            if card.project_id and card.project_name and card.project_id not in seen_projects:
+                _upsert_discovered_project(conn, card.project_id, card.project_name)
+                seen_projects.add(card.project_id)
+        conn.commit()
+
+        # Then upsert listings (project already exists, no deadlock risk)
         for card in cards:
             is_new = _upsert_discovered_listing(
                 conn, card, listing_type, discover_source
