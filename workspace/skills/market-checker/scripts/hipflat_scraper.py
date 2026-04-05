@@ -75,12 +75,12 @@ PROVINCE_LINK_RE = re.compile(
 PROJECT_SLUG_RE = re.compile(
     r'href="(?:https://www\.hipflat\.co\.th)?/en/projects/([a-z0-9-]+)"'
 )
-DIRECTORY_DELAY = 0.2  # seconds between directory page fetches (async)
-DETAIL_DELAY = 0.2  # seconds between project detail fetches (async)
+DIRECTORY_DELAY = 0.1  # seconds between directory page fetches (async)
+DETAIL_DELAY = 0.1  # seconds between project detail fetches (async)
 
 # Concurrency limits
-DIR_SEMAPHORE_LIMIT = 5  # max concurrent province page fetches
-DETAIL_SEMAPHORE_LIMIT = 5  # max concurrent project detail fetches
+DIR_SEMAPHORE_LIMIT = 10  # max concurrent province page fetches
+DETAIL_SEMAPHORE_LIMIT = 10  # max concurrent project detail fetches
 
 
 # ---------------------------------------------------------------------------
@@ -670,7 +670,6 @@ async def _fetch_and_upsert_one(
     - Each project gets its own DB connection for crash isolation
     """
     async with sem:
-        await asyncio.sleep(DETAIL_DELAY)
         try:
             proj = await asyncio.to_thread(fetch_project_data, slug)
 
@@ -690,6 +689,10 @@ async def _fetch_and_upsert_one(
                 stats.new_count += new_d
                 stats.updated_count += upd_d
                 stats.price_changed += pc_d
+                saved_so_far = stats.total_found
+            # Per-project progress for visibility (every 10 saves)
+            if saved_so_far % 10 == 0:
+                print(f"    [DB] saved {saved_so_far} projects so far (latest: {slug})")
 
         except Exception as e:
             async with lock:
@@ -753,26 +756,27 @@ async def run_discover_async(
     log_id = await asyncio.to_thread(_start_log)
     started_at = datetime.now()
 
-    # Launch concurrent detail fetches
+    # Launch ALL detail fetches concurrently — semaphore gates actual parallelism
     sem = asyncio.Semaphore(DETAIL_SEMAPHORE_LIMIT)
     lock = asyncio.Lock()
+    total_work = len(work_filtered)
 
-    # Process in batches of 50 for progress reporting
-    batch_size = 50
-    for batch_start in range(0, len(work_filtered), batch_size):
-        batch = work_filtered[batch_start : batch_start + batch_size]
-        tasks = [_fetch_and_upsert_one(dp.slug, stats, sem, lock) for dp in batch]
-        await asyncio.gather(*tasks)
+    async def _fetch_with_progress(dp: DiscoveredProject, idx: int) -> None:
+        await _fetch_and_upsert_one(dp.slug, stats, sem, lock)
+        # Progress reporting every 50 completed items
+        done = stats.total_found + stats.failed_count
+        if done % 50 == 0 or done == total_work:
+            elapsed = (datetime.now() - started_at).total_seconds()
+            rate = done / elapsed if elapsed > 0 else 0
+            print(
+                f"  [{done}/{total_work}] "
+                f"found={stats.total_found} new={stats.new_count} "
+                f"updated={stats.updated_count} failed={stats.failed_count} "
+                f"({rate:.1f} proj/s)"
+            )
 
-        elapsed = (datetime.now() - started_at).total_seconds()
-        done = batch_start + len(batch)
-        rate = done / elapsed if elapsed > 0 else 0
-        print(
-            f"  [{done}/{len(work_filtered)}] "
-            f"found={stats.total_found} new={stats.new_count} "
-            f"updated={stats.updated_count} failed={stats.failed_count} "
-            f"({rate:.1f} proj/s)"
-        )
+    tasks = [_fetch_with_progress(dp, i) for i, dp in enumerate(work_filtered)]
+    await asyncio.gather(*tasks)
 
     # Finalize scrape log
     error_msg: Optional[str] = None
