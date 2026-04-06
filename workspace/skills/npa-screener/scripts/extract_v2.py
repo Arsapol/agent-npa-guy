@@ -219,7 +219,7 @@ def extract_all_properties(
                b.usable_area as size_sqm, b.lat as latitude, b.lon as longitude,
                b.bedroom, b.bathroom, NULL::text as floor,
                NULL::int as building_age,
-               EXTRACT(EPOCH FROM (now() - b.scraped_at)) / 86400.0 / 30.0 AS npa_vintage_months,
+               EXTRACT(EPOCH FROM (now() - b.first_seen_at)) / 86400.0 / 30.0 AS npa_vintage_months,
                NULL::int as auction_round
         FROM bam_properties b
         WHERE b.province = ANY(%s)
@@ -251,7 +251,7 @@ def extract_all_properties(
                j.meter as size_sqm, j.lat as latitude, j.lon as longitude,
                j.bedroom, j.bathroom, j.floor,
                NULL::int as building_age,
-               EXTRACT(EPOCH FROM (now() - j.scraped_at)) / 86400.0 / 30.0 AS npa_vintage_months,
+               EXTRACT(EPOCH FROM (now() - j.first_seen_at)) / 86400.0 / 30.0 AS npa_vintage_months,
                NULL::int as auction_round
         FROM jam_properties j
         WHERE j.province_name = ANY(%s)
@@ -282,7 +282,7 @@ def extract_all_properties(
                k.sum_area_num as size_sqm, k.lat as latitude, k.lon as longitude,
                k.bedroom_num as bedroom, k.bathroom_num as bathroom,
                NULL::text as floor, NULL::int as building_age,
-               EXTRACT(EPOCH FROM (now() - k.scraped_at)) / 86400.0 / 30.0 AS npa_vintage_months,
+               EXTRACT(EPOCH FROM (now() - k.first_seen_at)) / 86400.0 / 30.0 AS npa_vintage_months,
                NULL::int as auction_round
         FROM ktb_properties k
         WHERE k.province = ANY(%s)
@@ -314,7 +314,7 @@ def extract_all_properties(
                kb.useable_area as size_sqm, kb.lat as latitude, kb.lon as longitude,
                kb.bedroom, kb.bathroom, NULL::text as floor,
                kb.building_age,
-               EXTRACT(EPOCH FROM (now() - kb.scraped_at)) / 86400.0 / 30.0 AS npa_vintage_months,
+               EXTRACT(EPOCH FROM (now() - kb.first_seen_at)) / 86400.0 / 30.0 AS npa_vintage_months,
                NULL::int as auction_round
         FROM kbank_properties kb
         WHERE kb.province_name = ANY(%s)
