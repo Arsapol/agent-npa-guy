@@ -199,11 +199,13 @@ def find_hot_districts(
         ORDER BY s.sold_total::float / NULLIF(s.sold_total + COALESCE(i.total_inventory, 0), 0) DESC
     """, [provinces, provinces, provinces, min_sold])
 
+    rows = cur.fetchall()
+
     # Drop temp table
     cur.execute("DROP TABLE IF EXISTS _sold_properties")
 
     districts = []
-    for row in cur.fetchall():
+    for row in rows:
         total = row["total"] or 1
         sold = row["sold_total"] or 0
         sell_pct = sold / total * 100
@@ -588,6 +590,13 @@ def format_report(
 
 
 def export_json(results: list[NpaInHotDistrict], path: str) -> None:
+    import decimal
+
+    def _conv(v):
+        if isinstance(v, decimal.Decimal):
+            return float(v)
+        return v
+
     data = []
     for r in results:
         data.append({
