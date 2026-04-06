@@ -202,7 +202,30 @@ ALTER TABLE ktb_properties ADD COLUMN IF NOT EXISTS deactivated_at TIMESTAMPTZ;
 ```
 
 ### Staleness threshold per provider
-- **SAM**: Mark inactive if `updated_at < NOW() - 3 days` (scrapes daily at 07:40)
-- **BAM**: Mark inactive if `last_scraped_at < latest_run - 2 hours` (full province coverage per run)
-- **JAM**: Use `status_soldout = true` directly; no staleness needed
-- **KTB**: Mark inactive if `last_scraped_at < latest_run - 2 hours`
+- **SAM**: Mark inactive if `updated_at < NOW() - 3 days` (scrapes daily at 07:40, full inventory per run)
+- **BAM**: Mark inactive if not seen in 2 consecutive scrapes of the SAME province (scrapes are province-partitioned — use `province` column to scope comparison)
+- **JAM**: Use `status_soldout = true` directly; no staleness needed. Scraper already tracks sold/unsold transitions in price history.
+- **KTB**: Mark inactive if `last_scraped_at < latest_run - 2 hours` (appears to be full-inventory scrape, not partitioned)
+
+### Reconciliation implementation pattern (SAM/BAM/KTB)
+
+```python
+# After completing a full scrape run:
+seen_ids = set()  # IDs returned by API in this run
+
+# For BAM: scope to province being scraped
+# UPDATE bam_properties SET is_active = false, deactivated_at = NOW()
+# WHERE province = :scraped_province AND asset_no NOT IN :seen_ids AND is_active = true
+
+# For SAM: full inventory, no province scoping needed
+# UPDATE sam_properties SET is_active = false, deactivated_at = NOW()
+# WHERE sam_id NOT IN :seen_ids AND is_active = true
+
+# Also log the transition in price_history as change_type='removed'
+```
+
+### Priority order
+1. **JAM** — Already done, no work needed
+2. **SAM** — Easiest: has `is_active` column, full-inventory scrape, just needs flip logic
+3. **KTB** — Needs `is_active` + `deactivated_at` columns, full-inventory scrape
+4. **BAM** — Hardest: needs province-scoped reconciliation due to partitioned scraping
