@@ -1,60 +1,57 @@
 # KBank NPA — Sold Detection Investigation
-Date: 2026-04-05
 
-## DB Schema Findings
+**Date:** 2026-04-05  
+**Investigator:** subagent  
+**DB:** `npa_kb` / tables: `kbank_properties`, `kbank_price_history`
 
-- **`is_sold_out`** (boolean): present on `kbank_properties`. KBank API returns this flag directly — when they mark a property as sold out it appears in the list response.
-- **`is_reserve`** (boolean): also tracked; similar status flag.
-- **`last_scraped_at`**: updated every scrape run via `_apply_item_to_prop`.
-- **`first_seen_at`**: set once on insert.
-- No `is_active` column. No `removed_at` column. No explicit "disappeared" tracking.
+---
 
-## Data Freshness
+## 1. Does KBank scraper track `is_active` or similar flag?
 
-- Only **one scrape run** so far: 2026-04-04 (all 13,361 properties share same `last_scraped_at`)
-- All `kbank_price_history` entries are `change_type = 'new'` — no price/status changes recorded yet
-- 0 properties older than 7 days (all inserted 2026-04-04)
+**No `is_active` flag exists.** Current relevant columns:
 
-## `is_sold_out` Current State
+| Column | Type | Notes |
+|--------|------|-------|
+| `is_sold_out` | `boolean` | From KBank API field `IsSoldOut`. **155 rows = true** today. KBank flags this before delisting. |
+| `is_reserve` | `boolean` | Reserved/under-offer. **268 rows = true** today. |
+| `last_scraped_at` | `timestamptz` | Updated on every upsert in `_apply_item_to_prop()`. Key field for disappearance detection. |
+| `first_seen_at` | `timestamptz` | Set once on first insert. |
 
-| `is_sold_out` | Count |
-|---|---|
-| false | 13,206 |
-| true | 155 |
+**No `presumed_sold_at`, no `removed_at`, no `is_active` column.**
 
-KBank **keeps sold properties in the API response** with `is_sold_out = true` rather than removing them silently. This is different from what was assumed.
+Key insight: KBank **keeps sold properties in the API** with `is_sold_out = true` rather than removing them silently. This is better than assumed — they telegraph disposition before delisting.
 
-## Disappearance Detection — Can We Do It?
+---
 
-**Yes, but only after 2+ scrape runs exist.**
+## 2. SQL to identify "likely sold" = in DB but not in latest scrape
 
-The pattern:
-1. Each scrape updates `last_scraped_at` on every property it touches.
-2. After a scrape completes, any property whose `last_scraped_at` < scrape start time was NOT returned by the API — it disappeared.
-3. "Disappeared" = likely sold (or rarely, delisted for another reason).
-
-Since there's only one scrape run, no disappearances can be detected yet. After the next daily scrape runs, the query below becomes meaningful.
-
-## SQL Query: "Likely Sold / Disappeared"
+**Dynamic version** (no hardcoded dates, uses `kbank_scrape_logs` for run anchor):
 
 ```sql
--- Properties not seen in the most recent scrape run
--- Replace '2026-04-05 06:00:00+07' with the actual scrape start timestamp
+-- Properties not seen in the most recent scrape session
+-- Uses kbank_scrape_logs.started_at as the run boundary
+WITH latest_run AS (
+    SELECT started_at FROM kbank_scrape_logs
+    ORDER BY started_at DESC LIMIT 1
+)
 SELECT
-    property_id,
-    property_type_name,
-    province_name,
-    amphur_name,
-    sell_price,
-    first_seen_at,
-    last_scraped_at,
-    is_sold_out
-FROM kbank_properties
-WHERE last_scraped_at < '2026-04-05 06:00:00+07'
-ORDER BY last_scraped_at DESC;
+    p.property_id,
+    p.property_id_format,
+    p.property_type_name,
+    p.province_name,
+    p.amphur_name,
+    p.sell_price,
+    p.is_sold_out,
+    p.is_reserve,
+    p.first_seen_at::date,
+    p.last_scraped_at::date AS last_seen
+FROM kbank_properties p, latest_run lr
+WHERE p.last_scraped_at < lr.started_at
+ORDER BY p.last_scraped_at;
 ```
 
-**Dynamic version** (uses max scrape time as latest run marker):
+**Simpler fallback** (no scrape_logs dependency, uses 10-min buffer on max ts):
+
 ```sql
 WITH latest_run AS (
     SELECT max(last_scraped_at) AS run_ts FROM kbank_properties
@@ -63,45 +60,136 @@ SELECT
     p.property_id,
     p.property_type_name,
     p.province_name,
-    p.amphur_name,
     p.sell_price,
-    p.first_seen_at,
-    p.last_scraped_at,
-    p.is_sold_out
-FROM kbank_properties p, latest_run
-WHERE p.last_scraped_at < latest_run.run_ts - interval '10 minutes'
+    p.is_sold_out,
+    p.first_seen_at::date,
+    p.last_scraped_at::date AS last_seen
+FROM kbank_properties p, latest_run lr
+WHERE p.last_scraped_at < lr.run_ts - interval '10 minutes'
 ORDER BY p.last_scraped_at;
 ```
 
-The 10-minute buffer accounts for scrape duration across 268 pages.
+The 10-minute buffer accounts for scrape duration across 268 pages at 20 req/60s.
 
-## Recommended Implementation
+---
 
-To properly track disappearances, the scraper should:
-1. After each full scrape completes, mark missing properties as removed:
+## 3. How many properties appear to have disappeared?
+
+**0 today.** Only one scrape run exists (2026-04-04). All 13,361 rows share the same `last_scraped_at`. The stale-detection query returns 0 because there's no prior baseline.
+
+Current best proxy for "sold":
+- **155 properties** with `is_sold_out = true` — KBank API already flags these
+  - Top types: บ้านเดี่ยว (61), ทาวน์เฮ้าส์ (39), คอนโด (22), อาคารพาณิชย์ (18)
+  - Top provinces: ชลบุรี (28), กรุงเทพ (20), เชียงใหม่ (9), ปทุมธานี (8), นนทบุรี (8)
+- **241 properties** with `is_reserve = true` — sales pipeline, may convert to sold
+
+After the next daily scrape (06:00 daily per cron), the disappearance query will yield real results.
+
+---
+
+## 4. Add `presumed_sold_at` column + detection logic
+
+### Schema migration
 
 ```sql
--- Run after scraper finishes, passing $1 = scrape start timestamp
-UPDATE kbank_properties
-SET is_active = false, removed_at = now()
-WHERE last_scraped_at < $1
-  AND (is_active IS NULL OR is_active = true);
+ALTER TABLE kbank_properties
+    ADD COLUMN IF NOT EXISTS presumed_sold_at timestamptz,
+    ADD COLUMN IF NOT EXISTS is_active boolean NOT NULL DEFAULT true;
+
+CREATE INDEX IF NOT EXISTS ix_kbank_active ON kbank_properties(is_active);
+CREATE INDEX IF NOT EXISTS ix_kbank_presumed_sold ON kbank_properties(presumed_sold_at)
+    WHERE presumed_sold_at IS NOT NULL;
 ```
 
-This requires adding `is_active` (boolean) and `removed_at` (timestamptz) columns — they don't exist yet.
+### Python implementation (add to `database.py`)
 
-**Alternatively** (no schema change): use `kbank_scrape_logs` to get `started_at` of the latest run, then query `last_scraped_at < started_at` as the "disappeared" set.
+```python
+from sqlalchemy import update
 
-## Current Count of "Disappeared"
+def mark_presumed_sold(session: Session, scrape_started_at: datetime) -> int:
+    """
+    After a full scrape, mark properties not seen in this run as presumed sold.
+    Also inserts a price_history record for each newly marked property.
+    Returns count of newly marked rows.
+    """
+    # Find properties that disappeared (not updated in this scrape run)
+    gone_stmt = select(KbankProperty).where(
+        KbankProperty.last_scraped_at < scrape_started_at,
+        KbankProperty.presumed_sold_at.is_(None),
+        KbankProperty.is_active == True,
+    )
+    gone = list(session.execute(gone_stmt).scalars())
 
-- **0** — only one scrape run exists. The query will return results after the next scheduled run (daily at 06:00).
-- 155 properties are already marked `is_sold_out = true` by KBank's own API flag.
+    if not gone:
+        return 0
+
+    now = datetime.now()
+    for prop in gone:
+        prop.presumed_sold_at = now
+        prop.is_active = False
+        session.add(KbankPriceHistory(
+            property_id=prop.property_id,
+            sell_price=prop.sell_price,
+            promotion_price=prop.promotion_price,
+            adjust_price=prop.adjust_price,
+            change_type="presumed_sold",
+            scraped_at=now,
+        ))
+
+    session.commit()
+    return len(gone)
+```
+
+### Wire into `scraper.py` — add after the scrape log is committed
+
+```python
+# After logging the scrape run:
+with Session(engine) as session:
+    sold_count = mark_presumed_sold(session, started_at)
+    print(f"[scraper] Marked {sold_count} properties as presumed sold")
+```
+
+Note: pass `started_at` (the scrape start time), not `finished_at`, so any property that KBank removed mid-scrape is also caught.
+
+---
+
+## 5. Two-signal detection strategy
+
+`is_sold_out` (KBank API) and disappearance detection are complementary:
+
+| Signal | Meaning | When available |
+|--------|---------|----------------|
+| `is_sold_out = true` | KBank explicitly flagged it | Immediately — KBank sets before delisting |
+| `presumed_sold_at IS NOT NULL` | Not returned by any scrape since that date | After 2nd scrape run |
+| `is_reserve = true` | Reserved/pending | Now — may revert |
+
+**Combined "sold or gone" query (once schema change applied):**
+
+```sql
+SELECT
+    property_id,
+    property_id_format,
+    province_name,
+    amphur_name,
+    sell_price,
+    is_sold_out,
+    is_reserve,
+    presumed_sold_at::date,
+    first_seen_at::date
+FROM kbank_properties
+WHERE is_sold_out = true
+   OR is_active = false
+ORDER BY coalesce(presumed_sold_at, last_scraped_at) DESC;
+```
+
+---
 
 ## Summary
 
 | Question | Answer |
-|---|---|
-| `is_active` or similar flag? | No — only `is_sold_out` from API. No disappearance tracking. |
-| Detect by `last_scraped_at`? | Yes — viable once 2+ runs exist |
-| "Likely sold" SQL query? | See dynamic query above (uses max scrape ts as anchor) |
-| How many disappeared? | 0 today (first scrape run was 2026-04-04); 155 already `is_sold_out = true` |
+|----------|--------|
+| `is_active` or similar? | No — only `is_sold_out` from API. No disappearance tracking yet. |
+| Detect by `last_scraped_at`? | Yes — viable now that structure exists, but needs 2+ scrape runs to yield results |
+| "Likely sold" SQL? | See dynamic query above (anchors on `kbank_scrape_logs.started_at`) |
+| How many disappeared? | **0** today (first run 2026-04-04); **155** already `is_sold_out = true` |
+| Can we add `presumed_sold_at`? | Yes — simple `ALTER TABLE` + `mark_presumed_sold()` function in `database.py`, called at end of each scrape |
