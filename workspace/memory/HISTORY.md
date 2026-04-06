@@ -15307,3 +15307,38 @@ Exit code: 0
 [2026-04-04 22:40-22:59] User requested JAM deep dive agent (4th parallel agent). All 4 agents (KTB, BAM, KBANK, JAM) completed but failed to deliver output — all analyses done manually. KTB deep dive: 4 units near MRT สุทธิสาร 300m at ฿45K/sqm (62% below market) — KTB 235676 (฿3.17M/69.6sqm), 209693 (฿3.41M/71.92sqm), 207681 (฿3.12M/69.6sqm), 208251 (฿3.20M/69.33sqm). KTB 231239 วังทองหลาง ฿967K/64.44sqm=฿15K/sqm but MRT 2244m away. BAM deep dive: ทรู ทองหล่อ Grade A — 2 units (137984: ฿3.27M/44.9sqm=฿73K/sqm, 132119: ฿2.63M/36.04sqm=฿73K/sqm) at MRT เพชรบุรี 1425m, 50% below market ฿156K/sqm. Other BAM picks: Casa Sukhumvit 97 (146637, BTS อ่อนนุช 1075m, ฿57K/sqm), Fifty Residence (27291, ฿13K/sqm, BTS พระโขนง 1464m). KBANK deep dive: Only 25 BKK condos total, 3 under 5M with GPS. Best: 178800219 ราชเทวี BTS 633m but 16.71sqm micro at ฿160K/sqm. Low priority provider. JAM deep dive: MAJOR CORRECTION — JAM has 11,350 SALE properties, 6,276 condos for sale (NOT rental-only!). Top JAM picks: ไลฟ์ รัชดาภิเษก (#315, MRT ห้วยขวาง 214m, ฿2.85M, ฿90K/sqm), เดอะสเตชั่น สาทร-บางรัก (#654, BTS ตากสิน 799m, ฿2.1M, ฿60K/sqm), แฮปปี้คอนโด (#918, MRT สุทธิสาร 874m, ฿1.25M, ฿44K/sqm), ไลฟ์ แอด ลาดพร้าว 18 (#614, MRT ลาดพร้าว 823m, ฿3.27M, ฿82K/sqm), คอนโดเลต มิสท์ พระราม 9 (#45236, ARL มักกะสัน 896m, ฿3.4M, ฿119K/sqm). All analyses sent to Telegram with images, ingested to KB. Cross-provider top 3: (1) JAM 315 ไลฟ์ รัชดา, (2) KTB 207681 ห้วยขวาง, (3) BAM 132119 ทรู ทองหล่อ.
 
 [2026-04-05 08:00] Daily NPA alert: 0 new properties (Sunday). No changes from yesterday. Same BTS/MRT properties, same stale deals, same Songkhla auctions Apr 7. Quiet weekend.
+[2026-04-04 23:06] End-of-session reflection and journaling. Wrote comprehensive 191-line journal entry to `skills/npa-journal/thoughts/2026-04-04.md` (12,641 bytes). Documented 4 critical mistakes (JAM rental-only myth, Chewathai agent size hallucination, SAM 15 unverified, subagent failures), 6 things done right, 4 falsifiable predictions, 6 open questions. Self-grade improved from C+ (Apr 3) to B+. Added 5 operational rules. Previous day's journal at `thoughts/2026-04-03.md` covered initial screening mistakes and self-reflection. Journal skill has daily/weekly/monthly reflection cadence with structured format at `skills/npa-journal/`.
+
+
+[2026-04-06 00:19] Expanded npa-alerts to cover ALL 6 providers (was LED+SAM only)
+- New properties: now checks LED, SAM, BAM, JAM, KTB, KBANK (via first_seen_at / created_at)
+- BTS/MRT: now searches BAM, JAM, KTB, KBank GPS coordinates (was SAM only)
+- NEW: Price drops command (`alert.py drops`) — detects price drops via price_history tables for SAM, BAM, JAM, KTB, KBANK
+- Updated SKILL.md with full documentation
+- Tested: `alert.py new` shows 400+ results across all providers; `alert.py bts` shows BAM+KBANK near transit; `alert.py drops` shows SAM price changes
+[2026-04-06 00:11] User asked how the NPA daily alert system checks for "new properties." Explanation revealed the alert system (`alert.py`) only monitors LED (`properties.created_at`) and SAM (`sam_properties.first_seen_at`) for newly inserted rows. It does NOT check BAM, JAM, KTB, or KBank for new entries, does NOT track price changes on existing properties, and does NOT track status changes. "New" means new to our local database, not newly listed on source websites. Assistant offered to expand alerts to other providers and add price change detection — user hasn't responded yet.
+
+
+[2026-04-06 00:32] Added price increase detection to npa-alerts
+- New command: `alert.py increases --hours 24 --min-increase 5`
+- Compares first price_history entry vs current price for BAM, JAM, KTB, KBANK
+- Checks SAM price_history for negative price_drop_pct (increase)
+- Added to daily report as "📈 Price Increases" section with ⚠️ warning
+- Currently 0 results because all providers only have single scrape — will activate once scrapers run on schedule
+- Design rationale: NPA prices normally only drop. An increase signals re-appraisal, encumbrance removal, or area shift — worth investigating.
+[2026-04-06 00:21] Expanded NPA alert system (alert.py) to cover ALL 6 providers. Changes: (1) New properties query now checks LED, SAM, BAM, JAM, KTB, KBANK via first_seen_at/created_at. (2) New `drops` command detects price drops across 5 providers with price_history tables (SAM, BAM, JAM, KTB, KBANK) — tested with 15 drops found. (3) BTS/MRT proximity search expanded from SAM-only to all 5 GPS providers (SAM, BAM, JAM, KTB, KBANK) — now finds BAM properties near BTS เพชรเกล้า and KBANK near BTS นานา. (4) Daily report updated with price drops section. Fixed f-string quoting bugs in report generation. Updated SKILL.md documentation. DB counts: LED 17,705, SAM 4,707, BAM 6,798, JAM 38,820, KTB 2,671, KBANK 13,361. Price history row counts: SAM 160, BAM 6,798, JAM 38,820, KTB 2,671, KBANK 13,361. All providers have first_seen_at timestamps.
+
+[2026-04-06 00:31-00:38] Added price increase alerts to NPA alert system. Implemented `alert_price_increases()` function with `increases` CLI command and integrated into daily report. Price history tables only have `change_type='new'` entries (single scrape), so price increase detection returns 0 results — will work once scrapers run on schedule. Manually triggered all 7 alert commands: new=600, drops=30 (all SAM), increases=0 (expected), deals=20 (all LED UNVERIFIED), bts=20 near transit, upcoming=15 auctions. Notable findings: SAM has 30 price drops including Bangkok (ราชเทวี -24.9%, พระโขนง -16%); Centurion Park at BTS หมอชิต 95m (฿55K/sqm); BAM unit at MRT พระราม 9 151m (฿55K/sqm). All alerts working, sent summary to Telegram. SKILL.md updated.
+
+
+[2026-04-06 01:10] Songkhla cross-provider NPA pre-auction homework for Apr 7 LED auction.
+- 165 LED lots auctioning Apr 7 (all 6th round, all ที่ดินพร้อมสิ่งปลูกสร้าง, all owner-occupied)
+- Cross-provider inventory: LED 508, KTB 204, KBANK 264, JAM 121, SAM 78, BAM 0
+- Hat Yai dominates (83 of 165 Apr 7 lots)
+- Market checker run on Hat Yai condos: Dcondo Kanchanavanich ฿55-60K/sqm, Plus Condo 2 ฿49-57K/sqm, City Home ฿33-42K/sqm
+- Key insight: LED Apr 7 lots are ALL 6th round = already rejected 5 times by market. Prices likely still too high.
+- Best buys are from other providers (JAM condos, KBANK promo houses, SAM shophouses)
+- Full report sent to Telegram, ingested to KB
+[2026-04-06 01:02] Songkhla province deep dive for Apr 7 LED auction prep. LED: 508 total Songkhla assets, ALL "ที่ดินพร้อมสิ่งปลูกสร้าง" (land with buildings). 165 lots in Apr 7 auction, dominated by หาดใหญ่ (83), เมืองสงขลา (22), ระโนด (11), กิ่งบางกล่ำ (11). Cross-provider counts: SAM 78, BAM 0, JAM 121, KTB 204, KBANK 264. No condos in LED auction at all. SAM has 3 condos (หาดใหญ่) + commercial buildings. JAM has 27 condos (หาดใหญ่), mostly ดีคอนโด กาญจนวนิช at ฿47-55K/sqm (15% discount). KBANK has 13 condos, some with promo prices. KTB has 1 condo at ฿408M (entire building). Market research: Hat Yai land ~฿2,248/sqm average; condo market ฿53-60K/sqm for dcondo kanchanavanich (Sansiri, 1268 units, 2017), ฿49-57K/sqm for Plus Condo Hatyai 2 (582 units, 2019), ฿34K/sqm for City Home Hatyai (Supalai, 416 units, 2012). Rent median ฿6,000-8,500/mo. DB schema lesson: property_type is in `properties` table, deed_type is in `led_properties` table — must use proper JOINs.
+
+[2026-04-06 08:00] Daily NPA alert: 100 new from BAM (mostly ลำลูกกา/ธัญบุรี/ปทุมธานี suburban). NEW BTS/MRT entries: BAM HBKKCU2835001 & HBKKCU2870001 at ฿160K each, ฿5,857/sqm, 115m BTS เพชรเกล้า (very cheap). BAM DEBKKCU0142001 ฿3.28M near MRT พระราม 9. KBANK 051000574 ฿6.76M near BTS นานา. Same Songkhla auctions Apr 7.

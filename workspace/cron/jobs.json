@@ -20,8 +20,8 @@
         "to": "1372818654"
       },
       "state": {
-        "nextRunAtMs": 1775437200000,
-        "lastRunAtMs": 1775350800000,
+        "nextRunAtMs": 1775523600000,
+        "lastRunAtMs": 1775437200001,
         "lastStatus": "ok",
         "lastError": null,
         "runHistory": [
@@ -36,11 +36,17 @@
             "status": "ok",
             "durationMs": 25257,
             "error": null
+          },
+          {
+            "runAtMs": 1775437200001,
+            "status": "ok",
+            "durationMs": 60897,
+            "error": null
           }
         ]
       },
       "createdAtMs": 1775234757687,
-      "updatedAtMs": 1775350825257,
+      "updatedAtMs": 1775437260898,
       "deleteAfterRun": false
     },
     {

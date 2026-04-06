@@ -126,7 +126,7 @@ def fmt_baht(val):
 # ─── ALERT: New Properties ───
 
 def alert_new_properties(hours=24, source="all"):
-    """Find properties added in the last N hours."""
+    """Find properties added in the last N hours across ALL providers."""
     conn = get_conn()
     cur = conn.cursor()
     since = datetime.now() - timedelta(hours=hours)
@@ -199,6 +199,182 @@ def alert_new_properties(hours=24, source="all"):
                 "station": station_info,
                 "first_seen": str(row[9]),
                 "address": row[10],
+            })
+
+    # BAM new properties
+    if source in ("all", "bam"):
+        cur.execute("""
+            SELECT asset_no, col_sub_typedesc, district, province,
+                   discount_price, sell_price, shock_price, area_meter,
+                   lat, lon, project_th, grade, first_seen_at,
+                   asset_state
+            FROM bam_properties
+            WHERE first_seen_at >= %s
+              AND discount_price IS NOT NULL
+            ORDER BY first_seen_at DESC
+            LIMIT 100
+        """, (since,))
+        for row in cur.fetchall():
+            price = row[4] if row[4] else row[5]
+            station_info = None
+            if row[8] and row[9]:
+                ns = nearest_station(float(row[8]), float(row[9]))
+                if ns:
+                    station_info = f"{ns[0]} ({ns[1]:.0f}m)"
+            psqm = None
+            if price and row[7] and float(row[7]) > 0:
+                psqm = round(float(price) / float(row[7]))
+            results.append({
+                "source": "BAM",
+                "asset_id": row[0],
+                "type": row[1],
+                "district": row[2],
+                "province": row[3],
+                "price": fmt_baht(price),
+                "price_raw": int(float(price)) if price else None,
+                "sell_price": fmt_baht(row[5]),
+                "shock_price": fmt_baht(row[6]),
+                "size_sqm": float(row[7]) if row[7] else None,
+                "price_per_sqm": psqm,
+                "station": station_info,
+                "project": row[10],
+                "grade": row[11],
+                "first_seen": str(row[12]),
+                "status": row[13],
+            })
+
+    # JAM new properties
+    if source in ("all", "jam"):
+        cur.execute("""
+            SELECT asset_no, type_sale_th, amphur_name, province_name,
+                   discount, selling, meter, lat, lon,
+                   project_th, first_seen_at, type_asset_th,
+                   status_hotdeal, is_flash_sale
+            FROM jam_properties
+            WHERE first_seen_at >= %s
+              AND type_sale_th = 'ขาย'
+              AND discount IS NOT NULL
+            ORDER BY first_seen_at DESC
+            LIMIT 100
+        """, (since,))
+        for row in cur.fetchall():
+            price = row[4] if row[4] else row[5]
+            station_info = None
+            if row[7] and row[8]:
+                ns = nearest_station(float(row[7]), float(row[8]))
+                if ns:
+                    station_info = f"{ns[0]} ({ns[1]:.0f}m)"
+            psqm = None
+            if price and row[6] and float(row[6]) > 0:
+                psqm = round(float(price) / float(row[6]))
+            tags = []
+            if row[12]: tags.append("🔥HOT")
+            if row[13]: tags.append("⚡FLASH")
+            results.append({
+                "source": "JAM",
+                "asset_id": row[0],
+                "type": row[1],
+                "district": row[2],
+                "province": row[3],
+                "price": fmt_baht(price),
+                "price_raw": int(float(price)) if price else None,
+                "selling_price": fmt_baht(row[5]),
+                "size_sqm": float(row[6]) if row[6] else None,
+                "price_per_sqm": psqm,
+                "station": station_info,
+                "project": row[9],
+                "first_seen": str(row[10]),
+                "asset_type": row[11],
+                "tags": tags,
+            })
+
+    # KTB new properties
+    if source in ("all", "ktb"):
+        cur.execute("""
+            SELECT coll_mono_code, coll_type_name, amphur, province,
+                   price, nml_price, area, lat, lon,
+                   coll_desc, first_seen_at, is_new_asset, is_promotion
+            FROM ktb_properties
+            WHERE first_seen_at >= %s
+              AND price IS NOT NULL
+            ORDER BY first_seen_at DESC
+            LIMIT 100
+        """, (since,))
+        for row in cur.fetchall():
+            station_info = None
+            if row[7] and row[8]:
+                ns = nearest_station(float(row[7]), float(row[8]))
+                if ns:
+                    station_info = f"{ns[0]} ({ns[1]:.0f}m)"
+            discount_pct = None
+            if row[4] and row[5] and float(row[5]) > 0:
+                discount_pct = round((1 - float(row[4]) / float(row[5])) * 100, 1)
+            tags = []
+            if row[11]: tags.append("🆕NEW")
+            if row[12]: tags.append("🏷️PROMO")
+            results.append({
+                "source": "KTB",
+                "asset_id": row[0],
+                "type": row[1],
+                "district": row[2],
+                "province": row[3],
+                "price": fmt_baht(row[4]),
+                "price_raw": int(float(row[4])) if row[4] else None,
+                "appraisal": fmt_baht(row[5]),
+                "discount_pct": discount_pct,
+                "area_text": row[6],
+                "station": station_info,
+                "description": row[9],
+                "first_seen": str(row[10]),
+                "tags": tags,
+            })
+
+    # KBANK new properties
+    if source in ("all", "kbank"):
+        cur.execute("""
+            SELECT property_id, property_type_name, amphur_name, province_name,
+                   sell_price, promotion_price, adjust_price, useable_area,
+                   lat, lon, building_th, first_seen_at,
+                   is_new, is_hot
+            FROM kbank_properties
+            WHERE first_seen_at >= %s
+              AND sell_price IS NOT NULL
+            ORDER BY first_seen_at DESC
+            LIMIT 100
+        """, (since,))
+        for row in cur.fetchall():
+            price = row[5] if row[5] else row[4]  # prefer promo price
+            station_info = None
+            if row[8] and row[9]:
+                ns = nearest_station(float(row[8]), float(row[9]))
+                if ns:
+                    station_info = f"{ns[0]} ({ns[1]:.0f}m)"
+            psqm = None
+            if price and row[7] and float(row[7]) > 0:
+                psqm = round(float(price) / float(row[7]))
+            discount_pct = None
+            if row[5] and row[4] and float(row[4]) > 0:
+                discount_pct = round((1 - float(row[5]) / float(row[4])) * 100, 1)
+            tags = []
+            if row[12]: tags.append("🆕NEW")
+            if row[13]: tags.append("🔥HOT")
+            results.append({
+                "source": "KBANK",
+                "asset_id": row[0],
+                "type": row[1],
+                "district": row[2],
+                "province": row[3],
+                "price": fmt_baht(price),
+                "price_raw": int(float(price)) if price else None,
+                "sell_price": fmt_baht(row[4]),
+                "promo_price": fmt_baht(row[5]),
+                "discount_pct": discount_pct,
+                "size_sqm": float(row[7]) if row[7] else None,
+                "price_per_sqm": psqm,
+                "station": station_info,
+                "building": row[10],
+                "first_seen": str(row[11]),
+                "tags": tags,
             })
 
     conn.close()
@@ -278,7 +454,7 @@ def alert_deals(max_price_satang=None, min_discount_pct=20, limit=20):
 # ─── ALERT: Near BTS/MRT ───
 
 def alert_near_transit(max_meters=500, max_price_baht=None, source="all", limit=30):
-    """Find SAM/LED properties near BTS/MRT stations."""
+    """Find properties near BTS/MRT stations across ALL providers with GPS."""
     conn = get_conn()
     cur = conn.cursor()
     results = []
@@ -316,7 +492,139 @@ def alert_near_transit(max_meters=500, max_price_baht=None, source="all", limit=
                     "price_per_unit": row[10],
                 })
 
-    # LED doesn't have coordinates in current schema, skip for now
+    # BAM properties with coordinates
+    if source in ("all", "bam"):
+        cur.execute("""
+            SELECT asset_no, col_sub_typedesc, district, province,
+                   discount_price, sell_price, area_meter, lat, lon,
+                   project_th, grade
+            FROM bam_properties
+            WHERE lat IS NOT NULL AND lon IS NOT NULL
+              AND discount_price IS NOT NULL
+              AND (%s IS NULL OR discount_price <= %s)
+        """, (max_price_baht, max_price_baht))
+        for row in cur.fetchall():
+            lat, lng = float(row[7]), float(row[8])
+            ns = nearest_station(lat, lng, max_meters)
+            if ns:
+                psqm = None
+                if row[4] and row[6] and float(row[6]) > 0:
+                    psqm = round(float(row[4]) / float(row[6]))
+                results.append({
+                    "source": "BAM",
+                    "code": row[0],
+                    "type": row[1],
+                    "district": row[2],
+                    "province": row[3],
+                    "price": fmt_baht(row[4]),
+                    "price_raw": int(float(row[4])) if row[4] else None,
+                    "size_sqm": float(row[6]) if row[6] else None,
+                    "status": "active",
+                    "station": ns[0],
+                    "distance_m": round(ns[1]),
+                    "address": row[9],
+                    "price_per_unit": psqm,
+                    "grade": row[10],
+                })
+
+    # JAM properties with coordinates
+    if source in ("all", "jam"):
+        cur.execute("""
+            SELECT asset_no, type_sale_th, amphur_name, province_name,
+                   discount, meter, lat, lon, project_th
+            FROM jam_properties
+            WHERE lat IS NOT NULL AND lon IS NOT NULL
+              AND discount IS NOT NULL
+              AND type_sale_th = 'ขาย'
+              AND (%s IS NULL OR discount <= %s)
+        """, (max_price_baht, max_price_baht))
+        for row in cur.fetchall():
+            lat, lng = float(row[6]), float(row[7])
+            ns = nearest_station(lat, lng, max_meters)
+            if ns:
+                psqm = None
+                if row[4] and row[5] and float(row[5]) > 0:
+                    psqm = round(float(row[4]) / float(row[5]))
+                results.append({
+                    "source": "JAM",
+                    "code": row[0],
+                    "type": row[1],
+                    "district": row[2],
+                    "province": row[3],
+                    "price": fmt_baht(row[4]),
+                    "price_raw": int(float(row[4])) if row[4] else None,
+                    "size_sqm": float(row[5]) if row[5] else None,
+                    "status": "active",
+                    "station": ns[0],
+                    "distance_m": round(ns[1]),
+                    "address": row[8],
+                    "price_per_unit": psqm,
+                })
+
+    # KTB properties with coordinates
+    if source in ("all", "ktb"):
+        cur.execute("""
+            SELECT coll_mono_code, coll_type_name, amphur, province,
+                   price, nml_price, area, lat, lon, coll_desc
+            FROM ktb_properties
+            WHERE lat IS NOT NULL AND lon IS NOT NULL
+              AND price IS NOT NULL
+              AND (%s IS NULL OR price <= %s)
+        """, (max_price_baht, max_price_baht))
+        for row in cur.fetchall():
+            lat, lng = float(row[7]), float(row[8])
+            ns = nearest_station(lat, lng, max_meters)
+            if ns:
+                results.append({
+                    "source": "KTB",
+                    "code": row[0],
+                    "type": row[1],
+                    "district": row[2],
+                    "province": row[3],
+                    "price": fmt_baht(row[4]),
+                    "price_raw": int(float(row[4])) if row[4] else None,
+                    "size_sqm": row[6],
+                    "status": "active",
+                    "station": ns[0],
+                    "distance_m": round(ns[1]),
+                    "address": row[9],
+                    "price_per_unit": None,
+                })
+
+    # KBANK properties with coordinates
+    if source in ("all", "kbank"):
+        cur.execute("""
+            SELECT property_id, property_type_name, amphur_name, province_name,
+                   promotion_price, sell_price, useable_area, lat, lon,
+                   building_th
+            FROM kbank_properties
+            WHERE lat IS NOT NULL AND lon IS NOT NULL
+              AND sell_price IS NOT NULL
+              AND (%s IS NULL OR COALESCE(promotion_price, sell_price) <= %s)
+        """, (max_price_baht, max_price_baht))
+        for row in cur.fetchall():
+            lat, lng = float(row[7]), float(row[8])
+            ns = nearest_station(lat, lng, max_meters)
+            if ns:
+                price = row[4] if row[4] else row[5]
+                psqm = None
+                if price and row[6] and float(row[6]) > 0:
+                    psqm = round(float(price) / float(row[6]))
+                results.append({
+                    "source": "KBANK",
+                    "code": row[0],
+                    "type": row[1],
+                    "district": row[2],
+                    "province": row[3],
+                    "price": fmt_baht(price),
+                    "price_raw": int(float(price)) if price else None,
+                    "size_sqm": float(row[6]) if row[6] else None,
+                    "status": "active",
+                    "station": ns[0],
+                    "distance_m": round(ns[1]),
+                    "address": row[9],
+                    "price_per_unit": psqm,
+                })
 
     # Sort by distance
     results.sort(key=lambda x: x.get("distance_m", 9999))
@@ -377,6 +685,432 @@ def alert_upcoming_auctions(days=14, province=None, limit=30):
     return results
 
 
+# ─── ALERT: Price Changes ───
+
+def alert_price_changes(hours=24, min_drop_pct=5, limit=30):
+    """Find properties with price drops across all providers with price_history tables."""
+    conn = get_conn()
+    cur = conn.cursor()
+    since = datetime.now() - timedelta(hours=hours)
+    results = []
+
+    # SAM price changes (has structured sam_price_history)
+    cur.execute("""
+        SELECT ph.property_code, ph.old_price_baht, ph.new_price_baht,
+               ph.price_drop_pct, ph.size_sqm, ph.old_price_per_sqm,
+               ph.new_price_per_sqm, ph.district, ph.province,
+               ph.property_type, ph.created_at
+        FROM sam_price_history ph
+        WHERE ph.created_at >= %s
+          AND ph.price_drop_pct >= %s
+          AND ph.validation_status != 'invalid'
+        ORDER BY ph.price_drop_pct DESC
+        LIMIT %s
+    """, (since, min_drop_pct, limit))
+    for row in cur.fetchall():
+        results.append({
+            "source": "SAM",
+            "code": row[0],
+            "old_price": fmt_baht(row[1]),
+            "new_price": fmt_baht(row[2]),
+            "drop_pct": float(row[3]) if row[3] else 0,
+            "size_sqm": row[4],
+            "old_psqm": round(float(row[5])) if row[5] else None,
+            "new_psqm": round(float(row[6])) if row[6] else None,
+            "district": row[7],
+            "province": row[8],
+            "type": row[9],
+            "changed_at": str(row[10]),
+        })
+
+    # BAM price drops (compare current vs previous in bam_price_history)
+    cur.execute("""
+        SELECT bp.asset_no, bp.col_sub_typedesc, bp.district, bp.province,
+               bp.discount_price, bp.area_meter, bp.project_th,
+               ph_old.discount_price as old_discount,
+               ph_old.scraped_at as old_scraped
+        FROM bam_properties bp
+        JOIN LATERAL (
+            SELECT discount_price, scraped_at
+            FROM bam_price_history
+            WHERE asset_id = bp.id AND change_type = 'price_drop'
+              AND scraped_at >= %s
+            ORDER BY scraped_at DESC LIMIT 1
+        ) ph_old ON true
+        WHERE ph_old.discount_price IS NOT NULL
+          AND bp.discount_price IS NOT NULL
+          AND ph_old.discount_price > bp.discount_price
+          AND ((ph_old.discount_price - bp.discount_price) / ph_old.discount_price * 100) >= %s
+        ORDER BY (ph_old.discount_price - bp.discount_price) / ph_old.discount_price DESC
+        LIMIT %s
+    """, (since, min_drop_pct, limit))
+    for row in cur.fetchall():
+        old_p = float(row[7])
+        new_p = float(row[4])
+        drop = round((1 - new_p / old_p) * 100, 1)
+        psqm = round(new_p / float(row[5])) if row[5] and float(row[5]) > 0 else None
+        results.append({
+            "source": "BAM",
+            "code": row[0],
+            "type": row[1],
+            "district": row[2],
+            "province": row[3],
+            "old_price": fmt_baht(old_p),
+            "new_price": fmt_baht(new_p),
+            "drop_pct": drop,
+            "size_sqm": float(row[5]) if row[5] else None,
+            "old_psqm": round(old_p / float(row[5])) if row[5] and float(row[5]) > 0 else None,
+            "new_psqm": psqm,
+            "project": row[6],
+            "changed_at": str(row[8]),
+        })
+
+    # JAM price drops
+    cur.execute("""
+        SELECT jp.asset_no, jp.type_asset_th, jp.amphur_name, jp.province_name,
+               jp.discount, jp.meter, jp.project_th,
+               ph_old.discount as old_discount,
+               ph_old.scraped_at as old_scraped
+        FROM jam_properties jp
+        JOIN LATERAL (
+            SELECT discount, scraped_at
+            FROM jam_price_history
+            WHERE asset_id = jp.asset_id AND change_type = 'price_drop'
+              AND scraped_at >= %s
+            ORDER BY scraped_at DESC LIMIT 1
+        ) ph_old ON true
+        WHERE ph_old.discount IS NOT NULL
+          AND jp.discount IS NOT NULL
+          AND ph_old.discount > jp.discount
+          AND ((ph_old.discount - jp.discount) / ph_old.discount * 100) >= %s
+        ORDER BY (ph_old.discount - jp.discount) / ph_old.discount DESC
+        LIMIT %s
+    """, (since, min_drop_pct, limit))
+    for row in cur.fetchall():
+        old_p = float(row[7])
+        new_p = float(row[4])
+        drop = round((1 - new_p / old_p) * 100, 1)
+        psqm = round(new_p / float(row[5])) if row[5] and float(row[5]) > 0 else None
+        results.append({
+            "source": "JAM",
+            "code": row[0],
+            "type": row[1],
+            "district": row[2],
+            "province": row[3],
+            "old_price": fmt_baht(old_p),
+            "new_price": fmt_baht(new_p),
+            "drop_pct": drop,
+            "size_sqm": float(row[5]) if row[5] else None,
+            "old_psqm": round(old_p / float(row[5])) if row[5] and float(row[5]) > 0 else None,
+            "new_psqm": psqm,
+            "project": row[6],
+            "changed_at": str(row[8]),
+        })
+
+    # KTB price drops
+    cur.execute("""
+        SELECT kp.coll_mono_code, kp.coll_type_name, kp.amphur, kp.province,
+               kp.price, kp.area, kp.coll_desc,
+               ph_old.price as old_price,
+               ph_old.scraped_at as old_scraped
+        FROM ktb_properties kp
+        JOIN LATERAL (
+            SELECT price, scraped_at
+            FROM ktb_price_history
+            WHERE coll_grp_id = kp.coll_grp_id AND change_type = 'price_drop'
+              AND scraped_at >= %s
+            ORDER BY scraped_at DESC LIMIT 1
+        ) ph_old ON true
+        WHERE ph_old.price IS NOT NULL
+          AND kp.price IS NOT NULL
+          AND ph_old.price > kp.price
+          AND ((ph_old.price - kp.price) / ph_old.price * 100) >= %s
+        ORDER BY (ph_old.price - kp.price) / ph_old.price DESC
+        LIMIT %s
+    """, (since, min_drop_pct, limit))
+    for row in cur.fetchall():
+        old_p = float(row[7])
+        new_p = float(row[4])
+        drop = round((1 - new_p / old_p) * 100, 1)
+        results.append({
+            "source": "KTB",
+            "code": row[0],
+            "type": row[1],
+            "district": row[2],
+            "province": row[3],
+            "old_price": fmt_baht(old_p),
+            "new_price": fmt_baht(new_p),
+            "drop_pct": drop,
+            "size_sqm": row[5],
+            "old_psqm": None,
+            "new_psqm": None,
+            "project": row[6],
+            "changed_at": str(row[8]),
+        })
+
+    # KBANK price drops
+    cur.execute("""
+        SELECT kp.property_id, kp.property_type_name, kp.amphur_name, kp.province_name,
+               COALESCE(kp.promotion_price, kp.sell_price),
+               kp.useable_area, kp.building_th,
+               ph_old.sell_price as old_price,
+               ph_old.scraped_at as old_scraped
+        FROM kbank_properties kp
+        JOIN LATERAL (
+            SELECT sell_price, scraped_at
+            FROM kbank_price_history
+            WHERE property_id = kp.property_id AND change_type = 'price_drop'
+              AND scraped_at >= %s
+            ORDER BY scraped_at DESC LIMIT 1
+        ) ph_old ON true
+        WHERE ph_old.sell_price IS NOT NULL
+          AND kp.sell_price IS NOT NULL
+          AND ph_old.sell_price > COALESCE(kp.promotion_price, kp.sell_price)
+          AND ((ph_old.sell_price - COALESCE(kp.promotion_price, kp.sell_price)) / ph_old.sell_price * 100) >= %s
+        ORDER BY (ph_old.sell_price - COALESCE(kp.promotion_price, kp.sell_price)) / ph_old.sell_price DESC
+        LIMIT %s
+    """, (since, min_drop_pct, limit))
+    for row in cur.fetchall():
+        old_p = float(row[7])
+        new_p = float(row[4])
+        drop = round((1 - new_p / old_p) * 100, 1)
+        psqm = round(new_p / float(row[5])) if row[5] and float(row[5]) > 0 else None
+        results.append({
+            "source": "KBANK",
+            "code": row[0],
+            "type": row[1],
+            "district": row[2],
+            "province": row[3],
+            "old_price": fmt_baht(old_p),
+            "new_price": fmt_baht(new_p),
+            "drop_pct": drop,
+            "size_sqm": float(row[5]) if row[5] else None,
+            "old_psqm": round(old_p / float(row[5])) if row[5] and float(row[5]) > 0 else None,
+            "new_psqm": psqm,
+            "project": row[6],
+            "changed_at": str(row[8]),
+        })
+
+    # Sort by drop percentage
+    results.sort(key=lambda x: x.get("drop_pct", 0), reverse=True)
+    conn.close()
+    return results[:limit]
+
+
+# ─── ALERT: Price Increases ───
+
+def alert_price_increases(hours=24, min_increase_pct=5, limit=30):
+    """Find properties with price increases — unusual for NPA, worth investigating."""
+    conn = get_conn()
+    cur = conn.cursor()
+    since = datetime.now() - timedelta(hours=hours)
+    results = []
+
+    # SAM price increases (structured sam_price_history has negative drop_pct for increases)
+    cur.execute("""
+        SELECT ph.property_code, ph.old_price_baht, ph.new_price_baht,
+               ph.price_drop_pct, ph.size_sqm, ph.old_price_per_sqm,
+               ph.new_price_per_sqm, ph.district, ph.province,
+               ph.property_type, ph.created_at
+        FROM sam_price_history ph
+        WHERE ph.created_at >= %s
+          AND ph.price_drop_pct <= -%s
+          AND ph.validation_status != 'invalid'
+        ORDER BY ph.price_drop_pct ASC
+        LIMIT %s
+    """, (since, min_increase_pct, limit))
+    for row in cur.fetchall():
+        increase_pct = abs(float(row[3])) if row[3] else 0
+        results.append({
+            "source": "SAM",
+            "code": row[0],
+            "old_price": fmt_baht(row[1]),
+            "new_price": fmt_baht(row[2]),
+            "increase_pct": increase_pct,
+            "size_sqm": row[4],
+            "old_psqm": round(float(row[5])) if row[5] else None,
+            "new_psqm": round(float(row[6])) if row[6] else None,
+            "district": row[7],
+            "province": row[8],
+            "type": row[9],
+            "changed_at": str(row[10]),
+        })
+
+    # BAM price increases (try change_type first, then compare first vs current)
+    # Approach: compare earliest price_history entry to current price
+    cur.execute("""
+        SELECT bp.asset_no, bp.col_sub_typedesc, bp.district, bp.province,
+               bp.discount_price, bp.area_meter, bp.project_th,
+               ph_first.discount_price as first_discount,
+               ph_first.scraped_at as first_scraped
+        FROM bam_properties bp
+        JOIN LATERAL (
+            SELECT discount_price, scraped_at
+            FROM bam_price_history
+            WHERE asset_id = bp.id
+            ORDER BY scraped_at ASC LIMIT 1
+        ) ph_first ON true
+        WHERE ph_first.discount_price IS NOT NULL
+          AND bp.discount_price IS NOT NULL
+          AND bp.discount_price > ph_first.discount_price
+          AND ((bp.discount_price - ph_first.discount_price) / ph_first.discount_price * 100) >= %s
+          AND ph_first.scraped_at >= %s
+        ORDER BY (bp.discount_price - ph_first.discount_price) / ph_first.discount_price DESC
+        LIMIT %s
+    """, (min_increase_pct, since, limit))
+    for row in cur.fetchall():
+        old_p = float(row[7])
+        new_p = float(row[4])
+        increase = round((new_p / old_p - 1) * 100, 1)
+        psqm = round(new_p / float(row[5])) if row[5] and float(row[5]) > 0 else None
+        results.append({
+            "source": "BAM",
+            "code": row[0],
+            "type": row[1],
+            "district": row[2],
+            "province": row[3],
+            "old_price": fmt_baht(old_p),
+            "new_price": fmt_baht(new_p),
+            "increase_pct": increase,
+            "size_sqm": float(row[5]) if row[5] else None,
+            "old_psqm": round(old_p / float(row[5])) if row[5] and float(row[5]) > 0 else None,
+            "new_psqm": psqm,
+            "project": row[6],
+            "changed_at": str(row[8]),
+        })
+
+    # JAM price increases
+    cur.execute("""
+        SELECT jp.asset_no, jp.type_asset_th, jp.amphur_name, jp.province_name,
+               jp.discount, jp.meter, jp.project_th,
+               ph_first.discount as first_discount,
+               ph_first.scraped_at as first_scraped
+        FROM jam_properties jp
+        JOIN LATERAL (
+            SELECT discount, scraped_at
+            FROM jam_price_history
+            WHERE asset_id = jp.asset_id
+            ORDER BY scraped_at ASC LIMIT 1
+        ) ph_first ON true
+        WHERE ph_first.discount IS NOT NULL
+          AND jp.discount IS NOT NULL
+          AND jp.discount > ph_first.discount
+          AND ((jp.discount - ph_first.discount) / ph_first.discount * 100) >= %s
+          AND ph_first.scraped_at >= %s
+        ORDER BY (jp.discount - ph_first.discount) / ph_first.discount DESC
+        LIMIT %s
+    """, (min_increase_pct, since, limit))
+    for row in cur.fetchall():
+        old_p = float(row[7])
+        new_p = float(row[4])
+        increase = round((new_p / old_p - 1) * 100, 1)
+        psqm = round(new_p / float(row[5])) if row[5] and float(row[5]) > 0 else None
+        results.append({
+            "source": "JAM",
+            "code": row[0],
+            "type": row[1],
+            "district": row[2],
+            "province": row[3],
+            "old_price": fmt_baht(old_p),
+            "new_price": fmt_baht(new_p),
+            "increase_pct": increase,
+            "size_sqm": float(row[5]) if row[5] else None,
+            "old_psqm": round(old_p / float(row[5])) if row[5] and float(row[5]) > 0 else None,
+            "new_psqm": psqm,
+            "project": row[6],
+            "changed_at": str(row[8]),
+        })
+
+    # KTB price increases
+    cur.execute("""
+        SELECT kp.coll_mono_code, kp.coll_type_name, kp.amphur, kp.province,
+               kp.price, kp.area, kp.coll_desc,
+               ph_first.price as first_price,
+               ph_first.scraped_at as first_scraped
+        FROM ktb_properties kp
+        JOIN LATERAL (
+            SELECT price, scraped_at
+            FROM ktb_price_history
+            WHERE coll_grp_id = kp.coll_grp_id
+            ORDER BY scraped_at ASC LIMIT 1
+        ) ph_first ON true
+        WHERE ph_first.price IS NOT NULL
+          AND kp.price IS NOT NULL
+          AND kp.price > ph_first.price
+          AND ((kp.price - ph_first.price) / ph_first.price * 100) >= %s
+          AND ph_first.scraped_at >= %s
+        ORDER BY (kp.price - ph_first.price) / ph_first.price DESC
+        LIMIT %s
+    """, (min_increase_pct, since, limit))
+    for row in cur.fetchall():
+        old_p = float(row[7])
+        new_p = float(row[4])
+        increase = round((new_p / old_p - 1) * 100, 1)
+        results.append({
+            "source": "KTB",
+            "code": row[0],
+            "type": row[1],
+            "district": row[2],
+            "province": row[3],
+            "old_price": fmt_baht(old_p),
+            "new_price": fmt_baht(new_p),
+            "increase_pct": increase,
+            "size_sqm": row[5],
+            "old_psqm": None,
+            "new_psqm": None,
+            "project": row[6],
+            "changed_at": str(row[8]),
+        })
+
+    # KBANK price increases
+    cur.execute("""
+        SELECT kp.property_id, kp.property_type_name, kp.amphur_name, kp.province_name,
+               COALESCE(kp.promotion_price, kp.sell_price),
+               kp.useable_area, kp.building_th,
+               ph_first.sell_price as first_price,
+               ph_first.scraped_at as first_scraped
+        FROM kbank_properties kp
+        JOIN LATERAL (
+            SELECT sell_price, scraped_at
+            FROM kbank_price_history
+            WHERE property_id = kp.property_id
+            ORDER BY scraped_at ASC LIMIT 1
+        ) ph_first ON true
+        WHERE ph_first.sell_price IS NOT NULL
+          AND kp.sell_price IS NOT NULL
+          AND COALESCE(kp.promotion_price, kp.sell_price) > ph_first.sell_price
+          AND ((COALESCE(kp.promotion_price, kp.sell_price) - ph_first.sell_price) / ph_first.sell_price * 100) >= %s
+          AND ph_first.scraped_at >= %s
+        ORDER BY (COALESCE(kp.promotion_price, kp.sell_price) - ph_first.sell_price) / ph_first.sell_price DESC
+        LIMIT %s
+    """, (min_increase_pct, since, limit))
+    for row in cur.fetchall():
+        old_p = float(row[7])
+        new_p = float(row[4])
+        increase = round((new_p / old_p - 1) * 100, 1)
+        psqm = round(new_p / float(row[5])) if row[5] and float(row[5]) > 0 else None
+        results.append({
+            "source": "KBANK",
+            "code": row[0],
+            "type": row[1],
+            "district": row[2],
+            "province": row[3],
+            "old_price": fmt_baht(old_p),
+            "new_price": fmt_baht(new_p),
+            "increase_pct": increase,
+            "size_sqm": float(row[5]) if row[5] else None,
+            "old_psqm": round(old_p / float(row[5])) if row[5] and float(row[5]) > 0 else None,
+            "new_psqm": psqm,
+            "project": row[6],
+            "changed_at": str(row[8]),
+        })
+
+    # Sort by increase percentage (largest first)
+    results.sort(key=lambda x: x.get("increase_pct", 0), reverse=True)
+    conn.close()
+    return results[:limit]
+
+
 # ─── REPORT: Full Daily Report ───
 
 def generate_report():
@@ -385,19 +1119,74 @@ def generate_report():
 
     # 1. New properties
     new = alert_new_properties(hours=24)
+    # Count by source
+    by_source = {}
+    for p in new:
+        s = p["source"]
+        by_source[s] = by_source.get(s, 0) + 1
+    source_str = " | ".join(f"{s}: {c}" for s, c in sorted(by_source.items()))
     lines.append(f"**🆕 New Properties (last 24h): {len(new)}**")
-    for p in new[:10]:
+    if source_str:
+        lines.append(f"  {source_str}")
+    for p in new[:15]:
         if p["source"] == "LED":
             disc = f" (-{p['discount_pct']}%)" if p.get("discount_pct") else ""
             lines.append(f"  LED {p['asset_id']}: {p['price']}{disc} — {p['type']}, {p['district']}, {p['province']}")
-        else:
+        elif p["source"] == "SAM":
             st = f" 🚇{p['station']}" if p.get("station") else ""
             lines.append(f"  SAM {p['code']}: {p['price']} — {p['type']}, {p['district']}{st}")
-    if len(new) > 10:
-        lines.append(f"  ... and {len(new) - 10} more")
+        elif p["source"] == "BAM":
+            st = f" 🚇{p['station']}" if p.get("station") else ""
+            gr = f" [{p['grade']}]" if p.get("grade") else ""
+            psqm = f" ฿{p['price_per_sqm']:,}/sqm" if p.get("price_per_sqm") else ""
+            lines.append(f"  BAM {p['asset_id']}: {p['price']}{psqm}{gr} — {p.get('project','?')}, {p['district']}{st}")
+        elif p["source"] == "JAM":
+            st = f" 🚇{p['station']}" if p.get("station") else ""
+            tags = f" {' '.join(p['tags'])}" if p.get('tags') else ""
+            psqm = f" ฿{p['price_per_sqm']:,}/sqm" if p.get("price_per_sqm") else ""
+            lines.append(f"  JAM {p['asset_id']}: {p['price']}{psqm}{tags} — {p.get('project','?')}, {p['district']}{st}")
+        elif p["source"] == "KTB":
+            st = f" 🚇{p['station']}" if p.get("station") else ""
+            disc = f" (-{p['discount_pct']}%)" if p.get("discount_pct") else ""
+            tags = f" {' '.join(p['tags'])}" if p.get('tags') else ""
+            lines.append(f"  KTB {p['asset_id']}: {p['price']}{disc}{tags} — {p['district']}{st}")
+        elif p["source"] == "KBANK":
+            st = f" 🚇{p['station']}" if p.get("station") else ""
+            disc = f" (-{p['discount_pct']}% promo)" if p.get("discount_pct") else ""
+            tags = f" {' '.join(p['tags'])}" if p.get('tags') else ""
+            psqm = f" ฿{p['price_per_sqm']:,}/sqm" if p.get("price_per_sqm") else ""
+            lines.append(f"  KBANK {p['asset_id']}: {p['price']}{psqm}{disc}{tags} — {p.get('building','?')}, {p['district']}{st}")
+    if len(new) > 15:
+        lines.append(f"  ... and {len(new) - 15} more")
     lines.append("")
 
-    # 2. Best deals
+    # 2. Price drops
+    drops = alert_price_changes(hours=24, min_drop_pct=5, limit=15)
+    lines.append(f"**📉 Price Drops (last 24h, ≥5% drop): {len(drops)}**")
+    for p in drops[:10]:
+        psqm_str = ""
+        if p.get("new_psqm"):
+            psqm_str = f" (฿{p['new_psqm']:,}/sqm)"
+        lines.append(f"  {p['source']} {p['code']}: {p['old_price']} → {p['new_price']} (-{p['drop_pct']}%){psqm_str}")
+        proj = p.get("project", "")
+        if proj:
+            lines.append(f"    {proj}, {p['district']}")
+    lines.append("")
+
+    # 2b. Price increases — unusual for NPA, worth investigating
+    increases = alert_price_increases(hours=24, min_increase_pct=5, limit=15)
+    lines.append(f"**📈 Price Increases (last 24h, ≥5% up): {len(increases)}** ⚠️ unusual — investigate why")
+    for p in increases[:10]:
+        psqm_str = ""
+        if p.get("new_psqm"):
+            psqm_str = f" (฿{p['new_psqm']:,}/sqm)"
+        lines.append(f"  {p['source']} {p['code']}: {p['old_price']} → {p['new_price']} (+{p['increase_pct']}%){psqm_str}")
+        proj = p.get("project", "")
+        if proj:
+            lines.append(f"    {proj}, {p['district']}")
+    lines.append("")
+
+    # 3. Best deals
     deals = alert_deals(min_discount_pct=30, limit=10)
     unv = sum(1 for p in deals if p.get("discount_unverified"))
     stale = sum(1 for p in deals if p.get("stale_appraisal"))
@@ -409,15 +1198,15 @@ def generate_report():
         lines.append(f"  LED {p['asset_id']}: {p['price']} (appraised {p['appraisal']}, -{p['discount_pct']}%){flag} — {p['district']}, {p['province']}")
     lines.append("")
 
-    # 3. Near BTS/MRT
+    # 4. Near BTS/MRT
     transit = alert_near_transit(max_meters=500, limit=10)
     lines.append(f"**🚇 Near BTS/MRT (<500m): {len(transit)}**")
     for p in transit[:10]:
         psqm = f" ({fmt_baht(p['price_per_unit'])}/sqm)" if p.get("price_per_unit") else ""
-        lines.append(f"  SAM {p['code']}: {p['price']}{psqm} — {p['station']} ({p['distance_m']}m), {p['district']}")
+        lines.append(f"  {p['source']} {p['code']}: {p['price']}{psqm} — {p['station']} ({p['distance_m']}m), {p['district']}")
     lines.append("")
 
-    # 4. Upcoming auctions
+    # 5. Upcoming auctions
     upcoming = alert_upcoming_auctions(days=30, limit=10)
     lines.append(f"**📅 Upcoming Auctions (30 days): {len(upcoming)}**")
     for p in upcoming[:10]:
@@ -437,7 +1226,7 @@ def main():
     # new
     p_new = sub.add_parser("new", help="New properties in last N hours")
     p_new.add_argument("--hours", type=int, default=24)
-    p_new.add_argument("--source", choices=["all", "led", "sam"], default="all")
+    p_new.add_argument("--source", choices=["all", "led", "sam", "bam", "jam", "ktb", "kbank"], default="all")
     p_new.add_argument("--json", action="store_true")
 
     # deals
@@ -451,7 +1240,7 @@ def main():
     p_bts = sub.add_parser("bts", help="Properties near BTS/MRT")
     p_bts.add_argument("--meters", type=int, default=500)
     p_bts.add_argument("--max-price", type=int, help="Max price in baht")
-    p_bts.add_argument("--source", choices=["all", "sam"], default="all")
+    p_bts.add_argument("--source", choices=["all", "sam", "bam", "jam", "ktb", "kbank"], default="all")
     p_bts.add_argument("--limit", type=int, default=30)
     p_bts.add_argument("--json", action="store_true")
 
@@ -459,6 +1248,20 @@ def main():
     p_up = sub.add_parser("upcoming", help="Upcoming auctions")
     p_up.add_argument("--days", type=int, default=14)
     p_up.add_argument("--province", type=str, default=None)
+    p_up.add_argument("--limit", type=int, default=30)
+    p_up.add_argument("--json", action="store_true")
+
+    # drops (new)
+    p_drops = sub.add_parser("drops", help="Price drops across all providers")
+    p_drops.add_argument("--hours", type=int, default=24, help="Look back N hours")
+    p_drops.add_argument("--min-drop", type=int, default=5, help="Min drop %%")
+    p_drops.add_argument("--limit", type=int, default=30)
+    p_drops.add_argument("--json", action="store_true")
+
+    # increases (new)
+    p_up = sub.add_parser("increases", help="Price increases — unusual for NPA, worth investigating")
+    p_up.add_argument("--hours", type=int, default=24, help="Look back N hours")
+    p_up.add_argument("--min-increase", type=int, default=5, help="Min increase %%")
     p_up.add_argument("--limit", type=int, default=30)
     p_up.add_argument("--json", action="store_true")
 
@@ -472,14 +1275,42 @@ def main():
         if args.json:
             print(json.dumps(results, ensure_ascii=False, indent=2))
         else:
-            print(f"🆕 New Properties (last {args.hours}h): {len(results)} found\n")
+            by_source = {}
+            for p in results:
+                s = p["source"]
+                by_source[s] = by_source.get(s, 0) + 1
+            source_str = " | ".join(f"{s}: {c}" for s, c in sorted(by_source.items()))
+            print(f"🆕 New Properties (last {args.hours}h): {len(results)} found")
+            if source_str:
+                print(f"   {source_str}\n")
             for p in results[:30]:
                 if p["source"] == "LED":
                     disc = f" (-{p['discount_pct']}%)" if p.get("discount_pct") else ""
                     print(f"  LED {p['asset_id']}: {p['price']}{disc} — {p['type']}, {p['district']}, {p['province']}")
-                else:
+                elif p["source"] == "SAM":
                     st = f" 🚇{p['station']}" if p.get("station") else ""
                     print(f"  SAM {p['code']}: {p['price']} — {p['type']}, {p['district']}{st}")
+                elif p["source"] == "BAM":
+                    st = f" 🚇{p['station']}" if p.get("station") else ""
+                    gr = f" [{p['grade']}]" if p.get("grade") else ""
+                    psqm = f" ฿{p['price_per_sqm']:,}/sqm" if p.get("price_per_sqm") else ""
+                    print(f"  BAM {p['asset_id']}: {p['price']}{psqm}{gr} — {p.get('project','?')}, {p['district']}{st}")
+                elif p["source"] == "JAM":
+                    st = f" 🚇{p['station']}" if p.get("station") else ""
+                    tags = f" {' '.join(p['tags'])}" if p.get("tags") else ""
+                    psqm = f" ฿{p['price_per_sqm']:,}/sqm" if p.get("price_per_sqm") else ""
+                    print(f"  JAM {p['asset_id']}: {p['price']}{psqm}{tags} — {p.get('project','?')}, {p['district']}{st}")
+                elif p["source"] == "KTB":
+                    st = f" 🚇{p['station']}" if p.get("station") else ""
+                    disc = f" (-{p['discount_pct']}%)" if p.get("discount_pct") else ""
+                    tags = f" {' '.join(p['tags'])}" if p.get("tags") else ""
+                    print(f"  KTB {p['asset_id']}: {p['price']}{disc}{tags} — {p['district']}{st}")
+                elif p["source"] == "KBANK":
+                    st = f" 🚇{p['station']}" if p.get("station") else ""
+                    disc = f" (-{p['discount_pct']}% promo)" if p.get("discount_pct") else ""
+                    tags = f" {' '.join(p['tags'])}" if p.get("tags") else ""
+                    psqm = f" ฿{p['price_per_sqm']:,}/sqm" if p.get("price_per_sqm") else ""
+                    print(f"  KBANK {p['asset_id']}: {p['price']}{psqm}{disc}{tags} — {p.get('building','?')}, {p['district']}{st}")
             if len(results) > 30:
                 print(f"\n  ... and {len(results) - 30} more")
 
@@ -515,8 +1346,41 @@ def main():
             print(f"🚇 Near BTS/MRT (<{args.meters}m): {len(results)} found\n")
             for p in results:
                 psqm = f" ({fmt_baht(p['price_per_unit'])}/sqm)" if p.get("price_per_unit") else ""
-                print(f"  SAM {p['code']}: {p['price']}{psqm} — {p['station']} ({p['distance_m']}m)")
-                print(f"    {p['type']}, {p['district']}, {p['status']}")
+                print(f"  {p['source']} {p['code']}: {p['price']}{psqm} — {p['station']} ({p['distance_m']}m)")
+                print(f"    {p.get('type','?')}, {p['district']}, {p.get('status','')}")
+
+    elif args.command == "drops":
+        results = alert_price_changes(args.hours, args.min_drop, args.limit)
+        if args.json:
+            print(json.dumps(results, ensure_ascii=False, indent=2))
+        else:
+            print(f"📉 Price Drops (last {args.hours}h, ≥{args.min_drop}% drop): {len(results)} found\n")
+            for p in results:
+                psqm_str = ""
+                if p.get("new_psqm"):
+                    psqm_str = f" (฿{p['new_psqm']:,}/sqm)"
+                print(f"  {p['source']} {p['code']}: {p['old_price']} → {p['new_price']} (-{p['drop_pct']}%){psqm_str}")
+                proj = p.get("project", "")
+                dist = p.get("district", "")
+                if proj or dist:
+                    print(f"    {proj}, {dist}")
+
+    elif args.command == "increases":
+        results = alert_price_increases(args.hours, args.min_increase, args.limit)
+        if args.json:
+            print(json.dumps(results, ensure_ascii=False, indent=2))
+        else:
+            print(f"📈 Price Increases (last {args.hours}h, ≥{args.min_increase}% up): {len(results)} found")
+            print(f"   ⚠️ Price increases on NPA are unusual — investigate why!\n")
+            for p in results:
+                psqm_str = ""
+                if p.get("new_psqm"):
+                    psqm_str = f" (฿{p['new_psqm']:,}/sqm)"
+                print(f"  {p['source']} {p['code']}: {p['old_price']} → {p['new_price']} (+{p['increase_pct']}%){psqm_str}")
+                proj = p.get("project", "")
+                dist = p.get("district", "")
+                if proj or dist:
+                    print(f"    {proj}, {dist}")
 
     elif args.command == "upcoming":
         results = alert_upcoming_auctions(args.days, args.province, args.limit)
