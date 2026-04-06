@@ -81,7 +81,7 @@ Current best proxy for "sold":
 - **155 properties** with `is_sold_out = true` — KBank API already flags these
   - Top types: บ้านเดี่ยว (61), ทาวน์เฮ้าส์ (39), คอนโด (22), อาคารพาณิชย์ (18)
   - Top provinces: ชลบุรี (28), กรุงเทพ (20), เชียงใหม่ (9), ปทุมธานี (8), นนทบุรี (8)
-- **241 properties** with `is_reserve = true` — sales pipeline, may convert to sold
+- **268 properties** with `is_reserve = true` — sales pipeline, may convert to sold
 
 After the next daily scrape (06:00 daily per cron), the disappearance query will yield real results.
 
