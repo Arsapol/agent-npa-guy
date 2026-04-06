@@ -620,8 +620,16 @@ def export_json(results: list[NpaInHotDistrict], path: str) -> None:
             "district_sold_total": r.hot_district.sold_total,
             "district_sold_recent": r.hot_district.sold_recent,
         })
+    import decimal
+
+    class DecimalEncoder(json.JSONEncoder):
+        def default(self, o):
+            if isinstance(o, decimal.Decimal):
+                return float(o)
+            return super().default(o)
+
     with open(path, "w") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+        json.dump(data, f, ensure_ascii=False, indent=2, cls=DecimalEncoder)
 
 
 # ---------------------------------------------------------------------------
