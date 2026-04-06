@@ -104,61 +104,103 @@ def find_hot_districts(
     min_sell_pct: float = 8.0,
     min_sold: int = 3,
 ) -> list[HotDistrict]:
+    """Find districts with highest transaction velocity.
+
+    Combines sold data from 3 providers:
+    - LED: sale_status = 'ขายแล้ว' (court auction sales)
+    - JAM: status_soldout = true (JAM confirmed sold)
+    - KBank: is_sold_out = true (KBank API flag)
+    """
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
-    cur.execute(
-        """
+    # Union all sold signals into one temp table
+    cur.execute("""
+        CREATE TEMP TABLE _sold_properties AS
+        -- LED sold
         SELECT p.province, p.ampur as district,
-               count(*) FILTER (WHERE p.sale_status = 'ขายแล้ว') as sold_total,
-               count(*) FILTER (
-                   WHERE p.sale_status = 'ขายแล้ว'
-                   AND p.updated_at >= (now() - interval '12 months')
-               ) as sold_recent,
-               count(*) FILTER (WHERE p.sale_status = 'ยังไม่ขาย') as unsold,
-               count(*) as total,
-               -- Price band breakdown (sold only)
-               count(*) FILTER (
-                   WHERE p.sale_status = 'ขายแล้ว'
-                   AND p.primary_price_satang / 100.0 < 1000000
-               ) as sold_under_1m,
-               count(*) FILTER (
-                   WHERE p.sale_status = 'ขายแล้ว'
-                   AND p.primary_price_satang / 100.0 BETWEEN 1000000 AND 3000000
-               ) as sold_1m_3m,
-               count(*) FILTER (
-                   WHERE p.sale_status = 'ขายแล้ว'
-                   AND p.primary_price_satang / 100.0 BETWEEN 3000001 AND 5000000
-               ) as sold_3m_5m,
-               count(*) FILTER (
-                   WHERE p.sale_status = 'ขายแล้ว'
-                   AND p.primary_price_satang / 100.0 BETWEEN 5000001 AND 10000000
-               ) as sold_5m_10m,
-               count(*) FILTER (
-                   WHERE p.sale_status = 'ขายแล้ว'
-                   AND p.primary_price_satang / 100.0 > 10000000
-               ) as sold_over_10m,
-               -- Property type breakdown (sold only)
-               count(*) FILTER (
-                   WHERE p.sale_status = 'ขายแล้ว' AND p.property_type LIKE '%%ห้องชุด%%'
-               ) as sold_condo,
-               count(*) FILTER (
-                   WHERE p.sale_status = 'ขายแล้ว' AND (p.property_type LIKE '%%บ้าน%%' OR p.property_type LIKE '%%เดี่ยว%%')
-               ) as sold_house,
-               count(*) FILTER (
-                   WHERE p.sale_status = 'ขายแล้ว' AND p.property_type LIKE '%%ทาวน์%%'
-               ) as sold_townhouse,
-               count(*) FILTER (
-                   WHERE p.sale_status = 'ขายแล้ว' AND p.property_type LIKE '%%ที่ดิน%%'
-               ) as sold_land
+               p.primary_price_satang / 100.0 as price,
+               p.property_type as ptype,
+               p.updated_at as sold_date,
+               'LED' as src
         FROM properties p
-        WHERE p.province = ANY(%s)
-        GROUP BY p.province, p.ampur
-        HAVING count(*) FILTER (WHERE p.sale_status = 'ขายแล้ว') >= %s
-        ORDER BY count(*) FILTER (WHERE p.sale_status = 'ขายแล้ว')::float
-                 / NULLIF(count(*), 0) DESC
-        """,
-        [provinces, min_sold],
-    )
+        WHERE p.sale_status = 'ขายแล้ว'
+          AND p.province = ANY(%s)
+
+        UNION ALL
+
+        -- JAM sold
+        SELECT j.province_name, j.amphur_name,
+               COALESCE(j.discount, j.selling) as price,
+               j.type_asset_th as ptype,
+               j.soldout_date::timestamptz as sold_date,
+               'JAM' as src
+        FROM jam_properties j
+        WHERE j.status_soldout = true
+          AND j.province_name = ANY(%s)
+
+        UNION ALL
+
+        -- KBank sold
+        SELECT kb.province_name, kb.amphur_name,
+               COALESCE(kb.promotion_price, kb.sell_price) as price,
+               kb.property_type_name as ptype,
+               kb.last_scraped_at as sold_date,
+               'KBANK' as src
+        FROM kbank_properties kb
+        WHERE kb.is_sold_out = true
+          AND kb.province_name = ANY(%s)
+    """, [provinces, provinces, provinces])
+
+    # Also count total inventory per district (LED unsold + JAM active + KBank active)
+    cur.execute("""
+        WITH sold AS (
+            SELECT district, count(*) as sold_total,
+                   count(*) FILTER (WHERE sold_date >= now() - interval '12 months') as sold_recent,
+                   count(*) FILTER (WHERE price < 1000000) as sold_under_1m,
+                   count(*) FILTER (WHERE price BETWEEN 1000000 AND 3000000) as sold_1m_3m,
+                   count(*) FILTER (WHERE price BETWEEN 3000001 AND 5000000) as sold_3m_5m,
+                   count(*) FILTER (WHERE price BETWEEN 5000001 AND 10000000) as sold_5m_10m,
+                   count(*) FILTER (WHERE price > 10000000) as sold_over_10m,
+                   count(*) FILTER (WHERE ptype LIKE '%%ห้องชุด%%' OR ptype LIKE '%%คอนโด%%') as sold_condo,
+                   count(*) FILTER (WHERE ptype LIKE '%%บ้าน%%' OR ptype LIKE '%%เดี่ยว%%') as sold_house,
+                   count(*) FILTER (WHERE ptype LIKE '%%ทาวน์%%') as sold_townhouse,
+                   count(*) FILTER (WHERE ptype LIKE '%%ที่ดิน%%' OR ptype LIKE '%%ว่าง%%') as sold_land
+            FROM _sold_properties
+            GROUP BY district
+        ),
+        inventory AS (
+            -- LED total
+            SELECT p.ampur as district, count(*) as cnt
+            FROM properties p WHERE p.province = ANY(%s) GROUP BY p.ampur
+            UNION ALL
+            -- JAM total (not sold)
+            SELECT j.amphur_name, count(*) FROM jam_properties j
+            WHERE j.province_name = ANY(%s) AND (j.status_soldout IS NULL OR j.status_soldout = false)
+            GROUP BY j.amphur_name
+            UNION ALL
+            -- KBank total (not sold)
+            SELECT kb.amphur_name, count(*) FROM kbank_properties kb
+            WHERE kb.province_name = ANY(%s) AND (kb.is_sold_out IS NULL OR kb.is_sold_out = false)
+            GROUP BY kb.amphur_name
+        ),
+        inv_agg AS (
+            SELECT district, sum(cnt) as total_inventory FROM inventory GROUP BY district
+        )
+        SELECT s.district,
+               COALESCE((SELECT province FROM _sold_properties WHERE district = s.district LIMIT 1), '') as province,
+               s.sold_total, s.sold_recent,
+               COALESCE(i.total_inventory, 0) as unsold,
+               s.sold_total + COALESCE(i.total_inventory, 0) as total,
+               s.sold_under_1m, s.sold_1m_3m, s.sold_3m_5m, s.sold_5m_10m, s.sold_over_10m,
+               s.sold_condo, s.sold_house, s.sold_townhouse, s.sold_land
+        FROM sold s
+        LEFT JOIN inv_agg i ON i.district = s.district
+        WHERE s.sold_total >= %s
+        ORDER BY s.sold_total::float / NULLIF(s.sold_total + COALESCE(i.total_inventory, 0), 0) DESC
+    """, [provinces, provinces, provinces, min_sold])
+
+    # Drop temp table
+    cur.execute("DROP TABLE IF EXISTS _sold_properties")
 
     districts = []
     for row in cur.fetchall():
