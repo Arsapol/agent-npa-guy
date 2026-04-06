@@ -63,8 +63,9 @@ When a property disappears: run `UPDATE sam_properties SET is_active = false WHE
 - All 6,798 entries are `change_type="new"` in `bam_price_history` (no state changes yet)
 
 **Last scrape distribution:**
-- 2026-04-05: 3,469 rows
-- 2026-04-04: 3,329 rows (first run)
+- 2026-04-05: 3,469 rows (3 province partitions: ปทุมธานี 1,548; นนทบุรี 1,057; สมุทรปราการ 864)
+- 2026-04-04: 3,329 rows (กรุงเทพมหานคร 3,226 + 103 detail-only)
+- **WARNING:** Scrapes are province-partitioned — staleness check must account for which provinces were scraped in each run
 
 **Sold detection approach:**
 BAM only returns available properties in its search API. Sold items disappear. Detection via staleness:
@@ -82,7 +83,7 @@ ORDER BY last_scraped_at ASC;
 
 For marking: add `is_active` column or use `asset_state_code != 1` if BAM returns non-1 codes for sold items in future.
 
-**How many appear sold:** 0 confirmed yet (3,329 appear in only 1 run but may be from geographic partitions not yet re-scraped).
+**How many appear sold:** 0 confirmed yet. Since scrapes are province-partitioned, staleness detection must compare within same province: a BKK property not seen in the BKK re-scrape = likely sold; but a BKK property not seen in a ปทุมธานี run = irrelevant.
 
 ---
 
@@ -136,9 +137,18 @@ ORDER BY update_date DESC;
 
 **No explicit sold/active field.**
 
-**Date range of data:** price_str_dt ranges from 2024-10-03 to 2026-04-04 (all active listings).
+**Date range of data:** All 2,671 from single scrape on 2026-04-04. All `change_type="new"` in `ktb_price_history`.
 
-**`price_end_dt`:** All 2,671 rows have this populated. Sample values: `2026-11-24`, `2056-03-25`, `2027-01-31`. This appears to be the price validity end date — when it passes, property may be relisted at new price or removed.
+**`price_end_dt`:** All 2,671 rows have this populated. Distribution:
+- 1 expired (2026-04-04), 19 expire today (2026-04-05)
+- Most expire within 2026-2027 range
+- Some far-future dates (2056, 2200, 2201) — likely "no expiry" sentinel values
+- This is price validity end date, NOT a sold indicator, but expired + missing from next scrape = strong sold signal
+
+**Flag columns (all boolean, none = sold):**
+- `is_speedy=0`: 2,173; `is_speedy=1`: 422 (expedited sale)
+- `is_new_asset=1`: 76 (newly listed)
+- `is_promotion=1`: 2,173
 
 **Sold detection approach:**
 Like BAM, KTB's search API only returns available properties. Detection via staleness:
