@@ -56,10 +56,11 @@ When a property disappears: run `UPDATE sam_properties SET is_active = false WHE
 - `display_property = true` for all rows
 
 **Key fields:**
-- `sale_date`: NULL for all 6,798 rows
+- `sale_date`: NULL for all 6,798 rows (would be populated when sold — never observed yet)
 - `end_date`: NULL for all 6,798 rows
-- `sale_price_spc_to`: populated for 4,375 rows (special price end date — not a sold indicator)
+- `price_flag`: 2 (4,479), 3 (2,288), 1 (31) — meaning unclear, not a sold indicator
 - `asset_state_code = 1` = available; other codes likely = sold/withdrawn but not yet observed
+- All 6,798 entries are `change_type="new"` in `bam_price_history` (no state changes yet)
 
 **Last scrape distribution:**
 - 2026-04-05: 3,469 rows
@@ -97,10 +98,16 @@ For marking: add `is_active` column or use `asset_state_code != 1` if BAM return
 - `status_soldout = null`: 2,783 (unknown — likely legacy rows or fetch errors)
 
 **Notes on soldout_date:**
-- Not always populated even when `status_soldout = true` (3 of 5 sampled rows had null date)
+- Only 57 of 245 sold properties have `soldout_date` populated (189 have `status_soldout=true` but NULL date)
+- Dates range from 2024-06 to 2026-02, so JAM keeps historical sold items in its API for years
 - `update_date` is the reliable timestamp for when status changed
 
-**`image_sold_out`:** populated for 38,171 rows — this appears to be a URL to a "sold out" overlay image, present on ALL rows as a template (not a sold indicator by itself).
+**`image_sold_out`:** populated for 38,171 rows — this appears to be a URL to a "sold out" overlay image, present on ALL rows as a template (not a sold indicator by itself). Cross-tabulated:
+- `status_soldout=false` + has_sold_img: 35,451 (image is just a template)
+- `status_soldout=true` + has_sold_img: 238 (actual sold)
+- `status_soldout=true` + no_sold_img: 7 (sold but no overlay)
+
+**Scraper already tracks sold transitions:** The JAM scraper writes `change_type="sold"` and `change_type="unsold"` events to `jam_price_history`. Currently 0 transition events recorded (all 38,820 are `change_type="new"` from the first scrape run).
 
 **SQL to identify sold:**
 
