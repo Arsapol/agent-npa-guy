@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Unified NPA query CLI — search across LED, SAM, BAM, JAM, KTB, KBank.
+"""Unified NPA query CLI — search across all 12 providers.
 
 Usage:
     python query.py search --province กรุงเทพ --max-price 3000000
     python query.py search --province นนทบุรี --sources LED,SAM,BAM
+    python query.py search --sources SCB,GSB,TTB,BAY,LH,GHB --type คอนโด
     python query.py search --type คอนโด --min-price 500000 --max-price 2000000
     python query.py stats
     python query.py summary
@@ -120,7 +121,7 @@ def cmd_summary(args: argparse.Namespace) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Unified NPA query across LED, SAM, BAM, JAM, KTB, KBank",
+        description="Unified NPA query across LED, SAM, BAM, JAM, KTB, KBank, SCB, GSB, TTB, BAY, LH, GHB",
     )
     sub = parser.add_subparsers(dest="command", required=True)
 

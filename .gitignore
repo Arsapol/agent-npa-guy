@@ -1,3 +1,7 @@
+# OMC / tooling state
+.omc/
+state/
+
 # General
 .DS_Store
 __MACOSX/

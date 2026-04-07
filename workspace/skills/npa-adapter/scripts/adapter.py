@@ -10,6 +10,12 @@ Provider tables:
   JAM  → jam_properties               (price in BAHT)
   KTB  → ktb_properties               (price in BAHT)
   KBANK→ kbank_properties             (price in BAHT)
+  SCB  → scb_properties               (price in BAHT)
+  GSB  → gsb_properties               (price in BAHT)
+  TTB  → ttb_properties               (price in BAHT)
+  BAY  → bay_properties               (price in BAHT)
+  LH   → lh_properties                (price in BAHT)
+  GHB  → ghb_properties               (price in BAHT)
 """
 
 from __future__ import annotations
