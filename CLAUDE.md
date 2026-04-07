@@ -163,13 +163,13 @@ Juristic fund ≥ 70% | Arrears ≤ 24 months | GPS verified | Renovation ≤ 12
 
 | Agent | Workspace | Purpose |
 |-------|-----------|---------|
+| Collector | `~/.nanobot-npa-collector/` | Data ingestion — all scrapers run here, writes to shared DB |
 | Ada | `~/.nanobot-stocks/` | Financial analysis, macro context |
 | Sentinel | `~/.nanobot-sentinel/` | News monitoring, KB curation |
 | Reviewer | `~/.nanobot-reviewer/` | Critical review of investment theses |
 
-## Scraper Data Integrity
+## Provider Unique Identifiers (for queries)
 
-### Provider unique identifiers
 | Scraper | Business ID | PK type | Notes |
 |---------|------------|---------|-------|
 | BAM | `asset_no` | `UNIQUE` constraint (PK is internal `id`) | Upsert keyed by `asset_no` |
@@ -184,38 +184,7 @@ Juristic fund ≥ 70% | Arrears ≤ 24 months | GPS verified | Renovation ≤ 12
 | LH | `property_id` | Text PK | Asset code e.g. "LH031A" |
 | GHB | `property_id` | Integer PK | `property_no` has UNIQUE constraint |
 
-### Price history duplicate guard
-All price history tables (BAM/JAM/KTB/KBank/SCB/GSB/TTB/BAY/LH/GHB) have:
-- "new" entry only inserted if no prior history exists for that asset
-- Change events (price/state) skipped if a record already exists within the last 1 hour
-
-### Dedup scripts
-Run after any bulk import or table restore:
-```bash
-python workspace/skills/bam-scraper/scripts/dedup.py [--apply]
-python workspace/skills/jam-scraper/scripts/dedup.py [--apply]
-python workspace/skills/kbank-scraper/scripts/dedup.py [--apply]
-python workspace/skills/ktb-scraper/scripts/dedup.py [--apply]
-python workspace/skills/scb-scraper/scripts/dedup.py [--apply]
-python workspace/skills/gsb-scraper/scripts/dedup.py [--apply]
-python workspace/skills/ttb-scraper/scripts/dedup.py [--apply]
-python workspace/skills/bay-scraper/scripts/dedup.py [--apply]
-python workspace/skills/lh-scraper/scripts/dedup.py [--apply]
-python workspace/skills/ghb-scraper/scripts/dedup.py [--apply]
-```
-Default is dry-run; pass `--apply` to execute.
-
-### Market scraper unique identifiers
-| Scraper | Business ID | PK type | Notes |
-|---------|------------|---------|-------|
-| PropertyHub | `id` (GraphQL project ID) | TEXT PK | Upsert keyed by `id` |
-| Hipflat | `uuid` (project slug/UUID) | TEXT PK | Atomic ON CONFLICT upsert |
-| ZMyHome | `id` (numeric project ID) | TEXT PK | Listings keyed by `property_id` |
-| DDProperty | `id` (property_id) | INTEGER PK | Listings keyed by listing `id` |
-
-All 4 market scrapers use atomic `INSERT ... ON CONFLICT DO UPDATE` for dedup.
-All have per-page/per-project DB commits for crash resilience.
-Price history tables use 1-hour dedup window (no duplicate snapshots within same hour).
+> For dedup scripts and scraper data integrity details, see `~/.nanobot-npa-collector/CLAUDE.md`.
 
 ## Development Notes
 
