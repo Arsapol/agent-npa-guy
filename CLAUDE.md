@@ -35,6 +35,12 @@ PostgreSQL: `postgresql://arsapolm@localhost:5432/npa_kb`
 | JAM scraper | `jam_properties`, `jam_price_history`, `jam_scrape_logs` |
 | KTB scraper | `ktb_properties`, `ktb_price_history`, `ktb_scrape_logs` |
 | KBank scraper | `kbank_properties`, `kbank_price_history`, `kbank_scrape_logs` |
+| SCB scraper | `scb_properties`, `scb_price_history`, `scb_scrape_logs` |
+| GSB scraper | `gsb_properties`, `gsb_price_history`, `gsb_scrape_logs` |
+| TTB scraper | `ttb_properties`, `ttb_price_history`, `ttb_scrape_logs` |
+| BAY scraper | `bay_properties`, `bay_price_history`, `bay_scrape_logs` |
+| LH scraper | `lh_properties`, `lh_price_history`, `lh_scrape_logs` |
+| GHB scraper | `ghb_properties`, `ghb_price_history`, `ghb_scrape_logs` |
 | PropertyHub scraper | `propertyhub_projects`, `propertyhub_listings`, `propertyhub_price_history`, `propertyhub_scrape_logs` |
 | Hipflat scraper | `hipflat_projects`, `hipflat_price_history`, `hipflat_scrape_logs` |
 | ZMyHome scraper | `zmyhome_projects`, `zmyhome_listings`, `zmyhome_appraisals`, `zmyhome_price_history`, `zmyhome_scrape_logs` |
@@ -47,6 +53,12 @@ PostgreSQL: `postgresql://arsapolm@localhost:5432/npa_kb`
 - JAM prices stored in **whole baht** (numeric)
 - KTB prices stored in **whole baht** (numeric)
 - KBank prices stored in **whole baht** (numeric)
+- SCB prices stored in **whole baht** (numeric)
+- GSB prices stored in **whole baht** (numeric/integer)
+- TTB prices stored in **whole baht** (numeric)
+- BAY prices stored in **whole baht** (numeric)
+- LH prices stored in **whole baht** (numeric)
+- GHB prices stored in **whole baht** (numeric/integer)
 - PropertyHub prices stored in **whole baht** (numeric)
 - Hipflat prices stored in **whole baht per sqm** (integer)
 - ZMyHome prices stored in **whole baht** (integer)
@@ -61,7 +73,13 @@ PostgreSQL: `postgresql://arsapolm@localhost:5432/npa_kb`
 | `sam-scraper` | Scrape SAM NPA properties (4,700+) | `./run_scraper.sh` or individual scripts |
 | `bam-scraper` | Scrape BAM NPA properties (15,900+) | `python scraper.py` or `--province กรุงเทพมหานคร` |
 | `jam-scraper` | Scrape JAM NPA properties | `python scraper.py` or `--limit 100` |
-| `npa-adapter` | Unified query across all providers (LED/SAM/BAM/JAM/KTB/KBank) | `python query.py search --province "กรุงเทพ" --sources LED,BAM` |
+| `scb-scraper` | Scrape SCB NPA properties | `python scraper.py` or `--limit 10` |
+| `gsb-scraper` | Scrape GSB (ออมสิน) NPA properties | `python scraper.py` or `--limit 5` |
+| `ttb-scraper` | Scrape TTB/PAMCO NPA properties | `python scraper.py` or `--limit 10` |
+| `bay-scraper` | Scrape BAY/Krungsri NPA properties | `python scraper.py` or `--limit 10` |
+| `lh-scraper` | Scrape LH Bank NPA properties (HTML) | `python scraper.py` or `--limit 5` |
+| `ghb-scraper` | Scrape GHB (ธอส.) NPA properties | `python scraper.py` or `--limit 5` |
+| `npa-adapter` | Unified query across all 12 providers | `python query.py search --province "กรุงเทพ" --sources LED,BAM,SCB` |
 | `led-query` | Query LED properties by location/price/date | `python query.py search --province "กรุงเทพ"` |
 | `kb` | Temporal knowledge base (LightRAG + PostgreSQL) | `insert_document(content, desc, category, area, source)` |
 | `flood-check` | Flood risk assessment (HIGH/MEDIUM/LOW) | `python flood_check.py --lat 13.95 --lon 100.62` |
@@ -178,9 +196,15 @@ Juristic fund ≥ 70% | Arrears ≤ 24 months | GPS verified | Renovation ≤ 12
 | KTB | `coll_grp_id` | Integer PK | Is the stable provider ID |
 | KBank | `property_id` | String PK | Already stable string ID |
 | SAM | `sam_id` | `UNIQUE` constraint (PK is autoincrement `id`) | |
+| SCB | `project_id` | BigInteger PK | From search API |
+| GSB | `npa_id` (asset_group_id_npa) | Text PK | e.g. "BKK620093" |
+| TTB | `id_property` | Integer PK | `id_market` has UNIQUE constraint |
+| BAY | `code` | Text PK | Property code e.g. "BX1538" |
+| LH | `property_id` | Text PK | Asset code e.g. "LH031A" |
+| GHB | `property_id` | Integer PK | `property_no` has UNIQUE constraint |
 
 ### Price history duplicate guard
-All price history tables (BAM/JAM/KTB/KBank) have:
+All price history tables (BAM/JAM/KTB/KBank/SCB/GSB/TTB/BAY/LH/GHB) have:
 - "new" entry only inserted if no prior history exists for that asset
 - Change events (price/state) skipped if a record already exists within the last 1 hour
 
@@ -191,6 +215,12 @@ python workspace/skills/bam-scraper/scripts/dedup.py [--apply]
 python workspace/skills/jam-scraper/scripts/dedup.py [--apply]
 python workspace/skills/kbank-scraper/scripts/dedup.py [--apply]
 python workspace/skills/ktb-scraper/scripts/dedup.py [--apply]
+python workspace/skills/scb-scraper/scripts/dedup.py [--apply]
+python workspace/skills/gsb-scraper/scripts/dedup.py [--apply]
+python workspace/skills/ttb-scraper/scripts/dedup.py [--apply]
+python workspace/skills/bay-scraper/scripts/dedup.py [--apply]
+python workspace/skills/lh-scraper/scripts/dedup.py [--apply]
+python workspace/skills/ghb-scraper/scripts/dedup.py [--apply]
 ```
 Default is dry-run; pass `--apply` to execute.
 
