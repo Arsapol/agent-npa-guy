@@ -1,1 +1,0 @@
-RegisterSod("sp.init.js", "\u002f_layouts\u002f15\u002fsp.init.js?rev=UI6qO8nw5gAxpBlx\u00252Fq1z7w\u00253D\u00253DTAG0");

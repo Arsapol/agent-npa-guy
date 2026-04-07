@@ -1,1 +1,0 @@
-$(function(){$(".pxtm-click-toggleDetail").click(function(a){$(this).toggleClass("expandx")})});

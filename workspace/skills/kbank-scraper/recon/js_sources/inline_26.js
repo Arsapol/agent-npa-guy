@@ -1,1 +1,0 @@
-RegisterSod("clienttemplates.js", "\u002f_layouts\u002f15\u002fclienttemplates.js?rev=LD0wPQ1fouhgXEmYUE1ZGg\u00253D\u00253DTAG0");

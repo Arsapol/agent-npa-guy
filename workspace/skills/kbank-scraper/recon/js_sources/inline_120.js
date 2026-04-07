@@ -1,1 +1,0 @@
-window.onload=function(){$(function(){$(".main_banner").each(function(a){this.dataset.bannerPos=a})})};

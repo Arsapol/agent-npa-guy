@@ -1,1 +1,0 @@
-RegisterSod("callout.js", "\u002f_layouts\u002f15\u002fcallout.js?rev=WJ34peZ7FtzHnos0YyA78g\u00253D\u00253DTAG0");RegisterSodDep("callout.js", "strings.js");RegisterSodDep("callout.js", "mQuery.js");RegisterSodDep("callout.js", "core.js");

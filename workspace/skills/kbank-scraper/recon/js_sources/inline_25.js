@@ -1,1 +1,0 @@
-RegisterSod("sp.core.js", "\u002f_layouts\u002f15\u002fsp.core.js?rev=GH02HeA3b68XjXQNZ0noow\u00253D\u00253DTAG0");RegisterSodDep("sp.core.js", "strings.js");RegisterSodDep("sp.core.js", "sp.init.js");RegisterSodDep("sp.core.js", "core.js");

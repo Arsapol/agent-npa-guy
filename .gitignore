@@ -33,6 +33,7 @@ Temporary Items
 config.json
 # Byte-compiled / optimized / DLL files
 __pycache__/
+**/__pycache__/
 *.py[codz]
 *$py.class
 
@@ -251,3 +252,5 @@ __marimo__/
 # Cron logs
 workspace/cron/logs/
 workspace/output/images
+
+workspace/skills/**/recon/js_sources/

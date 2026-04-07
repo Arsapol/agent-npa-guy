@@ -1,1 +1,0 @@
-RegisterSod("sharing.js", "\u002f_layouts\u002f15\u002fsharing.js?rev=84PmCTuLEvl5PgmQWA\u00252B8hw\u00253D\u00253DTAG0");RegisterSodDep("sharing.js", "strings.js");RegisterSodDep("sharing.js", "mQuery.js");RegisterSodDep("sharing.js", "clienttemplates.js");RegisterSodDep("sharing.js", "core.js");

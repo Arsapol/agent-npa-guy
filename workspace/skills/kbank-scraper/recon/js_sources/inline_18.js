@@ -1,1 +1,0 @@
-RegisterSod("sp.js", "\u002f_layouts\u002f15\u002fsp.js?rev=ng8BLOvUqLlStFguKkTz\u00252Bg\u00253D\u00253DTAG0");RegisterSodDep("sp.js", "sp.runtime.js");RegisterSodDep("sp.js", "sp.ui.dialog.js");RegisterSodDep("sp.js", "sp.res.resx");

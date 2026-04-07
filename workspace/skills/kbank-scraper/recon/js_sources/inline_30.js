@@ -1,1 +1,0 @@
-RegisterSod("inplview", "\u002f_layouts\u002f15\u002finplview.js?rev=e1Wi4IFZKnLpy8AVoxN3jg\u00253D\u00253DTAG0");RegisterSodDep("inplview", "strings.js");RegisterSodDep("inplview", "core.js");RegisterSodDep("inplview", "clienttemplates.js");RegisterSodDep("inplview", "sp.js");
