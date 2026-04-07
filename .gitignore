@@ -254,3 +254,6 @@ workspace/cron/logs/
 workspace/output/images
 
 workspace/skills/**/recon/js_sources/
+
+# Nanobot auto-generated (framework recreates this — never track it)
+workspace/.gitignore
