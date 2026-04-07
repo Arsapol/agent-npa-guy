@@ -134,7 +134,7 @@ def main() -> None:
     sp.add_argument("--max-price", type=float, help="Max price in baht")
     sp.add_argument("--type", dest="property_type", type=str, help="Property type (partial)")
     sp.add_argument("--keyword", type=str, help="Keyword search")
-    sp.add_argument("--sources", type=str, help="Comma-separated: LED,SAM,BAM,JAM,KTB,KBANK")
+    sp.add_argument("--sources", type=str, help="Comma-separated: LED,SAM,BAM,JAM,KTB,KBANK,SCB,GSB,TTB,BAY,LH,GHB")
     sp.add_argument("--limit", type=int, default=20)
     sp.add_argument("--offset", type=int, default=0)
     sp.add_argument("--sort", default="price", choices=["price", "province", "newest"])
