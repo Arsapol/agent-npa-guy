@@ -12,7 +12,7 @@ Architecture:
 
 Usage:
     python scraper.py                              # full scrape (all property types)
-    python scraper.py --type 3                     # condos only (type_id=3)
+    python scraper.py --type 4                     # condos only (pt[]=4)
     python scraper.py --province 3001              # Bangkok only (province_id)
     python scraper.py --limit 50                   # first N properties (test)
     python scraper.py --skip-detail                # listing only, no detail fetch
@@ -22,7 +22,6 @@ Usage:
 import argparse
 import asyncio
 import re
-import sys
 import time
 from datetime import datetime
 
@@ -55,10 +54,11 @@ HTML_HEADERS = {
     "Accept-Language": "th,en-US;q=0.9,en;q=0.8",
 }
 
-# Property type IDs: 1=บ้านเดี่ยว, 2=บ้านแฝด, 3=คอนโด, 4=ทาวน์เฮ้าส์,
-# 5=อาคารพาณิชย์, 6=ที่ดิน, 7=แฟลต, 8=อื่นๆ
+# Property type IDs (from pt[] checkboxes on /property-for-sale):
+#   1=บ้านเดี่ยว, 2=บ้านแฝด, 3=ทาวน์เฮ้าส์, 4=คอนโด,
+#   5=อาคารพาณิชย์, 6=ที่ดิน, 7=แฟลต, 8=อื่นๆ
 ALL_TYPE_IDS = [1, 2, 3, 4, 5, 6, 7, 8]
-ITEMS_PER_PAGE = 10
+ITEMS_PER_PAGE = 20
 
 # Rate limiting
 LISTING_DELAY = 0.5       # 500ms between listing page requests
@@ -116,26 +116,70 @@ def parse_search_page(html: str) -> tuple[list[GhbSearchCard], int]:
     tree = HTMLParser(html)
     cards: list[GhbSearchCard] = []
 
-    # Extract total count from "ค้นพบ X,XXX รายการ" text
+    # Extract total count from "ค้นพบทรัพย์ 26,648 รายการ" in <h2>
     total = 0
-    for el in tree.css("*"):
-        t = (el.text() or "").strip()
-        if "รายการ" in t and len(t) < 100:
-            total_match = re.search(r"([\d,]+)\s*รายการ", t)
-            if total_match:
-                total = int(total_match.group(1).replace(",", ""))
-                break
+    total_match = re.search(r"ค้นพบ[^<]*?([\d,]+)\s*รายการ", html)
+    if total_match:
+        total = int(total_match.group(1).replace(",", ""))
 
-    # Extract property IDs from card links
+    # Each property card is a .card containing a link to /property-{id}
     seen_ids: set[int] = set()
-    for a in tree.css("a[href*='/property-']"):
-        href = a.attributes.get("href") or ""
-        m = re.search(r"/property-(\d+)$", href)
-        if m:
-            pid = int(m.group(1))
-            if pid not in seen_ids:
-                seen_ids.add(pid)
-                cards.append(GhbSearchCard(property_id=pid))
+    for card_el in tree.css(".card"):
+        link = card_el.css_first("a[href*='/property-']")
+        if not link:
+            continue
+        href = link.attributes.get("href") or ""
+        m = re.search(r"/property-(\d+)", href)
+        if not m:
+            continue
+        pid = int(m.group(1))
+        if pid in seen_ids:
+            continue
+        seen_ids.add(pid)
+
+        # Price from .text-propertyprice → "210,000 บาท"
+        price_el = card_el.css_first(".text-propertyprice")
+        price_text = (price_el.text() or "").strip() if price_el else None
+
+        # Title + property code from .text-header-titletype divs
+        # First one = title, the one with "รหัสทรัพย์" = property code
+        title = None
+        property_no = None
+        for div in card_el.css(".text-header-titletype"):
+            t = (div.text() or "").strip()
+            if "รหัสทรัพย์" in t:
+                code_m = re.search(r"รหัสทรัพย์[:\s]*(\S+)", t)
+                if code_m:
+                    property_no = code_m.group(1)
+            elif title is None and t:
+                title = t
+
+        # Location from .text-location → "ทุ่งโพธิ์, นาดี, ปราจีนบุรี"
+        loc_el = card_el.css_first(".text-location")
+        location = (loc_el.text() or "").strip() if loc_el else None
+
+        # Area from .text-area → "10.4 ตร.ว."
+        area_el = card_el.css_first(".text-area")
+        area_text = (area_el.text() or "").strip() if area_el else None
+
+        # Promotion label
+        tag_el = card_el.css_first(".card-tag")
+        promotion_label = (tag_el.text() or "").strip() if tag_el else None
+
+        # Image URL
+        img_el = card_el.css_first("img[src*='/Media/']")
+        image_url = (img_el.attributes.get("src") or None) if img_el else None
+
+        cards.append(GhbSearchCard(
+            property_id=pid,
+            property_no=property_no,
+            title=title,
+            price=price_text,
+            location=location,
+            area_text=area_text,
+            image_url=image_url,
+            promotion_label=promotion_label,
+        ))
 
     return cards, total
 
@@ -241,12 +285,12 @@ async def scrape_listing_pages(
     type_ids: list[int],
     province_id: int | None,
     limit: int | None,
-) -> list[int]:
+) -> list[GhbSearchCard]:
     """
-    Phase 1: Paginate HTML search listings to discover property IDs.
-    Returns list of unique property IDs.
+    Phase 1: Paginate HTML search listings to discover property cards.
+    Returns list of unique GhbSearchCard objects.
     """
-    all_ids: list[int] = []
+    all_cards: list[GhbSearchCard] = []
     seen: set[int] = set()
 
     for type_id in type_ids:
@@ -256,7 +300,7 @@ async def scrape_listing_pages(
 
         # Fetch first page to get total count
         r = await client.get(
-            f"{BASE_URL}/property-foryou-for-sale",
+            f"{BASE_URL}/property-for-sale",
             params=params,
             headers=HTML_HEADERS,
         )
@@ -266,17 +310,17 @@ async def scrape_listing_pages(
         for c in cards:
             if c.property_id not in seen:
                 seen.add(c.property_id)
-                all_ids.append(c.property_id)
+                all_cards.append(c)
 
         total_pages = max(1, (total + ITEMS_PER_PAGE - 1) // ITEMS_PER_PAGE)
-        type_label = {1: "บ้านเดี่ยว", 2: "บ้านแฝด", 3: "คอนโด", 4: "ทาวน์เฮ้าส์",
+        type_label = {1: "บ้านเดี่ยว", 2: "บ้านแฝด", 3: "ทาวน์เฮ้าส์", 4: "คอนโด",
                       5: "อาคารพาณิชย์", 6: "ที่ดิน", 7: "แฟลต", 8: "อื่นๆ"}.get(type_id, str(type_id))
         print(f"[Listing] type={type_label}: {total:,} properties, {total_pages:,} pages")
 
-        if limit and len(all_ids) >= limit:
-            all_ids = all_ids[:limit]
+        if limit and len(all_cards) >= limit:
+            all_cards = all_cards[:limit]
             print(f"[Listing] Limit reached: {limit}")
-            return all_ids
+            return all_cards
 
         # Paginate remaining pages
         for page in range(2, total_pages + 1):
@@ -285,7 +329,7 @@ async def scrape_listing_pages(
 
             try:
                 r = await client.get(
-                    f"{BASE_URL}/property-foryou-for-sale",
+                    f"{BASE_URL}/property-for-sale",
                     params=params,
                     headers=HTML_HEADERS,
                 )
@@ -296,28 +340,28 @@ async def scrape_listing_pages(
                 for c in cards:
                     if c.property_id not in seen:
                         seen.add(c.property_id)
-                        all_ids.append(c.property_id)
+                        all_cards.append(c)
                         new_count += 1
 
                 if page % 50 == 0 or page == total_pages:
                     print(f"  type={type_id} page {page}/{total_pages}: "
-                          f"+{new_count} new, {len(all_ids)} total")
+                          f"+{new_count} new, {len(all_cards)} total")
 
                 if new_count == 0 and len(cards) == 0:
                     print(f"  type={type_id} page {page}: empty page, stopping")
                     break
 
-                if limit and len(all_ids) >= limit:
-                    all_ids = all_ids[:limit]
+                if limit and len(all_cards) >= limit:
+                    all_cards = all_cards[:limit]
                     print(f"[Listing] Limit reached: {limit}")
-                    return all_ids
+                    return all_cards
 
             except httpx.HTTPError as e:
                 print(f"  type={type_id} page {page}: ERROR {e}")
                 continue
 
-    print(f"[Listing] Total unique property IDs: {len(all_ids):,}")
-    return all_ids
+    print(f"[Listing] Total unique property IDs: {len(all_cards):,}")
+    return all_cards
 
 
 async def fetch_detail(
@@ -411,19 +455,19 @@ async def run(args: argparse.Namespace) -> None:
 
         # Phase 1: Discover property IDs
         print("\n--- Phase 1: Listing crawl ---")
-        property_ids = await scrape_listing_pages(client, type_ids, province_id, args.limit)
+        listing_cards = await scrape_listing_pages(client, type_ids, province_id, args.limit)
 
-        if not property_ids:
+        if not listing_cards:
             print("No properties found.")
             return
 
         # Save listing results to DB
         with Session(engine) as session:
-            cards = [GhbSearchCard(property_id=pid) for pid in property_ids]
-            listing_counts = upsert_from_listing(session, cards)
+            listing_counts = upsert_from_listing(session, listing_cards)
             session.commit()
             print(f"[Listing] DB: new={listing_counts['new']}, updated={listing_counts['updated']}")
 
+        property_ids = [c.property_id for c in listing_cards]
         log.total_pages = len(property_ids) // ITEMS_PER_PAGE
         log.total_properties = len(property_ids)
         log.new_count = listing_counts["new"]
@@ -453,7 +497,7 @@ async def run(args: argparse.Namespace) -> None:
 def main():
     parser = argparse.ArgumentParser(description="GHB NPA Property Scraper")
     parser.add_argument("--type", type=int, choices=ALL_TYPE_IDS,
-                        help="Property type ID (3=condo, 1=house, etc.)")
+                        help="Property type ID (4=condo, 1=house, 3=townhouse, etc.)")
     parser.add_argument("--province", type=int,
                         help="Province ID (3001=Bangkok)")
     parser.add_argument("--limit", type=int,

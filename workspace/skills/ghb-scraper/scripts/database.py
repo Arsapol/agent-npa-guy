@@ -315,6 +315,7 @@ def upsert_from_listing(
                 property_id=card.property_id,
                 property_no=card.property_no,
                 price_amt=card.price,
+                image_url=card.image_url,
                 first_seen_at=now,
                 last_scraped_at=now,
             )
@@ -324,6 +325,10 @@ def upsert_from_listing(
             existing.last_scraped_at = now
             if card.property_no and not existing.property_no:
                 existing.property_no = card.property_no
+            if card.price and not existing.price_amt:
+                existing.price_amt = card.price
+            if card.image_url and not existing.image_url:
+                existing.image_url = card.image_url
             counts["updated"] += 1
 
     return counts

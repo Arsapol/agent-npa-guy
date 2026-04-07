@@ -40,35 +40,43 @@ Token must be refreshed by re-fetching any HTML page when expired.
 ### 1. HTML Search (Primary — Server-Rendered)
 
 ```
-GET /property-foryou-for-sale?{params}
 GET /property-for-sale?{params}
 ```
 
-Returns server-rendered HTML with 10 properties per page.
+Returns server-rendered HTML with 20 properties per page.
 
 | Param | Description | Example |
 |-------|-------------|---------|
+| `pt[]` | Property type ID (repeatable checkbox) | `4` (condo) |
 | `p` | Province ID (from location API) | `3001` (Bangkok) |
 | `d` | District/Amphur ID | `5033` (คลองเตย) |
 | `sd` | Sub-district/Tumbon ID | - |
-| `pt[]` | Property type ID (repeatable) | `3` (condo) |
 | `kw` | Keyword search | `สุขุมวิท` |
 | `minp` | Min price (baht) | `1000000` |
 | `maxp` | Max price (baht) | `5000000` |
 | `mina` | Min area (sqw/sqm) | `50` |
 | `maxa` | Max area (sqw/sqm) | `200` |
 | `pId` | Promotion ID | `65` (ทรัพย์ตรงใจ) |
-| `st` | Sort order | `PriceAsc`, `PriceDesc`, `AreaAsc`, `AreaDesc` |
+| `sortBy` | Sort order | `PriceAsc`, `PriceDesc`, `AreaAsc`, `AreaDesc` |
 | `pg` | Page number (1-based) | `1` |
-| `lid` | Location ID (from autocomplete) | - |
+| `locationId` | Location ID (from autocomplete) | - |
+
+**Property type filter**: Uses `pt[]` checkboxes (NOT `propertyType` hidden field).
+The `propertyType` hidden field is set by JS when submitting from the modal dialog,
+but the actual server-side filter reads from `pt[]` query params.
+
+**Province filter**: Uses `p` param with `provinceId` from the location API (e.g. `3001` for Bangkok).
+Province can also be passed in the URL path: `/property-for-sale/Bangkok`.
 
 **URL variants** (different view types):
-- `/property-foryou-for-sale` — "For You" recommendations (default sort)
-- `/property-for-sale` — Standard listing
-- `/property-foryou-grid-for-sale` — Grid view
-- `/property-search-maps` — Map view (empty markers, loads lazily)
+- `/property-for-sale` — Standard listing (primary)
+- `/property-grid-for-sale` — Grid view
+- `/property-foryou-for-sale` — "For You" recommendations
+- `/property-search-maps` — Map view (lazy-loaded markers)
+- `/{propertyType}-for-sale` — Type-specific (e.g. `/condominium-for-sale`)
 
-**Pagination**: 10 items/page, handled by `pg` param. Total pages = `ceil(total / 10)`.
+**Pagination**: 20 items/page, handled by `pg` param. Total pages = `ceil(total / 20)`.
+Total count displayed as "ค้นพบทรัพย์ X,XXX รายการ".
 
 ### 2. HTML Detail Page
 
@@ -151,16 +159,16 @@ This endpoint works with anonymous JWT but returns data associated with the trac
 
 ## Property Type IDs
 
-| ID | Thai Name | English |
-|----|-----------|---------|
-| 1 | บ้านเดี่ยว | Detached house |
-| 2 | บ้านแฝด | Semi-detached house |
-| 3 | คอนโด | Condominium |
-| 4 | ทาวน์เฮ้าส์ | Townhouse |
-| 5 | อาคารพาณิชย์ | Commercial building |
-| 6 | ที่ดิน | Land |
-| 7 | แฟลต | Flat |
-| 8 | อื่นๆ | Other |
+| ID | Thai Name | English | Count (Apr 2026) |
+|----|-----------|---------|------------------|
+| 1 | บ้านเดี่ยว | Detached house | ~9,208 |
+| 2 | บ้านแฝด | Semi-detached house | ~1,526 |
+| 3 | ทาวน์เฮ้าส์ | Townhouse | ~10,300 |
+| 4 | คอนโด | Condominium | ~4,633 |
+| 5 | อาคารพาณิชย์ | Commercial building | ~884 |
+| 6 | ที่ดิน | Land | ~83 |
+| 7 | แฟลต | Flat | ~10 |
+| 8 | อื่นๆ | Other | ~4 |
 
 ## Promotion IDs
 
@@ -175,17 +183,16 @@ This endpoint works with anonymous JWT but returns data associated with the trac
 
 ### From HTML Search Page (listing card)
 
-| Field | CSS/Regex | Sample Value |
-|-------|-----------|--------------|
+| Field | CSS Selector | Sample Value |
+|-------|-------------|--------------|
 | Property ID | `a[href*='/property-']` → regex `/property-(\d+)` | `987980` |
-| Price | Card text contains `บาท` or `฿` | `68,000 บาท` |
-| Title | Card text, first line | `ขายคอนโด (ปลาทอง94)` |
-| Location | Card text, second line | `บางพูน, เมืองปทุมธานี, ปทุมธานี` |
-| Area | Card text with `ตร.ม.` or `ตร.ว.` | `26.25 ตร.ม.` |
-| Property code | `รหัสทรัพย์:` text | `1301201301` |
-| Order number | `ลำดับทรัพย์ที่:` text | `510` |
-| Image | `img[src*='/v3/property/api/Media/']` | URL with size suffix |
-| Promotion label | Card overlay text | `ทรัพย์โปรโมชั่นราคาพิเศษ` |
+| Price | `.text-propertyprice` | `210,000 บาท` |
+| Title | first `.text-header-titletype` (without รหัสทรัพย์) | `ขายคอนโด (ปลาทอง94)` |
+| Location | `.text-location` | `บางพูน, เมืองปทุมธานี, ปทุมธานี` |
+| Area | `.text-area` | `26.25 ตร.ม.` |
+| Property code | `.text-header-titletype` containing `รหัสทรัพย์:` | `1301201301` |
+| Image | `img[src*='/Media/']` | URL with size suffix |
+| Promotion label | `.card-tag` | `ทรัพย์โปรโมชั่นราคาพิเศษ` |
 
 ### From HTML Detail Page
 
@@ -282,9 +289,9 @@ This endpoint works with anonymous JWT but returns data associated with the trac
 
 ## Scraper Design Recommendations
 
-1. **Listing crawl**: Iterate `/property-foryou-for-sale?pg=1..N` with filters per province
-   - 10 items per page, ~2,665 pages for all 26,648 properties
-   - Extract property IDs from card links
+1. **Listing crawl**: Iterate `/property-for-sale?pt[]={type}&pg=1..N` per property type
+   - 20 items per page, ~1,333 pages for all 26,648 properties
+   - Extract property IDs + card data (price, location, area, property code)
 2. **Detail crawl**: Fetch `/property-{id}` for each property ID
    - Parse HTML for all fields (key-value pairs, GPS, images, meta)
 3. **JWT refresh**: Re-extract token from any HTML page before it expires (~7 days)
