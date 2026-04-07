@@ -674,6 +674,567 @@ def _query_kbank(filters: SearchFilters) -> list[NpaProperty]:
 
 
 # ---------------------------------------------------------------------------
+# SCB
+# ---------------------------------------------------------------------------
+
+def _query_scb(filters: SearchFilters) -> list[NpaProperty]:
+    where, params = _where_clause(
+        filters,
+        province_col="province_id::text",
+        district_col="district_id::text",
+        subdistrict_col="project_address_detail",
+        price_col="price",
+        type_col="project_type_name",
+        keyword_cols=["project_title", "project_address", "project_address_detail"],
+    )
+
+    price_where, price_params = _price_filter("price", filters)
+    if price_where:
+        where += f" AND {price_where}"
+        params.extend(price_params)
+
+    where += " AND (project_sold_out IS NULL OR project_sold_out != '1')"
+
+    order_map = {
+        "price": "price",
+        "province": "province_id",
+        "newest": "first_seen_at",
+    }
+    order = order_map.get(filters.sort_by, "price")
+    direction = "DESC" if filters.sort_desc else "ASC"
+
+    sql = f"""
+        SELECT
+            project_id, project_type_name, project_title, slug,
+            province_id, district_id,
+            project_address, project_address_detail,
+            price, price_discount,
+            area_use, land_area, area_sqm,
+            lat, lon,
+            bedrooms, bathrooms,
+            title_deed,
+            project_sold_out, project_recommended,
+            promotion_description
+        FROM scb_properties
+        WHERE {where}
+        ORDER BY {order} {direction} NULLS LAST
+        LIMIT %s OFFSET %s
+    """
+    params.extend([filters.limit, filters.offset])
+
+    conn = _conn()
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute(sql, params)
+            rows = cur.fetchall()
+    finally:
+        conn.close()
+
+    results: list[NpaProperty] = []
+    for r in rows:
+        price = _safe_float(r["price"])
+        discount_price = _safe_float(r["price_discount"])
+        discount = None
+        if price and discount_price and discount_price > 0 and discount_price < price:
+            discount = round((1 - discount_price / price) * 100, 1)
+
+        results.append(NpaProperty(
+            source=Source.SCB,
+            source_id=str(r["project_id"]),
+            property_type=r["project_type_name"] or "",
+            province=str(r["province_id"] or ""),
+            district=str(r["district_id"] or ""),
+            subdistrict="",
+            price_baht=discount_price or price,
+            appraisal_baht=price if discount_price else None,
+            discount_pct=discount,
+            size_sqm=_safe_float(r["area_use"]) or _safe_float(r["area_sqm"]),
+            size_wa=_safe_float(r["land_area"]),
+            bedroom=_safe_int(r["bedrooms"]),
+            bathroom=_safe_int(r["bathrooms"]),
+            lat=_safe_float(r["lat"]),
+            lon=_safe_float(r["lon"]),
+            status="sold" if r["project_sold_out"] == "1" else "active",
+            is_sold=r["project_sold_out"] == "1",
+            project_name=r["project_title"],
+            address=r["project_address_detail"] or r["project_address"],
+            source_url=f"https://asset.home.scb/project/{r['slug']}" if r["slug"] else None,
+            extra={
+                "title_deed": r["title_deed"],
+                "promotion": r["promotion_description"],
+                "is_recommended": r["project_recommended"],
+            },
+        ))
+    return results
+
+
+# ---------------------------------------------------------------------------
+# GSB
+# ---------------------------------------------------------------------------
+
+def _query_gsb(filters: SearchFilters) -> list[NpaProperty]:
+    where, params = _where_clause(
+        filters,
+        province_col="province_name",
+        district_col="district_name",
+        subdistrict_col="sub_district_name",
+        price_col="current_offer_price",
+        type_col="asset_type_desc",
+        keyword_cols=["asset_name", "village_head", "remark"],
+    )
+
+    price_where, price_params = _price_filter("current_offer_price", filters)
+    if price_where:
+        where += f" AND {price_where}"
+        params.extend(price_params)
+
+    order_map = {
+        "price": "current_offer_price",
+        "province": "province_name",
+        "newest": "first_seen_at",
+    }
+    order = order_map.get(filters.sort_by, "current_offer_price")
+    direction = "DESC" if filters.sort_desc else "ASC"
+
+    sql = f"""
+        SELECT
+            npa_id, asset_type_desc, asset_subtype_desc, asset_name,
+            province_name, district_name, sub_district_name,
+            village_head, road,
+            current_offer_price, xprice_normal, xprice, xtype,
+            sum_rai, sum_ngan, sum_square_wa, square_meter,
+            lat, lon,
+            deed_info, builded_year,
+            is_recommend, promo_type
+        FROM gsb_properties
+        WHERE {where}
+        ORDER BY {order} {direction} NULLS LAST
+        LIMIT %s OFFSET %s
+    """
+    params.extend([filters.limit, filters.offset])
+
+    conn = _conn()
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute(sql, params)
+            rows = cur.fetchall()
+    finally:
+        conn.close()
+
+    results: list[NpaProperty] = []
+    for r in rows:
+        price = _safe_float(r["current_offer_price"])
+        results.append(NpaProperty(
+            source=Source.GSB,
+            source_id=r["npa_id"],
+            property_type=r["asset_type_desc"] or r["asset_subtype_desc"] or "",
+            province=r["province_name"] or "",
+            district=r["district_name"] or "",
+            subdistrict=r["sub_district_name"] or "",
+            price_baht=price,
+            size_rai=_safe_float(r["sum_rai"]),
+            size_ngan=_safe_float(r["sum_ngan"]),
+            size_wa=_safe_float(r["sum_square_wa"]),
+            size_sqm=_safe_float(r["square_meter"]),
+            lat=_safe_float(r["lat"]),
+            lon=_safe_float(r["lon"]),
+            project_name=r["village_head"],
+            address=r["road"],
+            extra={
+                "deed_info": r["deed_info"],
+                "builded_year": r["builded_year"],
+                "xprice": _safe_float(r["xprice"]),
+                "xprice_normal": _safe_float(r["xprice_normal"]),
+                "xtype": r["xtype"],
+                "is_recommend": r["is_recommend"],
+                "promo_type": r["promo_type"],
+            },
+        ))
+    return results
+
+
+# ---------------------------------------------------------------------------
+# TTB
+# ---------------------------------------------------------------------------
+
+def _query_ttb(filters: SearchFilters) -> list[NpaProperty]:
+    where, params = _where_clause(
+        filters,
+        province_col="province_name",
+        district_col="district_name",
+        subdistrict_col="sub_district_name",
+        price_col="price",
+        type_col="detail_name",
+        keyword_cols=["title", "soi", "street", "hgroup"],
+    )
+
+    price_where, price_params = _price_filter("price", filters)
+    if price_where:
+        where += f" AND {price_where}"
+        params.extend(price_params)
+
+    order_map = {
+        "price": "price",
+        "province": "province_name",
+        "newest": "first_seen_at",
+    }
+    order = order_map.get(filters.sort_by, "price")
+    direction = "DESC" if filters.sort_desc else "ASC"
+
+    sql = f"""
+        SELECT
+            id_property, id_market, source_type, title, detail_name,
+            province_name, district_name, sub_district_name,
+            lat, lon,
+            price, special_price, no_price,
+            area_sqw, useable_area,
+            bedroom, bathroom, floor,
+            land_id, house_id,
+            tel_ao, tag,
+            slug
+        FROM ttb_properties
+        WHERE {where}
+        ORDER BY {order} {direction} NULLS LAST
+        LIMIT %s OFFSET %s
+    """
+    params.extend([filters.limit, filters.offset])
+
+    conn = _conn()
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute(sql, params)
+            rows = cur.fetchall()
+    finally:
+        conn.close()
+
+    results: list[NpaProperty] = []
+    for r in rows:
+        price = _safe_float(r["price"])
+        sp = _safe_float(r["special_price"])
+
+        results.append(NpaProperty(
+            source=Source.TTB,
+            source_id=str(r["id_property"]),
+            property_type=r["detail_name"] or r["title"] or "",
+            province=r["province_name"] or "",
+            district=r["district_name"] or "",
+            subdistrict=r["sub_district_name"] or "",
+            price_baht=sp or price,
+            appraisal_baht=price if sp else None,
+            size_wa=_safe_float(r["area_sqw"]),
+            size_sqm=_safe_float(r["useable_area"]),
+            bedroom=_safe_int(r["bedroom"]),
+            bathroom=_safe_int(r["bathroom"]),
+            lat=_safe_float(r["lat"]),
+            lon=_safe_float(r["lon"]),
+            status=r["tag"] or "",
+            source_url=f"https://property.pamco.co.th/property/{r['slug']}" if r["slug"] else None,
+            extra={
+                "id_market": r["id_market"],
+                "source_type": r["source_type"],
+                "special_price": sp,
+                "floor": r["floor"],
+                "land_id": r["land_id"],
+                "tel_ao": r["tel_ao"],
+            },
+        ))
+    return results
+
+
+# ---------------------------------------------------------------------------
+# BAY
+# ---------------------------------------------------------------------------
+
+def _query_bay(filters: SearchFilters) -> list[NpaProperty]:
+    where, params = _where_clause(
+        filters,
+        province_col="province",
+        district_col="district",
+        subdistrict_col="subdistrict",
+        price_col="sale_price",
+        type_col="property_type_name",
+        keyword_cols=["project", "default_address", "detail"],
+    )
+
+    price_where, price_params = _price_filter("sale_price", filters)
+    if price_where:
+        where += f" AND {price_where}"
+        params.extend(price_params)
+
+    where += " AND (sale_status IS NULL OR sale_status != 'sold')"
+
+    order_map = {
+        "price": "sale_price",
+        "province": "province",
+        "newest": "first_seen_at",
+    }
+    order = order_map.get(filters.sort_by, "sale_price")
+    direction = "DESC" if filters.sort_desc else "ASC"
+
+    sql = f"""
+        SELECT
+            code, property_type_name, category_code,
+            province, district, subdistrict,
+            default_address,
+            sale_price, promo_price, final_price, discount_pct,
+            land_size_rai, land_size_ngan, land_size_sq_wa,
+            size_sq_meter,
+            bed_count, bath_count,
+            lat, lon,
+            project, deed_no,
+            sale_status, flag_highlight, flag_promo,
+            sale_name, sale_contact,
+            cover_image_url
+        FROM bay_properties
+        WHERE {where}
+        ORDER BY {order} {direction} NULLS LAST
+        LIMIT %s OFFSET %s
+    """
+    params.extend([filters.limit, filters.offset])
+
+    conn = _conn()
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute(sql, params)
+            rows = cur.fetchall()
+    finally:
+        conn.close()
+
+    results: list[NpaProperty] = []
+    for r in rows:
+        price = _safe_float(r["sale_price"])
+        promo = _safe_float(r["promo_price"])
+        final = _safe_float(r["final_price"])
+        effective = final or promo or price
+
+        discount = None
+        if price and effective and effective < price:
+            discount = round((1 - effective / price) * 100, 1)
+
+        results.append(NpaProperty(
+            source=Source.BAY,
+            source_id=r["code"],
+            property_type=r["property_type_name"] or "",
+            province=r["province"] or "",
+            district=r["district"] or "",
+            subdistrict=r["subdistrict"] or "",
+            price_baht=effective,
+            appraisal_baht=price if effective != price else None,
+            discount_pct=discount,
+            size_rai=_safe_float(r["land_size_rai"]),
+            size_ngan=_safe_float(r["land_size_ngan"]),
+            size_wa=_safe_float(r["land_size_sq_wa"]),
+            size_sqm=_safe_float(r["size_sq_meter"]),
+            bedroom=_safe_int(r["bed_count"]),
+            bathroom=_safe_int(r["bath_count"]),
+            lat=_safe_float(r["lat"]),
+            lon=_safe_float(r["lon"]),
+            status=r["sale_status"] or "active",
+            project_name=r["project"],
+            address=r["default_address"],
+            thumbnail_url=r["cover_image_url"],
+            extra={
+                "deed_no": r["deed_no"],
+                "category_code": r["category_code"],
+                "flag_highlight": r["flag_highlight"],
+                "flag_promo": r["flag_promo"],
+                "sale_contact": r["sale_contact"],
+            },
+        ))
+    return results
+
+
+# ---------------------------------------------------------------------------
+# LH
+# ---------------------------------------------------------------------------
+
+def _query_lh(filters: SearchFilters) -> list[NpaProperty]:
+    where, params = _where_clause(
+        filters,
+        province_col="address",
+        district_col="address",
+        subdistrict_col="address",
+        price_col="sale_price",
+        type_col="asset_type",
+        keyword_cols=["address", "location_text", "description"],
+    )
+
+    price_where, price_params = _price_filter("sale_price", filters)
+    if price_where:
+        where += f" AND {price_where}"
+        params.extend(price_params)
+
+    order_map = {
+        "price": "sale_price",
+        "province": "address",
+        "newest": "first_seen_at",
+    }
+    order = order_map.get(filters.sort_by, "sale_price")
+    direction = "DESC" if filters.sort_desc else "ASC"
+
+    sql = f"""
+        SELECT
+            property_id, asset_type,
+            sale_price,
+            address, location_text,
+            lat, lon,
+            area_text, area_sqm,
+            description, post_date,
+            thumbnail_url, detail_url
+        FROM lh_properties
+        WHERE {where}
+        ORDER BY {order} {direction} NULLS LAST
+        LIMIT %s OFFSET %s
+    """
+    params.extend([filters.limit, filters.offset])
+
+    conn = _conn()
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute(sql, params)
+            rows = cur.fetchall()
+    finally:
+        conn.close()
+
+    results: list[NpaProperty] = []
+    for r in rows:
+        price = _safe_float(r["sale_price"])
+        results.append(NpaProperty(
+            source=Source.LH,
+            source_id=r["property_id"],
+            property_type=r["asset_type"] or "",
+            province="",
+            district="",
+            subdistrict="",
+            price_baht=price,
+            size_sqm=_safe_float(r["area_sqm"]),
+            lat=_safe_float(r["lat"]),
+            lon=_safe_float(r["lon"]),
+            address=r["address"] or r["location_text"],
+            source_url=r["detail_url"],
+            thumbnail_url=r["thumbnail_url"],
+            extra={
+                "area_text": r["area_text"],
+                "post_date": r["post_date"],
+                "description": r["description"],
+            },
+        ))
+    return results
+
+
+# ---------------------------------------------------------------------------
+# GHB
+# ---------------------------------------------------------------------------
+
+def _query_ghb(filters: SearchFilters) -> list[NpaProperty]:
+    where, params = _where_clause(
+        filters,
+        province_col="province",
+        district_col="district",
+        subdistrict_col="sub_district",
+        price_col="price_amt",
+        type_col="property_type",
+        keyword_cols=["property_name", "village_name", "road", "soi"],
+    )
+
+    price_where, price_params = _price_filter("price_amt", filters)
+    if price_where:
+        where += f" AND {price_where}"
+        params.extend(price_params)
+
+    where += " AND (property_active_flag IS NULL OR property_active_flag = 1)"
+
+    order_map = {
+        "price": "price_amt",
+        "province": "province",
+        "newest": "first_seen_at",
+    }
+    order = order_map.get(filters.sort_by, "price_amt")
+    direction = "DESC" if filters.sort_desc else "ASC"
+
+    sql = f"""
+        SELECT
+            property_id, property_no, property_type,
+            property_name, village_name,
+            province, district, sub_district,
+            price_amt, promotion_price_amt, begin_auction_price,
+            rai, ngan, wa,
+            usage_area, usage_area_txt,
+            bedrooms, bathrooms, floors,
+            lat, lon,
+            deed_no, road, soi,
+            contact_person, contact_tel_no,
+            property_active_flag, property_status,
+            promotion_name, share_url
+        FROM ghb_properties
+        WHERE {where}
+        ORDER BY {order} {direction} NULLS LAST
+        LIMIT %s OFFSET %s
+    """
+    params.extend([filters.limit, filters.offset])
+
+    conn = _conn()
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute(sql, params)
+            rows = cur.fetchall()
+    finally:
+        conn.close()
+
+    results: list[NpaProperty] = []
+    for r in rows:
+        price = _safe_float(r["price_amt"])
+        promo = _safe_float(r["promotion_price_amt"])
+        effective = promo or price
+
+        discount = None
+        if price and promo and promo < price:
+            discount = round((1 - promo / price) * 100, 1)
+
+        # Parse usage_area for sqm
+        sqm = None
+        if r["usage_area"]:
+            try:
+                sqm = float(r["usage_area"])
+            except (ValueError, TypeError):
+                pass
+
+        results.append(NpaProperty(
+            source=Source.GHB,
+            source_id=str(r["property_id"]),
+            property_type=r["property_type"] or "",
+            province=r["province"] or "",
+            district=r["district"] or "",
+            subdistrict=r["sub_district"] or "",
+            price_baht=effective,
+            appraisal_baht=price if promo else None,
+            discount_pct=discount,
+            size_rai=_safe_float(r["rai"]),
+            size_ngan=_safe_float(r["ngan"]),
+            size_wa=_safe_float(r["wa"]),
+            size_sqm=sqm,
+            bedroom=_safe_int(r["bedrooms"]),
+            bathroom=_safe_int(r["bathrooms"]),
+            lat=_safe_float(r["lat"]),
+            lon=_safe_float(r["lon"]),
+            status=r["property_status"] or "",
+            project_name=r["village_name"] or r["property_name"],
+            address=r["road"],
+            source_url=r["share_url"],
+            extra={
+                "property_no": r["property_no"],
+                "deed_no": r["deed_no"],
+                "begin_auction_price": _safe_float(r["begin_auction_price"]),
+                "floors": r["floors"],
+                "promotion_name": r["promotion_name"],
+                "contact_person": r["contact_person"],
+                "contact_tel_no": r["contact_tel_no"],
+            },
+        ))
+    return results
+
+
+# ---------------------------------------------------------------------------
 # Dispatcher map
 # ---------------------------------------------------------------------------
 
@@ -684,6 +1245,12 @@ _PROVIDERS: dict[Source, Any] = {
     Source.JAM: _query_jam,
     Source.KTB: _query_ktb,
     Source.KBANK: _query_kbank,
+    Source.SCB: _query_scb,
+    Source.GSB: _query_gsb,
+    Source.TTB: _query_ttb,
+    Source.BAY: _query_bay,
+    Source.LH: _query_lh,
+    Source.GHB: _query_ghb,
 }
 
 
@@ -764,6 +1331,48 @@ def stats() -> list[ProviderStats]:
                    AVG(sell_price) as avg_price
             FROM kbank_properties WHERE (is_sold_out = false OR is_sold_out IS NULL) AND sell_price > 0
         """,
+        Source.SCB: """
+            SELECT COUNT(*) as total,
+                   MIN(price) as min_price,
+                   MAX(price) as max_price,
+                   AVG(price) as avg_price
+            FROM scb_properties WHERE (project_sold_out IS NULL OR project_sold_out != '1') AND price > 0
+        """,
+        Source.GSB: """
+            SELECT COUNT(*) as total,
+                   MIN(current_offer_price) as min_price,
+                   MAX(current_offer_price) as max_price,
+                   AVG(current_offer_price) as avg_price
+            FROM gsb_properties WHERE current_offer_price > 0
+        """,
+        Source.TTB: """
+            SELECT COUNT(*) as total,
+                   MIN(price) as min_price,
+                   MAX(price) as max_price,
+                   AVG(price) as avg_price
+            FROM ttb_properties WHERE price > 0
+        """,
+        Source.BAY: """
+            SELECT COUNT(*) as total,
+                   MIN(sale_price) as min_price,
+                   MAX(sale_price) as max_price,
+                   AVG(sale_price) as avg_price
+            FROM bay_properties WHERE (sale_status IS NULL OR sale_status != 'sold') AND sale_price > 0
+        """,
+        Source.LH: """
+            SELECT COUNT(*) as total,
+                   MIN(sale_price) as min_price,
+                   MAX(sale_price) as max_price,
+                   AVG(sale_price) as avg_price
+            FROM lh_properties WHERE sale_price > 0
+        """,
+        Source.GHB: """
+            SELECT COUNT(*) as total,
+                   MIN(price_amt) as min_price,
+                   MAX(price_amt) as max_price,
+                   AVG(price_amt) as avg_price
+            FROM ghb_properties WHERE (property_active_flag IS NULL OR property_active_flag = 1) AND price_amt > 0
+        """,
     }
 
     province_queries: dict[Source, str] = {
@@ -773,6 +1382,12 @@ def stats() -> list[ProviderStats]:
         Source.JAM: "SELECT province_name as province, COUNT(*) as cnt FROM jam_properties WHERE (status_soldout = false OR status_soldout IS NULL) GROUP BY province_name ORDER BY cnt DESC LIMIT 10",
         Source.KTB: "SELECT province, COUNT(*) as cnt FROM ktb_properties GROUP BY province ORDER BY cnt DESC LIMIT 10",
         Source.KBANK: "SELECT province_name as province, COUNT(*) as cnt FROM kbank_properties WHERE (is_sold_out = false OR is_sold_out IS NULL) GROUP BY province_name ORDER BY cnt DESC LIMIT 10",
+        Source.SCB: "SELECT province_id::text as province, COUNT(*) as cnt FROM scb_properties WHERE (project_sold_out IS NULL OR project_sold_out != '1') GROUP BY province_id ORDER BY cnt DESC LIMIT 10",
+        Source.GSB: "SELECT province_name as province, COUNT(*) as cnt FROM gsb_properties GROUP BY province_name ORDER BY cnt DESC LIMIT 10",
+        Source.TTB: "SELECT province_name as province, COUNT(*) as cnt FROM ttb_properties GROUP BY province_name ORDER BY cnt DESC LIMIT 10",
+        Source.BAY: "SELECT province, COUNT(*) as cnt FROM bay_properties WHERE (sale_status IS NULL OR sale_status != 'sold') GROUP BY province ORDER BY cnt DESC LIMIT 10",
+        Source.LH: "SELECT address as province, COUNT(*) as cnt FROM lh_properties GROUP BY address ORDER BY cnt DESC LIMIT 10",
+        Source.GHB: "SELECT province, COUNT(*) as cnt FROM ghb_properties WHERE (property_active_flag IS NULL OR property_active_flag = 1) GROUP BY province ORDER BY cnt DESC LIMIT 10",
     }
 
     results: list[ProviderStats] = []
