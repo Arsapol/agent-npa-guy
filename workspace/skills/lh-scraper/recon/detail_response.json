@@ -1,0 +1,39 @@
+{
+  "_note": "Extracted from detail page for LH031A (condo)",
+  "_url": "https://www.lhbank.co.th/th/property-for-sale/detail/?AssetCode=LH031A&Asset=1",
+  "_fetched": "2026-04-07",
+  "fields": {
+    "ราคาประกาศขาย": "3,000,000",
+    "ข้อมูลคดี": "สินทรัพย์ธนาคาร",
+    "สถานะ": "ห้องชุดเดอะคริส รัชดา สภาพเดิม 1 ห้องนอน 1 ห้องน้ำ ใกล้รถไฟฟ้า MRT สถานีสุทธิสาร พื้นที่ใช้สอย 46.5 ตารางเมตร",
+    "ประเภทสินทรัพย์": "คอนโด (ห้องชุด)",
+    "ที่ตั้งสินทรัพย์": "ห้องชุดเลขที่ 324/111 ชั้น 8 เดอะคริส รัชดา (เดอะคริส 1) ซ.รัชดาภิเษก 17 ถ.รัชดาภิเษก กรุงเทพมหานคร เขตห้วยขวาง ห้วยขวาง  เขตห้วยขวาง กรุงเทพมหานคร 10310",
+    "เนื้อที่/พื้นที่ใช้สอย": "0-0-46.50 ตารางเมตร",
+    "วันที่บันทึก": "ข้อมูล ณ วันที่ 29/05/2568"
+  },
+  "hidden_inputs": {
+    "hdfAssetCode": "LH031A",
+    "hdfMap": "/LH/media/Main/PageCover/pic1_29.jpg?ext=.jpg",
+    "hdfGoogle": "",
+    "hdfLatitude": "13.787325",
+    "hdfLongitude": "100.5711829"
+  },
+  "image_urls": [
+    "https://www.lhbank.co.th/getmedia/09d3af0b-be2f-46ed-b912-32760338c1f3/20241224_151508.jpg?width=800&height=600&ext=.jpg",
+    "https://www.lhbank.co.th/getmedia/6ea3b97d-ab36-4b67-a8d1-a9c1624b7d83/20241224_151424.jpg?width=800&height=600&ext=.jpg",
+    "https://www.lhbank.co.th/getmedia/5edc0b58-df99-4f55-86b7-88c8f0e44eca/20241224_151538.jpg?width=800&height=600&ext=.jpg",
+    "https://www.lhbank.co.th/getmedia/b38a5f06-f435-4c2c-b332-2000288d11a2/20241224_151548.jpg?width=800&height=600&ext=.jpg",
+    "https://www.lhbank.co.th/getmedia/7b6489de-beb6-40ea-9557-d18db88a0ca8/20241224_151700.jpg?width=800&height=600&ext=.jpg",
+    "https://www.lhbank.co.th/getmedia/fafee53b-c778-493b-aa86-414ff27d154c/20241224_152146.jpg?width=800&height=600&ext=.jpg",
+    "https://www.lhbank.co.th/getmedia/e793ef4e-36f5-4373-84c4-994636ee3322/20241224_152216.jpg?width=800&height=600&ext=.jpg",
+    "https://www.lhbank.co.th/getmedia/4d390530-096d-4716-bcf5-9a1a2b4b9589/20241224_152157.jpg?width=800&height=600&ext=.jpg",
+    "https://www.lhbank.co.th/getmedia/67dd3c13-402f-4ff6-bb33-0fea21a3d987/20241224_151727.jpg?width=800&height=600&ext=.jpg",
+    "https://www.lhbank.co.th/getmedia/606bcee9-3dbd-4ed1-b0b8-3180e3f1fdef/20241224_151924.jpg?width=800&height=600&ext=.jpg",
+    "https://www.lhbank.co.th/getmedia/77ca5e18-5e5c-4e94-aff9-a589e4e1ea72/20241224_151753.jpg?width=800&height=600&ext=.jpg",
+    "https://www.lhbank.co.th/getmedia/f7fdecd4-fa20-4e62-9941-41cef06e0813/20241224_151746.jpg?width=800&height=600&ext=.jpg",
+    "https://www.lhbank.co.th/getmedia/0f38edb9-bce3-4143-a91b-4399aa63534b/20241224_151838.jpg?width=800&height=600&ext=.jpg",
+    "https://www.lhbank.co.th/getmedia/30e1793e-258f-4a3f-96b8-3ffbebaa51d8/20241224_151902.jpg?width=800&height=600&ext=.jpg",
+    "https://www.lhbank.co.th/getmedia/a1088e53-1ae2-4363-9e69-153a30fadfda/20241224_151813.jpg?width=800&height=600&ext=.jpg"
+  ],
+  "image_count": 15
+}

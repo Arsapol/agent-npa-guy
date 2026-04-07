@@ -1,0 +1,2449 @@
+{
+  "popUp": {
+    "total": 2,
+    "list": [
+      {
+        "popup_promotion_id": 31,
+        "title": "Big Deal NPA Festival 2026",
+        "type": 5,
+        "price": 0,
+        "price_special": 0,
+        "start_date": "2026-03-02",
+        "end_date": "2026-05-31",
+        "comment": null,
+        "isApprove": true,
+        "isActive": true,
+        "remark": null,
+        "approve_date": "2026-02-26",
+        "user_id": "admin",
+        "thumbnail": "images/npa-popup-promotion/ef94a340-b044-466f-abd2-3c654db7fb69.jpeg",
+        "link": "https://property.pamco.co.th/assetpromotion",
+        "created_datetime": "2026-02-26T15:08:04+07:00",
+        "updated_datetime": "2026-02-26T15:08:56+07:00",
+        "slug": "bigdeal2026",
+        "noPrice": true,
+        "noteNoPrice": "ลดสูงสุดถึง 70%",
+        "noDate": true,
+        "video": null,
+        "posterVideo": null,
+        "posterVideoTitle": null
+      },
+      {
+        "popup_promotion_id": 29,
+        "title": "โปรยกล็อต คุ้ม 2 ต่อ",
+        "type": 5,
+        "price": 0,
+        "price_special": 0,
+        "start_date": "2026-01-01",
+        "end_date": "2026-12-31",
+        "comment": null,
+        "isApprove": true,
+        "isActive": true,
+        "remark": null,
+        "approve_date": "2026-01-06",
+        "user_id": "admin",
+        "thumbnail": "images/npa-popup-promotion/30d10884-76a0-4702-8ce2-d7bdfd595f44.jpeg",
+        "link": "https://npa-pamco-bucket.s3.ap-southeast-1.amazonaws.com/documents/npa-documents/ae96c9f1-c02d-4370-9c95-7488aae70830.pdf",
+        "created_datetime": "2025-09-04T11:35:36+07:00",
+        "updated_datetime": "2026-01-06T15:58:16+07:00",
+        "slug": "npayoklot2",
+        "noPrice": true,
+        "noteNoPrice": "คุ้มทั้งราคา และเงื่อนไข",
+        "noDate": true,
+        "video": null,
+        "posterVideo": null,
+        "posterVideoTitle": null
+      }
+    ]
+  },
+  "drop": [
+    {
+      "provinceCd": 81,
+      "provinceNameEn": "KRABI",
+      "provinceNameTh": "กระบี่",
+      "regId": 6,
+      "active": true,
+      "Region": {
+        "regId": 6,
+        "reg": "ภาคใต้",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 10,
+      "provinceNameEn": "BANGKOK",
+      "provinceNameTh": "กรุงเทพมหานคร",
+      "regId": 1,
+      "active": true,
+      "Region": {
+        "regId": 1,
+        "reg": "กรุงเทพมหานคร",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 71,
+      "provinceNameEn": "KANCHANABURI",
+      "provinceNameTh": "กาญจนบุรี",
+      "regId": 2,
+      "active": true,
+      "Region": {
+        "regId": 2,
+        "reg": "ภาคกลาง",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 46,
+      "provinceNameEn": "KALASIN",
+      "provinceNameTh": "กาฬสินธุ์",
+      "regId": 4,
+      "active": true,
+      "Region": {
+        "regId": 4,
+        "reg": "ภาคตะวันออกเฉียงเหนือ",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 62,
+      "provinceNameEn": "KAMPHAENG PHET",
+      "provinceNameTh": "กำแพงเพชร",
+      "regId": 5,
+      "active": true,
+      "Region": {
+        "regId": 5,
+        "reg": "ภาคเหนือ",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 40,
+      "provinceNameEn": "KHON KAEN",
+      "provinceNameTh": "ขอนแก่น",
+      "regId": 4,
+      "active": true,
+      "Region": {
+        "regId": 4,
+        "reg": "ภาคตะวันออกเฉียงเหนือ",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 22,
+      "provinceNameEn": "CHANTHABURI",
+      "provinceNameTh": "จันทบุรี",
+      "regId": 3,
+      "active": true,
+      "Region": {
+        "regId": 3,
+        "reg": "ภาคตะวันออก",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 24,
+      "provinceNameEn": "CHACHOENGSAO",
+      "provinceNameTh": "ฉะเชิงเทรา",
+      "regId": 3,
+      "active": true,
+      "Region": {
+        "regId": 3,
+        "reg": "ภาคตะวันออก",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 20,
+      "provinceNameEn": "CHON BURI",
+      "provinceNameTh": "ชลบุรี",
+      "regId": 3,
+      "active": true,
+      "Region": {
+        "regId": 3,
+        "reg": "ภาคตะวันออก",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 18,
+      "provinceNameEn": "CHAI NAT",
+      "provinceNameTh": "ชัยนาท",
+      "regId": 2,
+      "active": true,
+      "Region": {
+        "regId": 2,
+        "reg": "ภาคกลาง",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 36,
+      "provinceNameEn": "CHAIYAPHUM",
+      "provinceNameTh": "ชัยภูมิ",
+      "regId": 4,
+      "active": true,
+      "Region": {
+        "regId": 4,
+        "reg": "ภาคตะวันออกเฉียงเหนือ",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 86,
+      "provinceNameEn": "CHUMPHON",
+      "provinceNameTh": "ชุมพร",
+      "regId": 6,
+      "active": true,
+      "Region": {
+        "regId": 6,
+        "reg": "ภาคใต้",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 57,
+      "provinceNameEn": "CHIANG RAI",
+      "provinceNameTh": "เชียงราย",
+      "regId": 5,
+      "active": true,
+      "Region": {
+        "regId": 5,
+        "reg": "ภาคเหนือ",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 50,
+      "provinceNameEn": "CHIANG MAI",
+      "provinceNameTh": "เชียงใหม่",
+      "regId": 5,
+      "active": true,
+      "Region": {
+        "regId": 5,
+        "reg": "ภาคเหนือ",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 92,
+      "provinceNameEn": "TRANG",
+      "provinceNameTh": "ตรัง",
+      "regId": 6,
+      "active": true,
+      "Region": {
+        "regId": 6,
+        "reg": "ภาคใต้",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 23,
+      "provinceNameEn": "TRAT",
+      "provinceNameTh": "ตราด",
+      "regId": 3,
+      "active": true,
+      "Region": {
+        "regId": 3,
+        "reg": "ภาคตะวันออก",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 63,
+      "provinceNameEn": "TAK",
+      "provinceNameTh": "ตาก",
+      "regId": 5,
+      "active": true,
+      "Region": {
+        "regId": 5,
+        "reg": "ภาคเหนือ",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 26,
+      "provinceNameEn": "NAKHON NAYOK",
+      "provinceNameTh": "นครนายก",
+      "regId": 2,
+      "active": true,
+      "Region": {
+        "regId": 2,
+        "reg": "ภาคกลาง",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 73,
+      "provinceNameEn": "NAKHON PATHOM",
+      "provinceNameTh": "นครปฐม",
+      "regId": 7,
+      "active": true,
+      "Region": {
+        "regId": 7,
+        "reg": "ปริมณฑล",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 48,
+      "provinceNameEn": "NAKHON PHANOM",
+      "provinceNameTh": "นครพนม",
+      "regId": 4,
+      "active": true,
+      "Region": {
+        "regId": 4,
+        "reg": "ภาคตะวันออกเฉียงเหนือ",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 30,
+      "provinceNameEn": "NAKHON RATCHASIMA",
+      "provinceNameTh": "นครราชสีมา",
+      "regId": 4,
+      "active": true,
+      "Region": {
+        "regId": 4,
+        "reg": "ภาคตะวันออกเฉียงเหนือ",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 80,
+      "provinceNameEn": "NAKHON SI THAMMARAT",
+      "provinceNameTh": "นครศรีธรรมราช",
+      "regId": 6,
+      "active": true,
+      "Region": {
+        "regId": 6,
+        "reg": "ภาคใต้",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 60,
+      "provinceNameEn": "NAKHON SAWAN",
+      "provinceNameTh": "นครสวรรค์",
+      "regId": 5,
+      "active": true,
+      "Region": {
+        "regId": 5,
+        "reg": "ภาคเหนือ",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 12,
+      "provinceNameEn": "NONTHABURI",
+      "provinceNameTh": "นนทบุรี",
+      "regId": 7,
+      "active": true,
+      "Region": {
+        "regId": 7,
+        "reg": "ปริมณฑล",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 96,
+      "provinceNameEn": "NARATHIWAT",
+      "provinceNameTh": "นราธิวาส",
+      "regId": 6,
+      "active": true,
+      "Region": {
+        "regId": 6,
+        "reg": "ภาคใต้",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 55,
+      "provinceNameEn": "NAN",
+      "provinceNameTh": "น่าน",
+      "regId": 5,
+      "active": true,
+      "Region": {
+        "regId": 5,
+        "reg": "ภาคเหนือ",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 38,
+      "provinceNameEn": "BUENG KAN",
+      "provinceNameTh": "บึงกาฬ",
+      "regId": 4,
+      "active": true,
+      "Region": {
+        "regId": 4,
+        "reg": "ภาคตะวันออกเฉียงเหนือ",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 31,
+      "provinceNameEn": "BURI RAM",
+      "provinceNameTh": "บุรีรัมย์",
+      "regId": 4,
+      "active": true,
+      "Region": {
+        "regId": 4,
+        "reg": "ภาคตะวันออกเฉียงเหนือ",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 13,
+      "provinceNameEn": "PATHUM THANI",
+      "provinceNameTh": "ปทุมธานี",
+      "regId": 7,
+      "active": true,
+      "Region": {
+        "regId": 7,
+        "reg": "ปริมณฑล",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 77,
+      "provinceNameEn": "PRACHUAP KHIRI KHAN",
+      "provinceNameTh": "ประจวบคีรีขันธ์",
+      "regId": 2,
+      "active": true,
+      "Region": {
+        "regId": 2,
+        "reg": "ภาคกลาง",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 25,
+      "provinceNameEn": "PRACHIN BURI",
+      "provinceNameTh": "ปราจีนบุรี",
+      "regId": 3,
+      "active": true,
+      "Region": {
+        "regId": 3,
+        "reg": "ภาคตะวันออก",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 94,
+      "provinceNameEn": "PATTANI",
+      "provinceNameTh": "ปัตตานี",
+      "regId": 6,
+      "active": true,
+      "Region": {
+        "regId": 6,
+        "reg": "ภาคใต้",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 14,
+      "provinceNameEn": "PHRA NAKHON SI AYUTTHAYA",
+      "provinceNameTh": "พระนครศรีอยุธยา",
+      "regId": 2,
+      "active": true,
+      "Region": {
+        "regId": 2,
+        "reg": "ภาคกลาง",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 56,
+      "provinceNameEn": "PHAYAO",
+      "provinceNameTh": "พะเยา",
+      "regId": 5,
+      "active": true,
+      "Region": {
+        "regId": 5,
+        "reg": "ภาคเหนือ",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 82,
+      "provinceNameEn": "PHANGNGA",
+      "provinceNameTh": "พังงา",
+      "regId": 6,
+      "active": true,
+      "Region": {
+        "regId": 6,
+        "reg": "ภาคใต้",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 93,
+      "provinceNameEn": "PHATTHALUNG",
+      "provinceNameTh": "พัทลุง",
+      "regId": 6,
+      "active": true,
+      "Region": {
+        "regId": 6,
+        "reg": "ภาคใต้",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 66,
+      "provinceNameEn": "PHICHIT",
+      "provinceNameTh": "พิจิตร",
+      "regId": 5,
+      "active": true,
+      "Region": {
+        "regId": 5,
+        "reg": "ภาคเหนือ",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 65,
+      "provinceNameEn": "PHITSANULOK",
+      "provinceNameTh": "พิษณุโลก",
+      "regId": 5,
+      "active": true,
+      "Region": {
+        "regId": 5,
+        "reg": "ภาคเหนือ",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 76,
+      "provinceNameEn": "PHETCHABURI",
+      "provinceNameTh": "เพชรบุรี",
+      "regId": 2,
+      "active": true,
+      "Region": {
+        "regId": 2,
+        "reg": "ภาคกลาง",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 67,
+      "provinceNameEn": "PHETCHABUN",
+      "provinceNameTh": "เพชรบูรณ์",
+      "regId": 5,
+      "active": true,
+      "Region": {
+        "regId": 5,
+        "reg": "ภาคเหนือ",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 54,
+      "provinceNameEn": "PHRAE",
+      "provinceNameTh": "แพร่",
+      "regId": 5,
+      "active": true,
+      "Region": {
+        "regId": 5,
+        "reg": "ภาคเหนือ",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 83,
+      "provinceNameEn": "PHUKET",
+      "provinceNameTh": "ภูเก็ต",
+      "regId": 6,
+      "active": true,
+      "Region": {
+        "regId": 6,
+        "reg": "ภาคใต้",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 44,
+      "provinceNameEn": "MAHA SARAKHAM",
+      "provinceNameTh": "มหาสารคาม",
+      "regId": 4,
+      "active": true,
+      "Region": {
+        "regId": 4,
+        "reg": "ภาคตะวันออกเฉียงเหนือ",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 49,
+      "provinceNameEn": "MUKDAHAN",
+      "provinceNameTh": "มุกดาหาร",
+      "regId": 4,
+      "active": true,
+      "Region": {
+        "regId": 4,
+        "reg": "ภาคตะวันออกเฉียงเหนือ",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 58,
+      "provinceNameEn": "MAE HONG SON",
+      "provinceNameTh": "แม่ฮ่องสอน",
+      "regId": 5,
+      "active": true,
+      "Region": {
+        "regId": 5,
+        "reg": "ภาคเหนือ",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 35,
+      "provinceNameEn": "YASOTHON",
+      "provinceNameTh": "ยโสธร",
+      "regId": 4,
+      "active": true,
+      "Region": {
+        "regId": 4,
+        "reg": "ภาคตะวันออกเฉียงเหนือ",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 95,
+      "provinceNameEn": "YALA",
+      "provinceNameTh": "ยะลา",
+      "regId": 6,
+      "active": true,
+      "Region": {
+        "regId": 6,
+        "reg": "ภาคใต้",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 45,
+      "provinceNameEn": "ROI ET",
+      "provinceNameTh": "ร้อยเอ็ด",
+      "regId": 4,
+      "active": true,
+      "Region": {
+        "regId": 4,
+        "reg": "ภาคตะวันออกเฉียงเหนือ",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 85,
+      "provinceNameEn": "RANONG",
+      "provinceNameTh": "ระนอง",
+      "regId": 6,
+      "active": true,
+      "Region": {
+        "regId": 6,
+        "reg": "ภาคใต้",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 21,
+      "provinceNameEn": "RAYONG",
+      "provinceNameTh": "ระยอง",
+      "regId": 3,
+      "active": true,
+      "Region": {
+        "regId": 3,
+        "reg": "ภาคตะวันออก",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 70,
+      "provinceNameEn": "RATCHABURI",
+      "provinceNameTh": "ราชบุรี",
+      "regId": 2,
+      "active": true,
+      "Region": {
+        "regId": 2,
+        "reg": "ภาคกลาง",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 16,
+      "provinceNameEn": "LOP BURI",
+      "provinceNameTh": "ลพบุรี",
+      "regId": 2,
+      "active": true,
+      "Region": {
+        "regId": 2,
+        "reg": "ภาคกลาง",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 52,
+      "provinceNameEn": "LAMPANG",
+      "provinceNameTh": "ลำปาง",
+      "regId": 5,
+      "active": true,
+      "Region": {
+        "regId": 5,
+        "reg": "ภาคเหนือ",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 51,
+      "provinceNameEn": "LAMPHUN",
+      "provinceNameTh": "ลำพูน",
+      "regId": 5,
+      "active": true,
+      "Region": {
+        "regId": 5,
+        "reg": "ภาคเหนือ",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 42,
+      "provinceNameEn": "LOEI",
+      "provinceNameTh": "เลย",
+      "regId": 4,
+      "active": true,
+      "Region": {
+        "regId": 4,
+        "reg": "ภาคตะวันออกเฉียงเหนือ",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 33,
+      "provinceNameEn": "SI SA KET",
+      "provinceNameTh": "ศรีสะเกษ",
+      "regId": 4,
+      "active": true,
+      "Region": {
+        "regId": 4,
+        "reg": "ภาคตะวันออกเฉียงเหนือ",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 47,
+      "provinceNameEn": "SAKON NAKHON",
+      "provinceNameTh": "สกลนคร",
+      "regId": 4,
+      "active": true,
+      "Region": {
+        "regId": 4,
+        "reg": "ภาคตะวันออกเฉียงเหนือ",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 90,
+      "provinceNameEn": "SONGKHLA",
+      "provinceNameTh": "สงขลา",
+      "regId": 6,
+      "active": true,
+      "Region": {
+        "regId": 6,
+        "reg": "ภาคใต้",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 91,
+      "provinceNameEn": "SATUN",
+      "provinceNameTh": "สตูล",
+      "regId": 6,
+      "active": true,
+      "Region": {
+        "regId": 6,
+        "reg": "ภาคใต้",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 11,
+      "provinceNameEn": "SAMUT PRAKAN",
+      "provinceNameTh": "สมุทรปราการ",
+      "regId": 7,
+      "active": true,
+      "Region": {
+        "regId": 7,
+        "reg": "ปริมณฑล",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 75,
+      "provinceNameEn": "SAMUT SONGKHRAM",
+      "provinceNameTh": "สมุทรสงคราม",
+      "regId": 2,
+      "active": true,
+      "Region": {
+        "regId": 2,
+        "reg": "ภาคกลาง",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 74,
+      "provinceNameEn": "SAMUT SAKHON",
+      "provinceNameTh": "สมุทรสาคร",
+      "regId": 7,
+      "active": true,
+      "Region": {
+        "regId": 7,
+        "reg": "ปริมณฑล",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 27,
+      "provinceNameEn": "SA KAEO",
+      "provinceNameTh": "สระแก้ว",
+      "regId": 3,
+      "active": true,
+      "Region": {
+        "regId": 3,
+        "reg": "ภาคตะวันออก",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 19,
+      "provinceNameEn": "SARABURI",
+      "provinceNameTh": "สระบุรี",
+      "regId": 2,
+      "active": true,
+      "Region": {
+        "regId": 2,
+        "reg": "ภาคกลาง",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 17,
+      "provinceNameEn": "SING BURI",
+      "provinceNameTh": "สิงห์บุรี",
+      "regId": 2,
+      "active": true,
+      "Region": {
+        "regId": 2,
+        "reg": "ภาคกลาง",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 64,
+      "provinceNameEn": "SUKHOTHAI",
+      "provinceNameTh": "สุโขทัย",
+      "regId": 5,
+      "active": true,
+      "Region": {
+        "regId": 5,
+        "reg": "ภาคเหนือ",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 72,
+      "provinceNameEn": "SUPHAN BURI",
+      "provinceNameTh": "สุพรรณบุรี",
+      "regId": 2,
+      "active": true,
+      "Region": {
+        "regId": 2,
+        "reg": "ภาคกลาง",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 84,
+      "provinceNameEn": "SURAT THANI",
+      "provinceNameTh": "สุราษฎร์ธานี",
+      "regId": 6,
+      "active": true,
+      "Region": {
+        "regId": 6,
+        "reg": "ภาคใต้",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 32,
+      "provinceNameEn": "SURIN",
+      "provinceNameTh": "สุรินทร์",
+      "regId": 4,
+      "active": true,
+      "Region": {
+        "regId": 4,
+        "reg": "ภาคตะวันออกเฉียงเหนือ",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 43,
+      "provinceNameEn": "NONG KHAI",
+      "provinceNameTh": "หนองคาย",
+      "regId": 4,
+      "active": true,
+      "Region": {
+        "regId": 4,
+        "reg": "ภาคตะวันออกเฉียงเหนือ",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 39,
+      "provinceNameEn": "NONG BUA LAM PHU",
+      "provinceNameTh": "หนองบัวลำภู",
+      "regId": 4,
+      "active": true,
+      "Region": {
+        "regId": 4,
+        "reg": "ภาคตะวันออกเฉียงเหนือ",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 15,
+      "provinceNameEn": "ANG THONG",
+      "provinceNameTh": "อ่างทอง",
+      "regId": 2,
+      "active": true,
+      "Region": {
+        "regId": 2,
+        "reg": "ภาคกลาง",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 37,
+      "provinceNameEn": "AMNAT CHAROEN",
+      "provinceNameTh": "อำนาจเจริญ",
+      "regId": 4,
+      "active": true,
+      "Region": {
+        "regId": 4,
+        "reg": "ภาคตะวันออกเฉียงเหนือ",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 41,
+      "provinceNameEn": "UDON THANI",
+      "provinceNameTh": "อุดรธานี",
+      "regId": 4,
+      "active": true,
+      "Region": {
+        "regId": 4,
+        "reg": "ภาคตะวันออกเฉียงเหนือ",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 53,
+      "provinceNameEn": "UTTARADIT",
+      "provinceNameTh": "อุตรดิตถ์",
+      "regId": 5,
+      "active": true,
+      "Region": {
+        "regId": 5,
+        "reg": "ภาคเหนือ",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 61,
+      "provinceNameEn": "UTHAI THANI",
+      "provinceNameTh": "อุทัยธานี",
+      "regId": 5,
+      "active": true,
+      "Region": {
+        "regId": 5,
+        "reg": "ภาคเหนือ",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    },
+    {
+      "provinceCd": 34,
+      "provinceNameEn": "UBON RATCHATHANI",
+      "provinceNameTh": "อุบลราชธานี",
+      "regId": 4,
+      "active": true,
+      "Region": {
+        "regId": 4,
+        "reg": "ภาคตะวันออกเฉียงเหนือ",
+        "active": true,
+        "isActive": true,
+        "order": 0
+      }
+    }
+  ],
+  "PATH": "https://property-api-prod.automer.io/",
+  "recc": {
+    "total": 6,
+    "list": [
+      {
+        "idProperty": 3457,
+        "tag": "recommend",
+        "startDate": "2023-03-30",
+        "endDate": "2044-12-31",
+        "thumbnail": [
+          "images/property-thumbnail/WR13146-c08e69894ffc3.jpeg"
+        ],
+        "illustration": [
+          "images/property-illustration/WR13146-7476b794ffd83.jpeg",
+          "images/property-illustration/WR13146-5fbdac368bec6.jpeg",
+          "images/property-illustration/WR13146-265f85b490a36.jpeg",
+          "images/property-illustration/WR13146-5a13ff216b3e4.jpeg",
+          "images/property-illustration/WR13146-523df812870ec.jpeg",
+          "images/property-illustration/WR13146-72c6f7e2c7c1d.jpeg",
+          "images/property-illustration/WR13146-75a8d76a956ba.jpeg",
+          "images/property-illustration/WR13146-136f73314658c.jpeg",
+          "images/property-illustration/WR13146-5444b18b14c4d.jpeg",
+          "images/property-illustration/WR13146-d8f1017eb4e4c.jpeg",
+          "images/property-illustration/WR13146-92664c0b7cf26.jpeg",
+          "images/property-illustration/WR13146-623045fd80838.jpeg"
+        ],
+        "schedule": null,
+        "map": [
+          "images/property-map/WR13146-d8a1d5f8792bd.jpeg"
+        ],
+        "isApprove": true,
+        "created_datetime": "2025-11-10T07:00:00+07:00",
+        "updated_datetime": "2026-04-02T15:56:07+07:00",
+        "slug": "p01000",
+        "qrcode": "597748c39877910ac3d39f6b5ce6a506676af6249fd6ca2cd2d53fb491e52d80",
+        "livingRoom": "",
+        "bedRoom": "",
+        "parlor": "",
+        "kitchen": "",
+        "bathRoom": "",
+        "parking": "",
+        "floor": "",
+        "investment": "",
+        "noteAsset": null,
+        "nearBy": [
+          {
+            "nearby": "ตลาดมหาชัยเมืองใหม่",
+            "distance": "2.60"
+          },
+          {
+            "nearby": "บุญถาวร",
+            "distance": "3.10"
+          },
+          {
+            "nearby": "โรงพยาบาลพานาซี พระราม2",
+            "distance": "6.70"
+          },
+          {
+            "nearby": "วัดพันท้ายนรสิงห์",
+            "distance": "7.20"
+          }
+        ],
+        "googleMap": "<iframe src=\"https://www.google.com/maps/embed?pb=!1m17!1m12!1m3!1d3878.0342791913195!2d100.34734107500394!3d13.59471798678098!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m2!1m1!2zMTPCsDM1JzQxLjAiTiAxMDDCsDIwJzU5LjciRQ!5e0!3m2!1sth!2sth!4v1687875797968!5m2!1sth!2sth\" width=\"600\" height=\"450\" style=\"border:0;\" allowfullscreen=\"\" loading=\"lazy\" referrerpolicy=\"no-referrer-when-downgrade\"></iframe>",
+        "comment": null,
+        "telAO": "08 0050 2166",
+        "useableArea": "9114.75",
+        "redCase": null,
+        "payDown": null,
+        "legalOff": null,
+        "auctionSite": null,
+        "ref": null,
+        "type": 3,
+        "fileMap": null,
+        "npaProductTitle": "สำนักงานพร้อมโกดัง สมุทรสาคร",
+        "npaProductProvinceId": 74,
+        "npaProductAmphurId": "7401",
+        "npaProductDistrictId": "740112",
+        "npaProductLatitude": "13.594718",
+        "npaProductLongitude": "100.349916",
+        "npaProductArea": "2229.60",
+        "idMarket": "P01000",
+        "idDetail": 7,
+        "nfr": "",
+        "area": "0005-2-29.6",
+        "landid": "ฉ.180238, 28728",
+        "houseid": "9/4",
+        "moo": "1",
+        "soi": "",
+        "hgroup": "",
+        "street": "พระราม 2",
+        "searchArea": "2229.60",
+        "checker": true,
+        "titleThumbnail": [
+          "WR13146.jpg"
+        ],
+        "titleIllustration": [
+          "WR13146-05.jpg",
+          "WR13146-02.jpg",
+          "WR13146-01.jpg",
+          "WR13146-04.jpg",
+          "WR13146-03.jpg",
+          "WR13146-09.jpg",
+          "WR13146-07.jpg",
+          "WR13146-11.jpg",
+          "WR13146-12.jpg",
+          "WR13146-08.jpg",
+          "WR13146-10.jpg",
+          "WR13146-06.jpg"
+        ],
+        "video": "",
+        "posterVideo": "",
+        "posterVideoTitle": "",
+        "lowprice": [
+          {
+            "lowprice": "90630000",
+            "active": true,
+            "noPrice": true,
+            "noPriceNote": "**** ลดราคาพิเศษ ****  สนใจติดต่อเจ้าหน้าที่",
+            "checker": true
+          }
+        ],
+        "idEvent": [],
+        "statusDetail": [
+          {
+            "noh": "00",
+            "checker": true
+          }
+        ],
+        "NpaApprisal": null,
+        "NpaConProp": null,
+        "Region": "ปริมณฑล",
+        "provinceNameTh": "สมุทรสาคร",
+        "districtNameTh": "เมืองสมุทรสาคร",
+        "subDistrictNameTh": "บางน้ำจืด"
+      },
+      {
+        "idProperty": 1268,
+        "tag": "recommend",
+        "startDate": "2023-03-14",
+        "endDate": "2044-12-31",
+        "thumbnail": [
+          "images/property-thumbnail/B12889-d58f5faccfa7c.jpeg"
+        ],
+        "illustration": [
+          "images/property-illustration/B12889-001485bd2da52.jpeg",
+          "images/property-illustration/B12889-0a4638f477608.jpeg",
+          "images/property-illustration/B12889-abd85cc37a176.jpeg",
+          "images/property-illustration/B12889-05c454b93044e.jpeg",
+          "images/property-illustration/B12889-1b2bd35ebdaf9.jpeg",
+          "images/property-illustration/B12889-a7a8d2a091d40.jpeg",
+          "images/property-illustration/B12889-ae896687f3b45.jpeg",
+          "images/property-illustration/B12889-4b91652f5be14.jpeg",
+          "images/property-illustration/B12889-703c060eea1b7.jpeg",
+          "images/property-illustration/B12889-68af058f8a4a4.jpeg",
+          "images/property-illustration/B12889-3e6c413f8ae02.jpeg",
+          "images/property-illustration/B12889-85940fe11bf98.jpeg"
+        ],
+        "schedule": [
+          "2022-10-11"
+        ],
+        "map": [
+          "images/property-map/B12889-f80f488baaa00.jpeg"
+        ],
+        "isApprove": true,
+        "created_datetime": "2023-03-08T13:28:40+07:00",
+        "updated_datetime": "2026-03-31T19:43:53+07:00",
+        "slug": "b12889",
+        "qrcode": "d1949effd2cacfebe158f0cadea74598eab5a373",
+        "livingRoom": "",
+        "bedRoom": "",
+        "parlor": "",
+        "kitchen": "",
+        "bathRoom": "",
+        "parking": "",
+        "floor": "5",
+        "investment": "",
+        "noteAsset": null,
+        "nearBy": [
+          {
+            "nearby": "โรบินสัน หาดใหญ่ ",
+            "distance": "0.21"
+          },
+          {
+            "nearby": "ตลาดกิมหยง",
+            "distance": "0.80"
+          },
+          {
+            "nearby": "เทศบาลนครหาดใหญ่",
+            "distance": "1.00"
+          },
+          {
+            "nearby": "สถานีตำรวจภูธรหาดใหญ่",
+            "distance": "1.10"
+          },
+          {
+            "nearby": "โรงพยาบาลราษฎร์ยินดี ",
+            "distance": "1.80"
+          },
+          {
+            "nearby": "",
+            "distance": null
+          }
+        ],
+        "googleMap": "<iframe src=\"https://www.google.com/maps/embed?pb=!1m17!1m12!1m3!1d3960.0451784750194!2d100.46673707486181!3d7.003962992997378!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m2!1m1!2zN8KwMDAnMTQuMyJOIDEwMMKwMjgnMDkuNSJF!5e0!3m2!1sth!2ssg!4v1685319972614!5m2!1sth!2ssg\" width=\"600\" height=\"450\" style=\"border:0;\" allowfullscreen=\"\" loading=\"lazy\" referrerpolicy=\"no-referrer-when-downgrade\"></iframe>",
+        "comment": "มีการปรับปรุงค่าใช้จ่าย",
+        "telAO": "08 0042 4068",
+        "useableArea": "2319.98",
+        "redCase": null,
+        "payDown": null,
+        "legalOff": null,
+        "auctionSite": null,
+        "ref": null,
+        "type": 4,
+        "fileMap": null,
+        "npaProductTitle": "สำนักงาน ถนนธรรมนูญวิถี หาดใหญ่",
+        "npaProductProvinceId": 90,
+        "npaProductAmphurId": "9011",
+        "npaProductDistrictId": "901101",
+        "npaProductLatitude": "7.003963",
+        "npaProductLongitude": "100.469312",
+        "npaProductArea": "162.10",
+        "idMarket": "B12889",
+        "idDetail": 7,
+        "nfr": "",
+        "area": "0000-1-62.1",
+        "landid": "ฉ.222196",
+        "houseid": "25",
+        "moo": "",
+        "soi": "",
+        "hgroup": "",
+        "street": "นิพัทธ์อุทิศ 1",
+        "searchArea": "162.10",
+        "checker": true,
+        "titleThumbnail": [
+          "B12889-01.jpg"
+        ],
+        "titleIllustration": [
+          "B12889-02.jpg",
+          "B12889-09.jpg",
+          "B12889-11.jpg",
+          "B12889-04.jpg",
+          "B12889-08.jpg",
+          "B12889-03.jpg",
+          "B12889-06.jpg",
+          "B12889-10.jpg",
+          "B12889-05.jpg",
+          "B12889-13.jpg",
+          "B12889-07.jpg",
+          "B12889-12.jpg"
+        ],
+        "video": "",
+        "posterVideo": "",
+        "posterVideoTitle": "",
+        "lowprice": [
+          {
+            "lowprice": "63520000",
+            "active": true,
+            "noPrice": true,
+            "noPriceNote": "**** ลดราคาพิเศษ ****  สนใจติดต่อเจ้าหน้าที่",
+            "checker": true
+          }
+        ],
+        "idEvent": [],
+        "statusDetail": [
+          {
+            "noh": "00",
+            "checker": true
+          }
+        ],
+        "NpaApprisal": null,
+        "NpaConProp": null,
+        "Region": "ภาคใต้",
+        "provinceNameTh": "สงขลา",
+        "districtNameTh": "หาดใหญ่",
+        "subDistrictNameTh": "หาดใหญ่"
+      },
+      {
+        "idProperty": 2622,
+        "tag": "recommend",
+        "startDate": "2014-11-25",
+        "endDate": "2044-12-31",
+        "thumbnail": [
+          "images/property-thumbnail/B11906-533073ab2246e.jpeg"
+        ],
+        "illustration": [
+          "images/property-illustration/B11906-e908db16d7a61.jpeg",
+          "images/property-illustration/B11906-4b0e2b9fc1afc.jpeg",
+          "images/property-illustration/B11906-4fdf9f52af3f9.jpeg",
+          "images/property-illustration/B11906-57076014268a9.jpeg",
+          "images/property-illustration/B11906-a115dca1c2019.jpeg"
+        ],
+        "schedule": null,
+        "map": [
+          "images/property-map/B11906-f4c5a7ea2c11b.jpeg"
+        ],
+        "isApprove": true,
+        "created_datetime": "2023-11-09T07:00:00+07:00",
+        "updated_datetime": "2026-03-31T18:48:39+07:00",
+        "slug": "p00495",
+        "qrcode": "0d9f3c5d37bc396ef1c30d85f8f4d463102e084c266bc1f055816b81f1a033b8",
+        "livingRoom": "",
+        "bedRoom": "",
+        "parlor": "",
+        "kitchen": "",
+        "bathRoom": "",
+        "parking": "",
+        "floor": "",
+        "investment": "",
+        "noteAsset": null,
+        "nearBy": [
+          {
+            "nearby": "ตลาดศาลาใหม่",
+            "distance": "2.80"
+          },
+          {
+            "nearby": "สถานีตำรวจภูธรหนองบัวโคก",
+            "distance": "5.30"
+          },
+          {
+            "nearby": "เทศบาลตำบลหนองบัวโคก",
+            "distance": "5.40"
+          },
+          {
+            "nearby": "โรงพยาบาลส่งเสริมสุขภาพตำบลบ้านเขาดิน ",
+            "distance": "8.20"
+          },
+          {
+            "nearby": "",
+            "distance": ""
+          },
+          {
+            "nearby": "",
+            "distance": ""
+          }
+        ],
+        "googleMap": "<iframe src=\"https://www.google.com/maps/embed?pb=!1m17!1m12!1m3!1d3845.555704644142!2d101.8257230750403!3d15.454512985139402!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m2!1m1!2zMTXCsDI3JzE2LjMiTiAxMDHCsDQ5JzQxLjkiRQ!5e0!3m2!1sth!2sth!4v1690462139690!5m2!1sth!2sth\" width=\"600\" height=\"450\" style=\"border:0;\" allowfullscreen=\"\" loading=\"lazy\" referrerpolicy=\"no-referrer-when-downgrade\"></iframe>",
+        "comment": "มีการปรับปรุงค่าใช้จ่าย",
+        "telAO": "08 0042 5362",
+        "useableArea": "33154.50",
+        "redCase": null,
+        "payDown": null,
+        "legalOff": null,
+        "auctionSite": null,
+        "ref": null,
+        "type": 3,
+        "fileMap": null,
+        "npaProductTitle": "โรงงาน จัตุรัส ชัยภูมิ",
+        "npaProductProvinceId": 36,
+        "npaProductAmphurId": "3606",
+        "npaProductDistrictId": "360611",
+        "npaProductLatitude": "15.454513",
+        "npaProductLongitude": "101.828298",
+        "npaProductArea": "41577.90",
+        "idMarket": "P00495",
+        "idDetail": 6,
+        "nfr": "",
+        "area": "0103-3-77.9",
+        "landid": "ฉ.896, 897, 898",
+        "houseid": "168",
+        "moo": "11",
+        "soi": "",
+        "hgroup": "",
+        "street": "ชัยภูมิ-สีคิ้ว (201)",
+        "searchArea": null,
+        "checker": true,
+        "titleThumbnail": [
+          "B11906-01.jpg"
+        ],
+        "titleIllustration": [
+          "B11906-04.jpg",
+          "B11906-02.jpg",
+          "B11906-03.jpg",
+          "B11906-05.jpg",
+          "B11906-01.jpg"
+        ],
+        "video": "",
+        "posterVideo": "",
+        "posterVideoTitle": "",
+        "lowprice": [
+          {
+            "lowprice": "143300000",
+            "active": true,
+            "noPrice": true,
+            "noPriceNote": "**** ลดราคาพิเศษ ****  สนใจติดต่อเจ้าหน้าที่",
+            "checker": true
+          }
+        ],
+        "idEvent": [],
+        "statusDetail": [
+          {
+            "noh": "00",
+            "checker": true
+          }
+        ],
+        "NpaApprisal": null,
+        "NpaConProp": null,
+        "Region": "ภาคตะวันออกเฉียงเหนือ",
+        "provinceNameTh": "ชัยภูมิ",
+        "districtNameTh": "จัตุรัส",
+        "subDistrictNameTh": "หนองบัวโคก"
+      },
+      {
+        "idProperty": 2204,
+        "tag": "recommend",
+        "startDate": "2019-08-13",
+        "endDate": "2045-12-31",
+        "thumbnail": [
+          "images/property-thumbnail/P00375-3155c4ce9889d.jpeg"
+        ],
+        "illustration": [
+          "images/property-illustration/P00375-b9ca1c9f04bd8.jpeg",
+          "images/property-illustration/P00375-949b9ed22d996.jpeg",
+          "images/property-illustration/P00375-341c258bd0613.jpeg",
+          "images/property-illustration/P00375-4d21321ffd60e.jpeg",
+          "images/property-illustration/P00375-7e1f48740236c.jpeg",
+          "images/property-illustration/P00375-1c75f226e3993.jpeg"
+        ],
+        "schedule": null,
+        "map": [
+          "images/property-map/P00375-07efd295e7c38.jpeg"
+        ],
+        "isApprove": true,
+        "created_datetime": "2023-03-08T13:28:40+07:00",
+        "updated_datetime": "2026-03-31T18:48:39+07:00",
+        "slug": "p00375",
+        "qrcode": "5702f7512c0d8edd4ea97a9a783820ce7e92cfca",
+        "livingRoom": "",
+        "bedRoom": "",
+        "parlor": "",
+        "kitchen": "",
+        "bathRoom": "",
+        "parking": "",
+        "floor": "",
+        "investment": "",
+        "noteAsset": null,
+        "nearBy": [
+          {
+            "nearby": "สำนักงานเทศบาลตำบลหวายเหนียว",
+            "distance": "0.80"
+          },
+          {
+            "nearby": "โรงเรียนวัดหวายเหนียวปุญสิริวิทยา",
+            "distance": "1.20"
+          },
+          {
+            "nearby": "ที่ว่าการอำเภอท่ามะกา",
+            "distance": "1.20"
+          },
+          {
+            "nearby": "วัดหวายเหนียว",
+            "distance": "1.30"
+          },
+          {
+            "nearby": "โรงพยาบาลมะการักษ์",
+            "distance": "2.60"
+          },
+          {
+            "nearby": "",
+            "distance": ""
+          }
+        ],
+        "googleMap": "<iframe src=\"https://www.google.com/maps/embed?pb=!1m17!1m12!1m3!1d3872.735412952088!2d99.75681307500989!3d13.914756986494352!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m2!1m1!2zMTPCsDU0JzUzLjEiTiA5OcKwNDUnMzMuOCJF!5e0!3m2!1sth!2sth!4v1689691760159!5m2!1sth!2sth\" width=\"600\" height=\"450\" style=\"border:0;\" allowfullscreen=\"\" loading=\"lazy\" referrerpolicy=\"no-referrer-when-downgrade\"></iframe>",
+        "comment": "มีการปรับปรุงค่าใช้จ่าย",
+        "telAO": "08 0050 1942",
+        "useableArea": "26164.10",
+        "redCase": null,
+        "payDown": null,
+        "legalOff": null,
+        "auctionSite": null,
+        "ref": null,
+        "type": 3,
+        "fileMap": null,
+        "npaProductTitle": "โรงงาน ท่ามะกา",
+        "npaProductProvinceId": 71,
+        "npaProductAmphurId": "7105",
+        "npaProductDistrictId": "710513",
+        "npaProductLatitude": "13.914757",
+        "npaProductLongitude": "99.759388",
+        "npaProductArea": "5853.90",
+        "idMarket": "P00375",
+        "idDetail": 6,
+        "nfr": "อาคารโรงงานชั้นเดียว พร้อมสำนักงาน 2 ชั้น และสปส.อื่น ๆ รวม 9 รายการ",
+        "area": "0014-2-53.9",
+        "landid": "ฉ. 4195, 55811",
+        "houseid": "118, 118/1-15",
+        "moo": "1",
+        "soi": "",
+        "hgroup": "",
+        "street": "สุขาภิบาลหวายเหนียว สาย 1",
+        "searchArea": "5853.90",
+        "checker": true,
+        "titleThumbnail": [
+          "P00375-3155c4ce9889d.jpeg"
+        ],
+        "titleIllustration": [
+          "P00375-b9ca1c9f04bd8.jpeg",
+          "P00375-949b9ed22d996.jpeg",
+          "P00375-341c258bd0613.jpeg",
+          "P00375-4d21321ffd60e.jpeg",
+          "P00375-7e1f48740236c.jpeg",
+          "P00375-1c75f226e3993.jpeg"
+        ],
+        "video": "",
+        "posterVideo": "",
+        "posterVideoTitle": "",
+        "lowprice": [
+          {
+            "lowprice": "83650000",
+            "active": true,
+            "noPrice": true,
+            "noPriceNote": "**** ลดราคาพิเศษ ****  สนใจติดต่อเจ้าหน้าที่",
+            "checker": true
+          }
+        ],
+        "idEvent": [],
+        "statusDetail": [
+          {
+            "noh": "00",
+            "checker": true
+          }
+        ],
+        "NpaApprisal": null,
+        "NpaConProp": null,
+        "Region": "ภาคกลาง",
+        "provinceNameTh": "กาญจนบุรี",
+        "districtNameTh": "ท่ามะกา",
+        "subDistrictNameTh": "หวายเหนียว"
+      },
+      {
+        "idProperty": 2171,
+        "tag": "recommend",
+        "startDate": "2022-04-18",
+        "endDate": "2045-12-31",
+        "thumbnail": [
+          "images/property-thumbnail/P00343-95f580d1ebbfd.jpeg"
+        ],
+        "illustration": [
+          "images/property-illustration/P00343-a7585bf711c65.jpeg",
+          "images/property-illustration/P00343-ad3828aff7f97.jpeg",
+          "images/property-illustration/P00343-bf23329958655.jpeg"
+        ],
+        "schedule": null,
+        "map": [
+          "images/property-map/P00343-fd49f38fb39af.jpeg"
+        ],
+        "isApprove": true,
+        "created_datetime": "2023-03-08T13:28:40+07:00",
+        "updated_datetime": "2026-03-31T18:48:39+07:00",
+        "slug": "p00343",
+        "qrcode": "b9ffdd145d0e8395ae612030e9c5cd1d86ecae51",
+        "livingRoom": "",
+        "bedRoom": "",
+        "parlor": "",
+        "kitchen": "",
+        "bathRoom": "",
+        "parking": "",
+        "floor": "",
+        "investment": "",
+        "noteAsset": null,
+        "nearBy": [
+          {
+            "nearby": "สำนักงานที่ดินจังหวัดนครราชสีมา สาขาปากช่อง ",
+            "distance": "3.10"
+          },
+          {
+            "nearby": "สำนักงานขนส่งจังหวัดนครราชสีมา (สาขาปากช่อง )",
+            "distance": "5.90"
+          },
+          {
+            "nearby": "บิ๊กซี ปากช่อง-เขาใหญ่ ",
+            "distance": "6.60"
+          },
+          {
+            "nearby": "Night Bazaar Pakchong ",
+            "distance": "6.60"
+          },
+          {
+            "nearby": "รพ.ปากช่องนานา 2 ",
+            "distance": "6.80"
+          },
+          {
+            "nearby": "",
+            "distance": null
+          }
+        ],
+        "googleMap": "<iframe src=\"https://www.google.com/maps/embed?pb=!1m17!1m12!1m3!1d3859.8319761149965!2d101.43610307502435!3d14.665474985828627!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m2!1m1!2zMTTCsDM5JzU1LjciTiAxMDHCsDI2JzE5LjIiRQ!5e0!3m2!1sth!2sth!4v1689600803402!5m2!1sth!2sth\" width=\"600\" height=\"450\" style=\"border:0;\" allowfullscreen=\"\" loading=\"lazy\" referrerpolicy=\"no-referrer-when-downgrade\"></iframe>",
+        "comment": "มีการปรับปรุงค่าใช้จ่าย",
+        "telAO": "08 0042 5143",
+        "useableArea": "0.00",
+        "redCase": null,
+        "payDown": null,
+        "legalOff": null,
+        "auctionSite": null,
+        "ref": null,
+        "type": 3,
+        "fileMap": null,
+        "npaProductTitle": "ที่ดินเปล่า ปากช่อง",
+        "npaProductProvinceId": 30,
+        "npaProductAmphurId": "3021",
+        "npaProductDistrictId": "302107",
+        "npaProductLatitude": "14.665475",
+        "npaProductLongitude": "101.438678",
+        "npaProductArea": "16204.00",
+        "idMarket": "P00343",
+        "idDetail": 5,
+        "nfr": "",
+        "area": "0040-2-04.0",
+        "landid": "ฉ.15128",
+        "houseid": "",
+        "moo": "10",
+        "soi": "",
+        "hgroup": "",
+        "street": "มิตรภาพ (ทล.2) กม.61+700",
+        "searchArea": "16204.00",
+        "checker": true,
+        "titleThumbnail": [
+          "P00343.jpg"
+        ],
+        "titleIllustration": [
+          "P00343-01.jpg",
+          "P00343-02.jpg",
+          "P00343.jpg"
+        ],
+        "video": "",
+        "posterVideo": "",
+        "posterVideoTitle": "",
+        "lowprice": [
+          {
+            "lowprice": "231720000",
+            "active": true,
+            "noPrice": true,
+            "noPriceNote": "**** ลดราคาพิเศษ ****  สนใจติดต่อเจ้าหน้าที่",
+            "checker": true
+          }
+        ],
+        "idEvent": [],
+        "statusDetail": [
+          {
+            "noh": "00",
+            "checker": true
+          }
+        ],
+        "NpaApprisal": null,
+        "NpaConProp": null,
+        "Region": "ภาคตะวันออกเฉียงเหนือ",
+        "provinceNameTh": "นครราชสีมา",
+        "districtNameTh": "ปากช่อง",
+        "subDistrictNameTh": "ขนงพระ"
+      },
+      {
+        "idProperty": 2528,
+        "tag": "recommend",
+        "startDate": "2024-01-01",
+        "endDate": "2044-12-31",
+        "thumbnail": [
+          "images/property-thumbnail/B13214-0ddbecf1e9911.jpeg"
+        ],
+        "illustration": [
+          "images/property-illustration/B13214-5e70e16c94391.jpeg",
+          "images/property-illustration/B13214-6f3cd193e2382.jpeg",
+          "images/property-illustration/B13214-a3fda5f8309db.jpeg",
+          "images/property-illustration/B13214-d78f4535e0e6f.jpeg"
+        ],
+        "schedule": null,
+        "map": [
+          "images/property-map/B13214-b890d1613dc33.jpeg"
+        ],
+        "isApprove": true,
+        "created_datetime": "2023-11-09T07:00:00+07:00",
+        "updated_datetime": "2026-03-31T18:48:39+07:00",
+        "slug": "p00683",
+        "qrcode": "3215de3b435ea27d753a84fd4215d5b6060a84d5fb7a21520decc7f9294da99d",
+        "livingRoom": "",
+        "bedRoom": "",
+        "parlor": "",
+        "kitchen": "",
+        "bathRoom": "",
+        "parking": "",
+        "floor": "",
+        "investment": "",
+        "noteAsset": null,
+        "nearBy": [
+          {
+            "nearby": "โรงพยาบาลส่งเสริมสุขภาพตำบลคลองกระออม ",
+            "distance": "2.40"
+          },
+          {
+            "nearby": "บิ๊กซี ประชาอุทิศ",
+            "distance": "5.60"
+          },
+          {
+            "nearby": "แม็กซ์แวลู ซูเปอร์มาร์เก็ต ประชาอุทิศ",
+            "distance": "9.10"
+          },
+          {
+            "nearby": "โรงพยาบาลเปาโล พระประแดง",
+            "distance": "11.60"
+          }
+        ],
+        "googleMap": "<iframe src=\"https://www.google.com/maps/embed?pb=!1m17!1m12!1m3!1d3878.184860280086!2d100.48142107514995!3d13.585515201121556!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m2!1m1!2zMTPCsDM1JzA3LjgiTiAxMDDCsDI5JzAyLjQiRQ!5e0!3m2!1sth!2ssg!4v1689321263910!5m2!1sth!2ssg\" width=\"600\" height=\"450\" style=\"border:0;\" allowfullscreen=\"\" loading=\"lazy\" referrerpolicy=\"no-referrer-when-downgrade\"></iframe>",
+        "comment": null,
+        "telAO": "08 0042 5143",
+        "useableArea": "10177.40",
+        "redCase": null,
+        "payDown": null,
+        "legalOff": null,
+        "auctionSite": null,
+        "ref": null,
+        "type": 3,
+        "fileMap": null,
+        "npaProductTitle": "โรงงาน พระสมุทรเจดีย์ สมุทรปราการ",
+        "npaProductProvinceId": 11,
+        "npaProductAmphurId": "1105",
+        "npaProductDistrictId": "110501",
+        "npaProductLatitude": "13.585511",
+        "npaProductLongitude": "100.483996",
+        "npaProductArea": "5230.00",
+        "idMarket": "P00683",
+        "idDetail": 6,
+        "nfr": "อาคารโรงงาน 2 หลัง พร้อมที่ดินเปล่า 1 แปลง",
+        "area": "0013-0-30.0",
+        "landid": "ฉ.486, 76702, 76703",
+        "houseid": "308",
+        "moo": "3",
+        "soi": "",
+        "hgroup": "",
+        "street": "ประชาอุทิศ 90",
+        "searchArea": "5230.00",
+        "checker": true,
+        "titleThumbnail": [
+          "B13214-01.jpg"
+        ],
+        "titleIllustration": [
+          "B13214-05.jpg",
+          "B13214-03.jpg",
+          "B13214-02.jpg",
+          "B13214-04.jpg"
+        ],
+        "video": "",
+        "posterVideo": "",
+        "posterVideoTitle": "",
+        "lowprice": [
+          {
+            "lowprice": "92440000",
+            "active": true,
+            "noPrice": true,
+            "noPriceNote": "**** ลดราคาพิเศษ ****  สนใจติดต่อเจ้าหน้าที่",
+            "checker": true
+          }
+        ],
+        "idEvent": [],
+        "statusDetail": [
+          {
+            "noh": "00",
+            "checker": true
+          }
+        ],
+        "NpaApprisal": null,
+        "NpaConProp": null,
+        "Region": "ปริมณฑล",
+        "provinceNameTh": "สมุทรปราการ",
+        "districtNameTh": "พระสมุทรเจดีย์",
+        "subDistrictNameTh": "นาเกลือ"
+      }
+    ]
+  },
+  "dropdownDetail": [
+    {
+      "idDetail": 11,
+      "detail": "บ้านแฝด",
+      "idCategory": 2,
+      "order": 11,
+      "active": true,
+      "isActive": true,
+      "created_datetime": "2022-10-08T07:31:14.077Z",
+      "updated_datetime": "2023-05-10T10:08:35.360Z",
+      "category": {
+        "idCategory": 2,
+        "category": "2. Residential",
+        "order": 2,
+        "active": true,
+        "isActive": true,
+        "created_datetime": "2022-10-08T07:15:46.545Z",
+        "upodated_datetime": "2022-10-11T06:17:35.900Z"
+      },
+      "refId": 11
+    },
+    {
+      "idDetail": 27,
+      "detail": "สมาชิกสนามกอล์ฟ",
+      "idCategory": 5,
+      "order": 27,
+      "active": true,
+      "isActive": true,
+      "created_datetime": "2023-02-08T11:24:48.025Z",
+      "updated_datetime": "2023-05-10T10:09:03.406Z",
+      "category": {
+        "idCategory": 5,
+        "category": "6. Other",
+        "order": 6,
+        "active": true,
+        "isActive": true,
+        "created_datetime": "2022-10-08T07:16:17.545Z",
+        "upodated_datetime": "2022-10-11T06:17:35.901Z"
+      },
+      "refId": 27
+    },
+    {
+      "idDetail": 16,
+      "detail": "โชว์รูม",
+      "idCategory": 3,
+      "order": 16,
+      "active": true,
+      "isActive": true,
+      "created_datetime": "2022-10-08T07:31:14.080Z",
+      "updated_datetime": "2023-07-26T04:48:23.715Z",
+      "category": {
+        "idCategory": 3,
+        "category": "3. Commercial",
+        "order": 3,
+        "active": true,
+        "isActive": true,
+        "created_datetime": "2022-10-08T07:15:56.830Z",
+        "upodated_datetime": "2022-10-11T06:17:35.900Z"
+      },
+      "refId": 16
+    },
+    {
+      "idDetail": 20,
+      "detail": "โฮมออฟฟิศ",
+      "idCategory": 3,
+      "order": 20,
+      "active": true,
+      "isActive": true,
+      "created_datetime": "2022-10-08T07:31:14.082Z",
+      "updated_datetime": "2023-07-26T04:49:26.007Z",
+      "category": {
+        "idCategory": 3,
+        "category": "3. Commercial",
+        "order": 3,
+        "active": true,
+        "isActive": true,
+        "created_datetime": "2022-10-08T07:15:56.830Z",
+        "upodated_datetime": "2022-10-11T06:17:35.900Z"
+      },
+      "refId": 20
+    },
+    {
+      "idDetail": 24,
+      "detail": "ตึกแถว",
+      "idCategory": 2,
+      "order": 24,
+      "active": true,
+      "isActive": true,
+      "created_datetime": "2023-02-12T16:35:53.246Z",
+      "updated_datetime": "2023-07-26T06:41:32.053Z",
+      "category": {
+        "idCategory": 2,
+        "category": "2. Residential",
+        "order": 2,
+        "active": true,
+        "isActive": true,
+        "created_datetime": "2022-10-08T07:15:46.545Z",
+        "upodated_datetime": "2022-10-11T06:17:35.900Z"
+      },
+      "refId": 24
+    },
+    {
+      "idDetail": 19,
+      "detail": "ที่ดินพร้อมสิ่งปลูกสร้าง",
+      "idCategory": 6,
+      "order": 19,
+      "active": true,
+      "isActive": true,
+      "created_datetime": "2022-10-08T07:31:14.081Z",
+      "updated_datetime": "2023-07-26T06:42:43.896Z",
+      "category": {
+        "idCategory": 6,
+        "category": "7. Land and Building",
+        "order": 7,
+        "active": true,
+        "isActive": true,
+        "created_datetime": "2022-10-08T07:16:28.706Z",
+        "upodated_datetime": "2022-10-11T06:17:35.901Z"
+      },
+      "refId": 19
+    },
+    {
+      "idDetail": 25,
+      "detail": "ปั๊มน้ำมัน",
+      "idCategory": 3,
+      "order": 25,
+      "active": true,
+      "isActive": true,
+      "created_datetime": "2022-10-08T07:31:14.085Z",
+      "updated_datetime": "2023-07-26T07:24:24.083Z",
+      "category": {
+        "idCategory": 3,
+        "category": "3. Commercial",
+        "order": 3,
+        "active": true,
+        "isActive": true,
+        "created_datetime": "2022-10-08T07:15:56.830Z",
+        "upodated_datetime": "2022-10-11T06:17:35.900Z"
+      },
+      "refId": 25
+    },
+    {
+      "idDetail": 17,
+      "detail": "เครื่องจักร",
+      "idCategory": 7,
+      "order": 17,
+      "active": true,
+      "isActive": true,
+      "created_datetime": "2022-10-08T07:31:14.080Z",
+      "updated_datetime": "2023-05-03T07:32:42.354Z",
+      "category": {
+        "idCategory": 7,
+        "category": "5. Machine",
+        "order": 5,
+        "active": true,
+        "isActive": true,
+        "created_datetime": "2023-09-07T12:10:44.300Z",
+        "upodated_datetime": "2023-09-07T12:10:44.300Z"
+      },
+      "refId": 17
+    },
+    {
+      "idDetail": 22,
+      "detail": "โรงเรียน",
+      "idCategory": 3,
+      "order": 22,
+      "active": true,
+      "isActive": true,
+      "created_datetime": "2022-10-08T07:31:14.083Z",
+      "updated_datetime": "2023-05-03T07:32:42.355Z",
+      "category": {
+        "idCategory": 3,
+        "category": "3. Commercial",
+        "order": 3,
+        "active": true,
+        "isActive": true,
+        "created_datetime": "2022-10-08T07:15:56.830Z",
+        "upodated_datetime": "2022-10-11T06:17:35.900Z"
+      },
+      "refId": 22
+    },
+    {
+      "idDetail": 23,
+      "detail": "โรงภาพยนตร์",
+      "idCategory": 3,
+      "order": 23,
+      "active": true,
+      "isActive": true,
+      "created_datetime": "2022-10-08T07:31:14.084Z",
+      "updated_datetime": "2023-05-03T07:32:42.355Z",
+      "category": {
+        "idCategory": 3,
+        "category": "3. Commercial",
+        "order": 3,
+        "active": true,
+        "isActive": true,
+        "created_datetime": "2022-10-08T07:15:56.830Z",
+        "upodated_datetime": "2022-10-11T06:17:35.900Z"
+      },
+      "refId": 23
+    },
+    {
+      "idDetail": 8,
+      "detail": "โรงแรม",
+      "idCategory": 3,
+      "order": 8,
+      "active": true,
+      "isActive": true,
+      "created_datetime": "2022-10-08T07:31:14.076Z",
+      "updated_datetime": "2023-05-03T07:32:42.346Z",
+      "category": {
+        "idCategory": 3,
+        "category": "3. Commercial",
+        "order": 3,
+        "active": true,
+        "isActive": true,
+        "created_datetime": "2022-10-08T07:15:56.830Z",
+        "upodated_datetime": "2022-10-11T06:17:35.900Z"
+      },
+      "refId": 8
+    },
+    {
+      "idDetail": 6,
+      "detail": "โรงงาน",
+      "idCategory": 4,
+      "order": 6,
+      "active": true,
+      "isActive": true,
+      "created_datetime": "2022-10-08T07:31:14.075Z",
+      "updated_datetime": "2023-05-03T07:32:42.348Z",
+      "category": {
+        "idCategory": 4,
+        "category": "4. Industrial",
+        "order": 4,
+        "active": true,
+        "isActive": true,
+        "created_datetime": "2022-10-08T07:16:07.440Z",
+        "upodated_datetime": "2022-10-11T06:17:35.900Z"
+      },
+      "refId": 6
+    },
+    {
+      "idDetail": 1,
+      "detail": "บ้านเดี่ยว",
+      "idCategory": 2,
+      "order": 1,
+      "active": true,
+      "isActive": true,
+      "created_datetime": "2022-10-08T07:31:14.064Z",
+      "updated_datetime": "2023-05-03T07:32:42.347Z",
+      "category": {
+        "idCategory": 2,
+        "category": "2. Residential",
+        "order": 2,
+        "active": true,
+        "isActive": true,
+        "created_datetime": "2022-10-08T07:15:46.545Z",
+        "upodated_datetime": "2022-10-11T06:17:35.900Z"
+      },
+      "refId": 1
+    },
+    {
+      "idDetail": 7,
+      "detail": "สำนักงาน",
+      "idCategory": 3,
+      "order": 7,
+      "active": true,
+      "isActive": true,
+      "created_datetime": "2023-02-10T10:13:05.184Z",
+      "updated_datetime": "2023-05-03T07:32:42.351Z",
+      "category": {
+        "idCategory": 3,
+        "category": "3. Commercial",
+        "order": 3,
+        "active": true,
+        "isActive": true,
+        "created_datetime": "2022-10-08T07:15:56.830Z",
+        "upodated_datetime": "2022-10-11T06:17:35.900Z"
+      },
+      "refId": 7
+    },
+    {
+      "idDetail": 9,
+      "detail": "ศูนย์การค้า",
+      "idCategory": 3,
+      "order": 9,
+      "active": true,
+      "isActive": true,
+      "created_datetime": "2022-10-08T07:31:14.076Z",
+      "updated_datetime": "2023-05-03T07:32:42.352Z",
+      "category": {
+        "idCategory": 3,
+        "category": "3. Commercial",
+        "order": 3,
+        "active": true,
+        "isActive": true,
+        "created_datetime": "2022-10-08T07:15:56.830Z",
+        "upodated_datetime": "2022-10-11T06:17:35.900Z"
+      },
+      "refId": 9
+    },
+    {
+      "idDetail": 13,
+      "detail": "อพาร์ทเม้นท์",
+      "idCategory": 3,
+      "order": 13,
+      "active": true,
+      "isActive": true,
+      "created_datetime": "2023-02-12T16:36:46.732Z",
+      "updated_datetime": "2023-05-03T07:32:42.353Z",
+      "category": {
+        "idCategory": 3,
+        "category": "3. Commercial",
+        "order": 3,
+        "active": true,
+        "isActive": true,
+        "created_datetime": "2022-10-08T07:15:56.830Z",
+        "upodated_datetime": "2022-10-11T06:17:35.900Z"
+      },
+      "refId": 13
+    },
+    {
+      "idDetail": 12,
+      "detail": "รีสอร์ท",
+      "idCategory": 3,
+      "order": 12,
+      "active": true,
+      "isActive": true,
+      "created_datetime": "2022-10-08T07:31:14.078Z",
+      "updated_datetime": "2023-05-03T07:32:42.352Z",
+      "category": {
+        "idCategory": 3,
+        "category": "3. Commercial",
+        "order": 3,
+        "active": true,
+        "isActive": true,
+        "created_datetime": "2022-10-08T07:15:56.830Z",
+        "upodated_datetime": "2022-10-11T06:17:35.900Z"
+      },
+      "refId": 12
+    },
+    {
+      "idDetail": 14,
+      "detail": "โกดัง",
+      "idCategory": 4,
+      "order": 14,
+      "active": true,
+      "isActive": true,
+      "created_datetime": "2022-10-08T07:31:14.079Z",
+      "updated_datetime": "2023-05-03T07:32:42.353Z",
+      "category": {
+        "idCategory": 4,
+        "category": "4. Industrial",
+        "order": 4,
+        "active": true,
+        "isActive": true,
+        "created_datetime": "2022-10-08T07:16:07.440Z",
+        "upodated_datetime": "2022-10-11T06:17:35.900Z"
+      },
+      "refId": 14
+    },
+    {
+      "idDetail": 15,
+      "detail": "ห้องแถว",
+      "idCategory": 2,
+      "order": 15,
+      "active": true,
+      "isActive": true,
+      "created_datetime": "2022-10-08T07:31:14.079Z",
+      "updated_datetime": "2023-05-03T07:32:42.353Z",
+      "category": {
+        "idCategory": 2,
+        "category": "2. Residential",
+        "order": 2,
+        "active": true,
+        "isActive": true,
+        "created_datetime": "2022-10-08T07:15:46.545Z",
+        "upodated_datetime": "2022-10-11T06:17:35.900Z"
+      },
+      "refId": 15
+    },
+    {
+      "idDetail": 18,
+      "detail": "ร้านอาหาร",
+      "idCategory": 3,
+      "order": 18,
+      "active": true,
+      "isActive": true,
+      "created_datetime": "2022-10-08T07:31:14.081Z",
+      "updated_datetime": "2023-05-03T07:32:42.354Z",
+      "category": {
+        "idCategory": 3,
+        "category": "3. Commercial",
+        "order": 3,
+        "active": true,
+        "isActive": true,
+        "created_datetime": "2022-10-08T07:15:56.830Z",
+        "upodated_datetime": "2022-10-11T06:17:35.900Z"
+      },
+      "refId": 18
+    },
+    {
+      "idDetail": 21,
+      "detail": "โรงพยาบาล",
+      "idCategory": 3,
+      "order": 21,
+      "active": true,
+      "isActive": true,
+      "created_datetime": "2022-10-08T07:31:14.083Z",
+      "updated_datetime": "2023-05-03T07:32:42.355Z",
+      "category": {
+        "idCategory": 3,
+        "category": "3. Commercial",
+        "order": 3,
+        "active": true,
+        "isActive": true,
+        "created_datetime": "2022-10-08T07:15:56.830Z",
+        "upodated_datetime": "2022-10-11T06:17:35.900Z"
+      },
+      "refId": 21
+    },
+    {
+      "idDetail": 26,
+      "detail": "ทาวน์โฮม",
+      "idCategory": 2,
+      "order": 26,
+      "active": true,
+      "isActive": true,
+      "created_datetime": "2023-02-12T16:36:14.319Z",
+      "updated_datetime": "2023-05-03T07:32:42.356Z",
+      "category": {
+        "idCategory": 2,
+        "category": "2. Residential",
+        "order": 2,
+        "active": true,
+        "isActive": true,
+        "created_datetime": "2022-10-08T07:15:46.545Z",
+        "upodated_datetime": "2022-10-11T06:17:35.900Z"
+      },
+      "refId": 26
+    },
+    {
+      "idDetail": 2,
+      "detail": "ทาวน์เฮ้าส์",
+      "idCategory": 2,
+      "order": 2,
+      "active": true,
+      "isActive": true,
+      "created_datetime": "2022-10-08T07:31:14.071Z",
+      "updated_datetime": "2023-05-10T10:06:18.616Z",
+      "category": {
+        "idCategory": 2,
+        "category": "2. Residential",
+        "order": 2,
+        "active": true,
+        "isActive": true,
+        "created_datetime": "2022-10-08T07:15:46.545Z",
+        "upodated_datetime": "2022-10-11T06:17:35.900Z"
+      },
+      "refId": 2
+    },
+    {
+      "idDetail": 3,
+      "detail": "อาคารพาณิชย์",
+      "idCategory": 3,
+      "order": 3,
+      "active": true,
+      "isActive": true,
+      "created_datetime": "2022-10-08T07:31:14.073Z",
+      "updated_datetime": "2023-05-10T10:06:45.917Z",
+      "category": {
+        "idCategory": 3,
+        "category": "3. Commercial",
+        "order": 3,
+        "active": true,
+        "isActive": true,
+        "created_datetime": "2022-10-08T07:15:56.830Z",
+        "upodated_datetime": "2022-10-11T06:17:35.900Z"
+      },
+      "refId": 3
+    },
+    {
+      "idDetail": 4,
+      "detail": "คอนโด",
+      "idCategory": 2,
+      "order": 4,
+      "active": true,
+      "isActive": true,
+      "created_datetime": "2022-10-08T07:31:14.073Z",
+      "updated_datetime": "2023-05-10T10:07:05.610Z",
+      "category": {
+        "idCategory": 2,
+        "category": "2. Residential",
+        "order": 2,
+        "active": true,
+        "isActive": true,
+        "created_datetime": "2022-10-08T07:15:46.545Z",
+        "upodated_datetime": "2022-10-11T06:17:35.900Z"
+      },
+      "refId": 4
+    },
+    {
+      "idDetail": 5,
+      "detail": "ที่ดินเปล่า",
+      "idCategory": 1,
+      "order": 5,
+      "active": true,
+      "isActive": true,
+      "created_datetime": "2022-10-08T07:31:14.074Z",
+      "updated_datetime": "2023-05-10T10:07:40.082Z",
+      "category": {
+        "idCategory": 1,
+        "category": "1. Vacant Land",
+        "order": 1,
+        "active": true,
+        "isActive": true,
+        "created_datetime": "2022-10-08T07:15:32.174Z",
+        "upodated_datetime": "2022-10-11T06:17:35.900Z"
+      },
+      "refId": 5
+    },
+    {
+      "idDetail": 10,
+      "detail": "อื่นๆ",
+      "idCategory": 5,
+      "order": 10,
+      "active": true,
+      "isActive": true,
+      "created_datetime": "2022-10-08T07:31:14.077Z",
+      "updated_datetime": "2023-05-10T10:08:18.515Z",
+      "category": {
+        "idCategory": 5,
+        "category": "6. Other",
+        "order": 6,
+        "active": true,
+        "isActive": true,
+        "created_datetime": "2022-10-08T07:16:17.545Z",
+        "upodated_datetime": "2022-10-11T06:17:35.901Z"
+      },
+      "refId": 10
+    }
+  ],
+  "S3PATH": "https://media.pamco.co.th/",
+  "LOGO_LINK": "https://www.pamco.co.th"
+}

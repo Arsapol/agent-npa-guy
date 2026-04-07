@@ -1,0 +1,414 @@
+{
+  "total": 286,
+  "list": [
+    {
+      "idProperty": 2959,
+      "tag": null,
+      "startDate": "2024-08-20",
+      "endDate": "2044-12-31",
+      "thumbnail": [
+        "images/property-thumbnail/B13477-8953148b37dba.jpeg"
+      ],
+      "illustration": [
+        "images/property-illustration/B13477-f346f4465fe0e.jpeg",
+        "images/property-illustration/B13477-7f7a6fd9645d5.jpeg",
+        "images/property-illustration/B13477-d4d95bb9e5946.jpeg",
+        "images/property-illustration/B13477-cdd342880130e.jpeg"
+      ],
+      "schedule": null,
+      "map": [
+        "images/property-map/B13477-3702c857c6675.jpeg"
+      ],
+      "isApprove": true,
+      "created_datetime": "2024-08-19T10:00:33+07:00",
+      "updated_datetime": "2024-08-19T10:00:33+07:00",
+      "slug": "b13477",
+      "qrcode": "bbfa01d0450223234cd7a5ac9480c836594e210a",
+      "livingRoom": "",
+      "bedRoom": "",
+      "parlor": "",
+      "kitchen": "",
+      "bathRoom": "",
+      "parking": "",
+      "floor": "12",
+      "investment": "",
+      "noteAsset": null,
+      "nearBy": [
+        {
+          "nearby": "เซ็นทรัล ชิดลม",
+          "distance": "0.65"
+        },
+        {
+          "nearby": "เซ็นทรัล เอ็มบาสซี",
+          "distance": "1.00"
+        },
+        {
+          "nearby": "เกษรอัมรินทร์ ",
+          "distance": "1.10"
+        },
+        {
+          "nearby": "เซ็นทรัลเวิลด์ ",
+          "distance": "1.30"
+        },
+        {
+          "nearby": "โรงพยาบาลบำรุงราษฎร์ อินเตอร์เนชั่นแนล",
+          "distance": "1.50"
+        }
+      ],
+      "googleMap": "<iframe src=\"https://www.google.com/maps/embed?pb=!1m17!1m12!1m3!1d3875.483317937299!2d100.54346507474928!3d13.749701986641972!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m2!1m1!2zMTPCsDQ0JzU4LjkiTiAxMDDCsDMyJzQ1LjciRQ!5e0!3m2!1sth!2sth!4v1733969862725!5m2!1sth!2sth\" width=\"600\" height=\"450\" style=\"border:0;\" allowfullscreen=\"\" loading=\"lazy\" referrerpolicy=\"no-referrer-when-downgrade\"></iframe>",
+      "comment": null,
+      "telAO": "08 2234 8131",
+      "useableArea": "48695.00",
+      "redCase": null,
+      "payDown": null,
+      "legalOff": null,
+      "auctionSite": null,
+      "ref": null,
+      "type": 4,
+      "fileMap": null,
+      "npaProductTitle": "สำนักงาน อาคารเพชรบุรี",
+      "npaProductProvinceId": 10,
+      "npaProductAmphurId": "1037",
+      "npaProductDistrictId": "103704",
+      "npaProductLatitude": "13.749702",
+      "npaProductLongitude": "100.546040",
+      "npaProductArea": "1603.00",
+      "idMarket": "B13477",
+      "idDetail": 7,
+      "nfr": "",
+      "area": "0004-0-03.0",
+      "landid": "ฉ.1293",
+      "houseid": "1101",
+      "moo": "",
+      "soi": "",
+      "hgroup": "",
+      "street": "เพชรบุรีตัดใหม่",
+      "searchArea": "1603.00",
+      "checker": true,
+      "titleThumbnail": [
+        "B13477.jpg"
+      ],
+      "titleIllustration": [
+        "B13477-1.jpg",
+        "B13477-4.jpg",
+        "B13477-3.jpg",
+        "B13477-5.jpg"
+      ],
+      "video": "",
+      "posterVideo": "",
+      "posterVideoTitle": "",
+      "NpaApprisal": null,
+      "NpaConProp": null,
+      "detail": {
+        "idDetail": 7,
+        "detail": "สำนักงาน",
+        "idCategory": 3,
+        "order": 7,
+        "active": true,
+        "isActive": true,
+        "created_datetime": "2023-02-10T10:13:05.184Z",
+        "updated_datetime": "2023-05-03T07:32:42.351Z"
+      },
+      "lowprice": [
+        {
+          "lowprice": "2659000000",
+          "active": true,
+          "noPrice": false,
+          "noPriceNote": null,
+          "checker": true
+        }
+      ],
+      "idEvent": [],
+      "statusDetail": [
+        {
+          "noh": "00",
+          "checker": true
+        }
+      ],
+      "Region": "กรุงเทพมหานคร",
+      "provinceNameTh": "กรุงเทพมหานคร",
+      "districtNameTh": "ราชเทวี",
+      "subDistrictNameTh": "มักกะสัน"
+    },
+    {
+      "idProperty": 3566,
+      "tag": null,
+      "startDate": "2023-09-25",
+      "endDate": "2044-12-31",
+      "thumbnail": [
+        "images/property-thumbnail/B13246-3a76d48ea5809.jpeg"
+      ],
+      "illustration": [
+        "images/property-illustration/B13246-9d9cb174562d1.jpeg",
+        "images/property-illustration/B13246-eb203bbdf53f5.jpeg",
+        "images/property-illustration/B13246-0b2a672f62f3b.jpeg"
+      ],
+      "schedule": null,
+      "map": [
+        "images/property-map/B13246-721970b9c38a2.jpeg"
+      ],
+      "isApprove": true,
+      "created_datetime": "2025-11-10T07:00:00+07:00",
+      "updated_datetime": "2025-11-10T07:00:00+07:00",
+      "slug": "p00831",
+      "qrcode": "eb8182d058fff3ecaa057a65e1a3588eab6951d5a4c141e2156468872d967d52",
+      "livingRoom": "",
+      "bedRoom": "",
+      "parlor": "",
+      "kitchen": "",
+      "bathRoom": "",
+      "parking": "",
+      "floor": "5",
+      "investment": "",
+      "noteAsset": null,
+      "nearBy": [
+        {
+          "nearby": "โรงพยาบาลบำรุงราษฎร์",
+          "distance": "2.20"
+        },
+        {
+          "nearby": "BTS สถานีรถไฟฟ้าชิดลม ",
+          "distance": "2.40"
+        },
+        {
+          "nearby": "เซ็นทรัล เอ็มบาสซี",
+          "distance": "2.50"
+        },
+        {
+          "nearby": "เซ็นทรัลเวิลด์",
+          "distance": "2.60"
+        },
+        {
+          "nearby": "",
+          "distance": ""
+        }
+      ],
+      "googleMap": "<iframe src=\"https://www.google.com/maps/embed?pb=!1m17!1m12!1m3!1d3875.445048832889!2d100.54392607430026!3d13.752013986639868!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m2!1m1!2zMTPCsDQ1JzA3LjMiTiAxMDDCsDMyJzQ3LjQiRQ!5e0!3m2!1sth!2sth!4v1695795805529!5m2!1sth!2sth\" width=\"600\" height=\"450\" style=\"border:0;\" allowfullscreen=\"\" loading=\"lazy\" referrerpolicy=\"no-referrer-when-downgrade\"></iframe>",
+      "comment": null,
+      "telAO": "08 0050 2166",
+      "useableArea": "1068.00",
+      "redCase": null,
+      "payDown": null,
+      "legalOff": null,
+      "auctionSite": null,
+      "ref": null,
+      "type": 3,
+      "fileMap": null,
+      "npaProductTitle": "อาคารพาณิชย์ ศูนย์การค้าเมโทร",
+      "npaProductProvinceId": 10,
+      "npaProductAmphurId": "1014",
+      "npaProductDistrictId": "101401",
+      "npaProductLatitude": "13.752014",
+      "npaProductLongitude": "100.546501",
+      "npaProductArea": "36.00",
+      "idMarket": "P00831",
+      "idDetail": 3,
+      "nfr": "",
+      "area": "0000-0-36.0",
+      "landid": "ฉ.11114, 11115, 11116",
+      "houseid": "1091/163-165",
+      "moo": "",
+      "soi": "เพชรบุรี 35(ศูนย์การค้าเมโทร)",
+      "hgroup": "",
+      "street": "เพชรบุรี",
+      "searchArea": "36.00",
+      "checker": true,
+      "titleThumbnail": [
+        "B13246-01.jpg"
+      ],
+      "titleIllustration": [
+        "B13246-02.jpg",
+        "B13246-03.jpg",
+        "B13246-04.jpg"
+      ],
+      "video": "",
+      "posterVideo": "",
+      "posterVideoTitle": "",
+      "NpaApprisal": null,
+      "NpaConProp": null,
+      "detail": {
+        "idDetail": 3,
+        "detail": "อาคารพาณิชย์",
+        "idCategory": 3,
+        "order": 3,
+        "active": true,
+        "isActive": true,
+        "created_datetime": "2022-10-08T07:31:14.073Z",
+        "updated_datetime": "2023-05-10T10:06:45.917Z"
+      },
+      "lowprice": [
+        {
+          "lowprice": "43100000",
+          "active": true,
+          "noPrice": false,
+          "noPriceNote": null,
+          "checker": true
+        }
+      ],
+      "idEvent": [
+        {
+          "priceSp1": "39952000",
+          "activePrice": true,
+          "active": true,
+          "startDate": "2026-03-02",
+          "endDate": "2026-05-31",
+          "noteSale": null,
+          "checker": true
+        }
+      ],
+      "statusDetail": [
+        {
+          "noh": "00",
+          "checker": true
+        }
+      ],
+      "Region": "กรุงเทพมหานคร",
+      "provinceNameTh": "กรุงเทพมหานคร",
+      "districtNameTh": "พญาไท",
+      "subDistrictNameTh": "สามเสนใน"
+    },
+    {
+      "idProperty": 3567,
+      "tag": null,
+      "startDate": "2023-04-11",
+      "endDate": "2044-12-31",
+      "thumbnail": [
+        "images/property-thumbnail/B13070-083e6d932e5fc.jpeg"
+      ],
+      "illustration": [
+        "images/property-illustration/B13070-7366eaac74d23.jpeg",
+        "images/property-illustration/B13070-9e713c9dcd80e.jpeg",
+        "images/property-illustration/B13070-a75eb6aa2cde8.jpeg",
+        "images/property-illustration/B13070-633090e434f55.jpeg"
+      ],
+      "schedule": null,
+      "map": [
+        "images/property-map/B13070-d3b684208e876.jpeg"
+      ],
+      "isApprove": true,
+      "created_datetime": "2025-11-10T07:00:00+07:00",
+      "updated_datetime": "2025-11-10T07:00:00+07:00",
+      "slug": "p00809",
+      "qrcode": "d3f44ee9697945272220e2cf6434b9d2fca9380ea1a4b4fdd1a8494b4be7fab0",
+      "livingRoom": "",
+      "bedRoom": "",
+      "parlor": "",
+      "kitchen": "",
+      "bathRoom": "",
+      "parking": "",
+      "floor": "8",
+      "investment": "",
+      "noteAsset": null,
+      "nearBy": [
+        {
+          "nearby": "วัดนิมมานรดี พระอารามหลวง",
+          "distance": "1.20"
+        },
+        {
+          "nearby": "โลตัส บางแค",
+          "distance": "1.70"
+        },
+        {
+          "nearby": "ตลาดบางแค",
+          "distance": "3.20"
+        },
+        {
+          "nearby": "MRT สถานีหลักสอง",
+          "distance": "3.30"
+        },
+        {
+          "nearby": "เดอะมอลล์ บางแค",
+          "distance": "3.50"
+        },
+        {
+          "nearby": "",
+          "distance": null
+        }
+      ],
+      "googleMap": "<iframe src=\"https://www.google.com/maps/embed?pb=!1m17!1m12!1m3!1d3876.21202021576!2d100.41918507495679!3d13.705604986681482!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m2!1m1!2zMTPCsDQyJzIwLjIiTiAxMDDCsDI1JzE4LjMiRQ!5e0!3m2!1sth!2ssg!4v1685009259211!5m2!1sth!2ssg\" width=\"600\" height=\"450\" style=\"border:0;\" allowfullscreen=\"\" loading=\"lazy\" referrerpolicy=\"no-referrer-when-downgrade\"></iframe>",
+      "comment": "มีการปรับปรุงค่าใช้จ่าย",
+      "telAO": "08 0043 9546",
+      "useableArea": "27.76",
+      "redCase": null,
+      "payDown": null,
+      "legalOff": null,
+      "auctionSite": null,
+      "ref": null,
+      "type": 3,
+      "fileMap": null,
+      "npaProductTitle": "คอนโด เดอะนิช ไอดี บางแค เฟส 1",
+      "npaProductProvinceId": 10,
+      "npaProductAmphurId": "1040",
+      "npaProductDistrictId": "104001",
+      "npaProductLatitude": "13.705605",
+      "npaProductLongitude": "100.421760",
+      "npaProductArea": "0.00",
+      "idMarket": "P00809",
+      "idDetail": 4,
+      "nfr": "",
+      "area": "0000-0-00.0",
+      "landid": "กรรมสิทธิ์ห้องชุดเลขที่ 862/194",
+      "houseid": "ห้องชุดเลขที่ 862/194 ชั้น8 อาคารเอ",
+      "moo": "",
+      "soi": "",
+      "hgroup": "อาคารชุด เดอะนิช ไอดี บางแค เฟส 1",
+      "street": "เทอดไท",
+      "searchArea": null,
+      "checker": true,
+      "titleThumbnail": [
+        "B13070-083e6d932e5fc.jpeg"
+      ],
+      "titleIllustration": [
+        "B13070-02.jpeg",
+        "B13070-03.jpeg",
+        "B13070-04.jpeg",
+        "B13070-01.jpeg"
+      ],
+      "video": "",
+      "posterVideo": "",
+      "posterVideoTitle": "",
+      "NpaApprisal": null,
+      "NpaConProp": null,
+      "detail": {
+        "idDetail": 4,
+        "detail": "คอนโด",
+        "idCategory": 2,
+        "order": 4,
+        "active": true,
+        "isActive": true,
+        "created_datetime": "2022-10-08T07:31:14.073Z",
+        "updated_datetime": "2023-05-10T10:07:05.610Z"
+      },
+      "lowprice": [
+        {
+          "lowprice": "1499000",
+          "active": true,
+          "noPrice": false,
+          "noPriceNote": null,
+          "checker": true
+        }
+      ],
+      "idEvent": [
+        {
+          "priceSp1": "1314000",
+          "activePrice": true,
+          "active": true,
+          "startDate": "2026-03-02",
+          "endDate": "2026-05-31",
+          "noteSale": null,
+          "checker": true
+        }
+      ],
+      "statusDetail": [
+        {
+          "noh": "00",
+          "checker": true
+        }
+      ],
+      "Region": "กรุงเทพมหานคร",
+      "provinceNameTh": "กรุงเทพมหานคร",
+      "districtNameTh": "บางแค",
+      "subDistrictNameTh": "บางแค"
+    }
+  ]
+}

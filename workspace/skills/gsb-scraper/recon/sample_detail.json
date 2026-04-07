@@ -1,0 +1,106 @@
+{
+  "asset_type_dev": "npa",
+  "asset_id": "752",
+  "asset_number": "471/348",
+  "asset_group_id": "GSBCD202100008",
+  "asset_type_id": 343,
+  "asset_group_id_npa": "BKK620093",
+  "province_code": "10",
+  "district_code": "22",
+  "sub_district_code": "01",
+  "asset_type_desc": "คอนโด/อาคารชุด/ห้องชุด",
+  "building_no": "1",
+  "floor_no": "23",
+  "asset_name": "แบงค์คอก ฮอไรซอน เพชรเกษม",
+  "square_meter": 30.8,
+  "square_wa": null,
+  "builded_year": null,
+  "alley": "-",
+  "village_head": "แบงค์คอก ฮอไรซอน เพชรเกษม",
+  "road": "เพชรเกษม",
+  "latitude": "13.713850",
+  "longitude": "100.441218",
+  "sub_district_name": "แขวงบางหว้า",
+  "district_name": "เขตภาษีเจริญ",
+  "province_name": "กรุงเทพมหานคร",
+  "remark": null,
+  "is_public": "Y",
+  "current_offer_price": 1575000,
+  "xtype": "promotion",
+  "ind_flag": "N",
+  "xprice_normal": 2250000,
+  "events": [
+    {
+      "event_id": 190,
+      "group_id": 629,
+      "promo_id": 249,
+      "id": 121922,
+      "event_name": "Big Mega Sale บ้านออมสิน โปรแรง กระแทกใจ ลดสูงสูด 70% ",
+      "location": "ธนาคารออมสินทุกสาขาทั่วประเทศ",
+      "url_info": null,
+      "period": "03 เม.ย. 2569 - 30 ธ.ค. 2569",
+      "start_date": "2026-04-03T00:00:00Z",
+      "starting": true,
+      "promotion_name": "งาน Big Mega Sale บ้านออมสิน โปรแรง กระแทกใจ ลดสูงสูด 70% ตลอดทั้งปี ส่วน 1",
+      "group_name": "อายุทรัพย์ 6 ปี - ไม่เกิน 9 ปี",
+      "is_special_price2": "N",
+      "promotion_type": "1",
+      "booking_price": 20000,
+      "booking_price2": null,
+      "special_price": 1575000,
+      "special_price2": null,
+      "asset_group_id": "GSBCD202100008",
+      "sell_price": 2250000,
+      "group_booking_price": null,
+      "group_special_price": null,
+      "group_sell_price": null,
+      "total_booking_price": null,
+      "total_special_price": null,
+      "special_condition_remark": null,
+      "sub_group": null,
+      "xprice_normal": 2250000
+    }
+  ],
+  "booking_count": 0,
+  "asset_pdf": null,
+  "asset_image": [
+    {
+      "id": "452143"
+    },
+    {
+      "id": "452144"
+    },
+    {
+      "id": "452145"
+    },
+    {
+      "id": "452146"
+    },
+    {
+      "id": "452147"
+    },
+    {
+      "id": "452148"
+    },
+    {
+      "id": "452149"
+    },
+    {
+      "id": "452143"
+    }
+  ],
+  "asset_map": [
+    {
+      "id": "486315"
+    },
+    {
+      "id": "486316"
+    },
+    {
+      "id": "486317"
+    }
+  ],
+  "panorama_image": [],
+  "deed_info": "หนังสือกรรมสิทธิห้องชุด 471/348",
+  "count_view": "2403"
+}

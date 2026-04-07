@@ -1,0 +1,59 @@
+{
+  "propertyId": "987980",
+  "url": "https://www.ghbhomecenter.com/property-987980",
+  "title": "ขายคอนโด (ปลาทอง94)",
+  "price": "฿ 68,000",
+  "fields": {
+    "รหัสทรัพย์ 1301201301": "1301201301",
+    "ประเภททรัพย์": "คอนโด",
+    "โครงการ": "ปลาทอง94",
+    "26.25 ตร.ม.": "ชั้นที่ 4 จาก 4 ชั้น",
+    "เลขที่โฉนด/นส 3ก.": "28146",
+    "เลขที่": "322/50",
+    "ซอย": "รังสิตซิตี้",
+    "ถนน": "รังสิต-ปทุมธานี",
+    "แขวง/ตำบล": "บางพูน",
+    "เขต/อำเภอ": "เมืองปทุมธานี",
+    "จังหวัด": "ปทุมธานี",
+    "ขอดูทรัพย์": "จองทรัพย์"
+  },
+  "gps": {
+    "lat": 13.9886,
+    "lon": 100.578
+  },
+  "images": [
+    "https://www.ghbhomecenter.com/v3/property/api/Media/210208397738697778",
+    "https://www.ghbhomecenter.com/v3/property/api/Media/21030941811451973",
+    "https://www.ghbhomecenter.com/v3/property/api/Media/22031676032055978",
+    "https://www.ghbhomecenter.com/v3/property/api/Media/22081628311924982",
+    "https://www.ghbhomecenter.com/v3/property/api/Media/23112308395902540",
+    "https://www.ghbhomecenter.com/v3/property/api/Media/24011702511297893",
+    "https://www.ghbhomecenter.com/v3/property/api/Media/24070554100566899",
+    "https://www.ghbhomecenter.com/v3/property/api/Media/25042306100839516",
+    "https://www.ghbhomecenter.com/v3/property/api/Media/26022592118321197",
+    "https://www.ghbhomecenter.com/v3/property/api/Media/26033188073453970",
+    "https://www.ghbhomecenter.com/v3/property/api/Media/260331880734539704",
+    "https://www.ghbhomecenter.com/v3/property/api/Media/26040770068883580"
+  ],
+  "meta": {
+    "viewport": "width=device-width, initial-scale=1.0",
+    "robots": "index, follow",
+    "description": "ขายด่วนคอนโด ปลาทอง94 4 ชั้น 26.25 ตร.ม. ซอย รังสิตซิตี้ ถนน รังสิต-ปทุมธานี บางพูน เมืองปทุมธานี ปทุมธานี จากธนาคารอาคารสงเคราะห์ ราคาดี เงื่อนไขพิเศษ",
+    "keywords": "บ้านมือสอง, GHB, ธนาคารอาคารสงเคราะห์",
+    "og:type": "article",
+    "og:title": "ขายคอนโด โครงการปลาทอง94 26.25 ตร.ม. ชั้น 4 รังสิตซิตี้ ร...",
+    "og:description": "ขายด่วนคอนโด ปลาทอง94 4 ชั้น 26.25 ตร.ม. ซอย รังสิตซิตี้ ถนน รังสิต-ปทุมธานี บางพูน เมืองปทุมธานี ปทุมธานี จากธนาคารอาคารสงเคราะห์ ราคาดี เงื่อนไขพิเศษ",
+    "og:image": "https://www.ghbhomecenter.com/v3/property/api/Media/260331880734539704",
+    "og:url": "https://www.ghbhomecenter.com/property-987980",
+    "og:site_name": "GHB Home Center",
+    "og:locale": "th_TH",
+    "twitter:card": "summary_large_image",
+    "twitter:title": "ขายคอนโด โครงการปลาทอง94 26.25 ตร.ม. ชั้น 4 รังสิตซิตี้ ร...",
+    "twitter:description": "ขายด่วนคอนโด ปลาทอง94 4 ชั้น 26.25 ตร.ม. ซอย รังสิตซิตี้ ถนน รังสิต-ปทุมธานี บางพูน เมืองปทุมธานี ปทุมธานี จากธนาคารอาคารสงเคราะห์ ราคาดี เงื่อนไขพิเศษ",
+    "twitter:image": "https://www.ghbhomecenter.com/v3/property/api/Media/260331880734539704",
+    "theme-color": "#ffffff",
+    "format-detection": "telephone=no",
+    "csrf-token": "6y5k47Azy7FZtnAq7QqMB2aoLRZPZ12iayOVKvTs",
+    "facebook-domain-verification": "n81rel8hssu80mt8wz4umuumem61h3"
+  }
+}
