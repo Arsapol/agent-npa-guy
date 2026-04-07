@@ -1,0 +1,391 @@
+{
+  "s": "y",
+  "m": "Success",
+  "d": [
+    {
+      "province_id": 2,
+      "title": "กระบี่",
+      "area": "SOU"
+    },
+    {
+      "province_id": 1,
+      "title": "กรุงเทพมหานคร",
+      "area": "BKK"
+    },
+    {
+      "province_id": 3,
+      "title": "กาญจนบุรี",
+      "area": "WES"
+    },
+    {
+      "province_id": 4,
+      "title": "กาฬสินธุ์",
+      "area": "NORE"
+    },
+    {
+      "province_id": 5,
+      "title": "กำแพงเพชร",
+      "area": "NOR"
+    },
+    {
+      "province_id": 6,
+      "title": "ขอนแก่น",
+      "area": "NORE"
+    },
+    {
+      "province_id": 7,
+      "title": "จันทบุรี",
+      "area": "EAS"
+    },
+    {
+      "province_id": 8,
+      "title": "ฉะเชิงเทรา",
+      "area": "CEN"
+    },
+    {
+      "province_id": 9,
+      "title": "ชลบุรี",
+      "area": "EAS"
+    },
+    {
+      "province_id": 10,
+      "title": "ชัยนาท",
+      "area": "CEN"
+    },
+    {
+      "province_id": 11,
+      "title": "ชัยภูมิ",
+      "area": "NORE"
+    },
+    {
+      "province_id": 12,
+      "title": "ชุมพร",
+      "area": "SOU"
+    },
+    {
+      "province_id": 15,
+      "title": "ตรัง",
+      "area": "SOU"
+    },
+    {
+      "province_id": 16,
+      "title": "ตราด",
+      "area": "EAS"
+    },
+    {
+      "province_id": 17,
+      "title": "ตาก",
+      "area": "NOR"
+    },
+    {
+      "province_id": 18,
+      "title": "นครนายก",
+      "area": "CEN"
+    },
+    {
+      "province_id": 19,
+      "title": "นครปฐม",
+      "area": "BKK"
+    },
+    {
+      "province_id": 20,
+      "title": "นครพนม",
+      "area": "NORE"
+    },
+    {
+      "province_id": 21,
+      "title": "นครราชสีมา",
+      "area": "NORE"
+    },
+    {
+      "province_id": 22,
+      "title": "นครศรีธรรมราช",
+      "area": "SOU"
+    },
+    {
+      "province_id": 23,
+      "title": "นครสวรรค์",
+      "area": "NOR"
+    },
+    {
+      "province_id": 24,
+      "title": "นนทบุรี",
+      "area": "BKK"
+    },
+    {
+      "province_id": 25,
+      "title": "นราธิวาส",
+      "area": "SOU"
+    },
+    {
+      "province_id": 26,
+      "title": "น่าน",
+      "area": "NOR"
+    },
+    {
+      "province_id": 77,
+      "title": "บึงกาฬ",
+      "area": "NORE"
+    },
+    {
+      "province_id": 27,
+      "title": "บุรีรัมย์",
+      "area": "NORE"
+    },
+    {
+      "province_id": 28,
+      "title": "ปทุมธานี",
+      "area": "BKK"
+    },
+    {
+      "province_id": 29,
+      "title": "ประจวบคีรีขันธ์",
+      "area": "WES"
+    },
+    {
+      "province_id": 30,
+      "title": "ปราจีนบุรี",
+      "area": "CEN"
+    },
+    {
+      "province_id": 31,
+      "title": "ปัตตานี",
+      "area": "SOU"
+    },
+    {
+      "province_id": 32,
+      "title": "พระนครศรีอยุธยา",
+      "area": "CEN"
+    },
+    {
+      "province_id": 33,
+      "title": "พะเยา",
+      "area": "NOR"
+    },
+    {
+      "province_id": 34,
+      "title": "พังงา",
+      "area": "SOU"
+    },
+    {
+      "province_id": 35,
+      "title": "พัทลุง",
+      "area": "SOU"
+    },
+    {
+      "province_id": 36,
+      "title": "พิจิตร",
+      "area": "NOR"
+    },
+    {
+      "province_id": 37,
+      "title": "พิษณุโลก",
+      "area": "NOR"
+    },
+    {
+      "province_id": 41,
+      "title": "ภูเก็ต",
+      "area": "SOU"
+    },
+    {
+      "province_id": 42,
+      "title": "มหาสารคาม",
+      "area": "NORE"
+    },
+    {
+      "province_id": 43,
+      "title": "มุกดาหาร",
+      "area": "NORE"
+    },
+    {
+      "province_id": 46,
+      "title": "ยะลา",
+      "area": "SOU"
+    },
+    {
+      "province_id": 45,
+      "title": "ยโสธร",
+      "area": "NORE"
+    },
+    {
+      "province_id": 48,
+      "title": "ระนอง",
+      "area": "SOU"
+    },
+    {
+      "province_id": 49,
+      "title": "ระยอง",
+      "area": "EAS"
+    },
+    {
+      "province_id": 50,
+      "title": "ราชบุรี",
+      "area": "WES"
+    },
+    {
+      "province_id": 47,
+      "title": "ร้อยเอ็ด",
+      "area": "NORE"
+    },
+    {
+      "province_id": 51,
+      "title": "ลพบุรี",
+      "area": "CEN"
+    },
+    {
+      "province_id": 52,
+      "title": "ลำปาง",
+      "area": "NOR"
+    },
+    {
+      "province_id": 53,
+      "title": "ลำพูน",
+      "area": "NOR"
+    },
+    {
+      "province_id": 55,
+      "title": "ศรีสะเกษ",
+      "area": "NORE"
+    },
+    {
+      "province_id": 56,
+      "title": "สกลนคร",
+      "area": "NORE"
+    },
+    {
+      "province_id": 57,
+      "title": "สงขลา",
+      "area": "SOU"
+    },
+    {
+      "province_id": 58,
+      "title": "สตูล",
+      "area": "SOU"
+    },
+    {
+      "province_id": 59,
+      "title": "สมุทรปราการ",
+      "area": "BKK"
+    },
+    {
+      "province_id": 60,
+      "title": "สมุทรสงคราม",
+      "area": "CEN"
+    },
+    {
+      "province_id": 61,
+      "title": "สมุทรสาคร",
+      "area": "BKK"
+    },
+    {
+      "province_id": 63,
+      "title": "สระบุรี",
+      "area": "CEN"
+    },
+    {
+      "province_id": 62,
+      "title": "สระแก้ว",
+      "area": "CEN"
+    },
+    {
+      "province_id": 64,
+      "title": "สิงห์บุรี",
+      "area": "CEN"
+    },
+    {
+      "province_id": 66,
+      "title": "สุพรรณบุรี",
+      "area": "CEN"
+    },
+    {
+      "province_id": 67,
+      "title": "สุราษฎร์ธานี",
+      "area": "SOU"
+    },
+    {
+      "province_id": 68,
+      "title": "สุรินทร์",
+      "area": "NORE"
+    },
+    {
+      "province_id": 65,
+      "title": "สุโขทัย",
+      "area": "NOR"
+    },
+    {
+      "province_id": 69,
+      "title": "หนองคาย",
+      "area": "NORE"
+    },
+    {
+      "province_id": 70,
+      "title": "หนองบัวลำภู",
+      "area": "NORE"
+    },
+    {
+      "province_id": 72,
+      "title": "อำนาจเจริญ",
+      "area": "NORE"
+    },
+    {
+      "province_id": 73,
+      "title": "อุดรธานี",
+      "area": "NORE"
+    },
+    {
+      "province_id": 74,
+      "title": "อุตรดิตถ์",
+      "area": "NOR"
+    },
+    {
+      "province_id": 75,
+      "title": "อุทัยธานี",
+      "area": "NOR"
+    },
+    {
+      "province_id": 76,
+      "title": "อุบลราชธานี",
+      "area": "NORE"
+    },
+    {
+      "province_id": 71,
+      "title": "อ่างทอง",
+      "area": "CEN"
+    },
+    {
+      "province_id": 13,
+      "title": "เชียงราย",
+      "area": "NOR"
+    },
+    {
+      "province_id": 14,
+      "title": "เชียงใหม่",
+      "area": "NOR"
+    },
+    {
+      "province_id": 38,
+      "title": "เพชรบุรี",
+      "area": "WES"
+    },
+    {
+      "province_id": 39,
+      "title": "เพชรบูรณ์",
+      "area": "NOR"
+    },
+    {
+      "province_id": 54,
+      "title": "เลย",
+      "area": "NORE"
+    },
+    {
+      "province_id": 40,
+      "title": "แพร่",
+      "area": "NOR"
+    },
+    {
+      "province_id": 44,
+      "title": "แม่ฮ่องสอน",
+      "area": "NOR"
+    }
+  ]
+}

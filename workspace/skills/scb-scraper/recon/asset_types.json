@@ -1,0 +1,27 @@
+{
+  "residential": {
+    "townhouses": "ทาวน์เฮ้าส์",
+    "vacant_land": "ที่ดินว่างเปล่า",
+    "semi_concrete_and_wood": "บ้านครึ่งตึกครึ่งไม้",
+    "homes_with_business|home": "บ้านพร้อมกิจการ",
+    "single_houses": "บ้านเดี่ยว",
+    "duplex_homes": "บ้านแฝด",
+    "condominiums": "ห้องชุด/คอนโดมิเนียม",
+    "bussiness_premises|home": "อาคารพาณิชย์",
+    "home_office|home": "โฮมออฟฟิศ"
+  },
+  "commercial": {
+    "gas_station": "สถานีบริการน้ำมัน",
+    "golf_field": "สนามกอล์ฟ",
+    "bussiness_premises|business": "อาคารพาณิชย์",
+    "office_buildings": "อาคารสำนักงาน",
+    "warehouses": "โกดัง",
+    "factories": "โรงงาน",
+    "school": "โรงเรียน",
+    "hotels": "โรงแรม",
+    "homes_with_business|business": "บ้านพร้อมกิจการ",
+    "building": "อาคาร",
+    "apartment_or_dormitories": "อพาร์ทเม้นท์/หอพัก",
+    "home_office|business": "โฮมออฟฟิศ"
+  }
+}
