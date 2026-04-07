@@ -122,75 +122,14 @@
         "to": null
       },
       "state": {
-        "nextRunAtMs": 1775573532897,
-        "lastRunAtMs": 1775566332878,
-        "lastStatus": "ok",
+        "nextRunAtMs": 1775586691890,
+        "lastRunAtMs": null,
+        "lastStatus": null,
         "lastError": null,
-        "runHistory": [
-          {
-            "runAtMs": 1775501484668,
-            "status": "ok",
-            "durationMs": 12,
-            "error": null
-          },
-          {
-            "runAtMs": 1775508684681,
-            "status": "ok",
-            "durationMs": 13,
-            "error": null
-          },
-          {
-            "runAtMs": 1775515884696,
-            "status": "ok",
-            "durationMs": 18,
-            "error": null
-          },
-          {
-            "runAtMs": 1775523084716,
-            "status": "ok",
-            "durationMs": 21,
-            "error": null
-          },
-          {
-            "runAtMs": 1775530284753,
-            "status": "ok",
-            "durationMs": 48036,
-            "error": null
-          },
-          {
-            "runAtMs": 1775537532795,
-            "status": "ok",
-            "durationMs": 19,
-            "error": null
-          },
-          {
-            "runAtMs": 1775544732820,
-            "status": "ok",
-            "durationMs": 23,
-            "error": null
-          },
-          {
-            "runAtMs": 1775551932846,
-            "status": "ok",
-            "durationMs": 24,
-            "error": null
-          },
-          {
-            "runAtMs": 1775559132871,
-            "status": "ok",
-            "durationMs": 4,
-            "error": null
-          },
-          {
-            "runAtMs": 1775566332878,
-            "status": "ok",
-            "durationMs": 19,
-            "error": null
-          }
-        ]
+        "runHistory": []
       },
-      "createdAtMs": 1775494284668,
-      "updatedAtMs": 1775566332897,
+      "createdAtMs": 1775579491890,
+      "updatedAtMs": 1775579491890,
       "deleteAfterRun": false
     }
   ]
