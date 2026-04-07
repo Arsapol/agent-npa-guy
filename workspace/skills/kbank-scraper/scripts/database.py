@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import Session
@@ -118,7 +118,7 @@ def upsert_properties(
     Upsert KBank properties from list API.
     Returns counts: {new, updated, price_changed, status_changed}
     """
-    now = datetime.now()
+    now = datetime.now(timezone.utc)
     counts = {"new": 0, "updated": 0, "price_changed": 0, "status_changed": 0}
 
     prop_ids = [item.property_id for item in items]

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import Session
@@ -67,7 +67,7 @@ def upsert_properties(
     Detects: new inserts, price changes, sold transitions.
     Returns counts: {new, updated, price_changed, sold, unsold}
     """
-    now = datetime.now()
+    now = datetime.now(timezone.utc)
     counts = {"new": 0, "updated": 0, "price_changed": 0, "sold": 0, "unsold": 0}
 
     # Load existing properties in bulk

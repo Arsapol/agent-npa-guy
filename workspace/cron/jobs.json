@@ -20,8 +20,8 @@
         "to": "1372818654"
       },
       "state": {
-        "nextRunAtMs": 1775523600000,
-        "lastRunAtMs": 1775437200001,
+        "nextRunAtMs": 1775610000000,
+        "lastRunAtMs": 1775523600001,
         "lastStatus": "ok",
         "lastError": null,
         "runHistory": [
@@ -42,11 +42,17 @@
             "status": "ok",
             "durationMs": 60897,
             "error": null
+          },
+          {
+            "runAtMs": 1775523600001,
+            "status": "ok",
+            "durationMs": 39570,
+            "error": null
           }
         ]
       },
       "createdAtMs": 1775234757687,
-      "updatedAtMs": 1775437260898,
+      "updatedAtMs": 1775523639571,
       "deleteAfterRun": false
     },
     {
@@ -68,8 +74,8 @@
         "to": "1372818654"
       },
       "state": {
-        "nextRunAtMs": 1775527200000,
-        "lastRunAtMs": 1775440800001,
+        "nextRunAtMs": 1775613600000,
+        "lastRunAtMs": 1775527200008,
         "lastStatus": "ok",
         "lastError": null,
         "runHistory": [
@@ -84,11 +90,101 @@
             "status": "ok",
             "durationMs": 11684,
             "error": null
+          },
+          {
+            "runAtMs": 1775527200008,
+            "status": "ok",
+            "durationMs": 10825,
+            "error": null
           }
         ]
       },
       "createdAtMs": 1775284843818,
-      "updatedAtMs": 1775440811685,
+      "updatedAtMs": 1775527210833,
+      "deleteAfterRun": false
+    },
+    {
+      "id": "dream",
+      "name": "dream",
+      "enabled": true,
+      "schedule": {
+        "kind": "every",
+        "atMs": null,
+        "everyMs": 7200000,
+        "expr": null,
+        "tz": null
+      },
+      "payload": {
+        "kind": "system_event",
+        "message": "",
+        "deliver": false,
+        "channel": null,
+        "to": null
+      },
+      "state": {
+        "nextRunAtMs": 1775566332875,
+        "lastRunAtMs": 1775559132871,
+        "lastStatus": "ok",
+        "lastError": null,
+        "runHistory": [
+          {
+            "runAtMs": 1775501484668,
+            "status": "ok",
+            "durationMs": 12,
+            "error": null
+          },
+          {
+            "runAtMs": 1775508684681,
+            "status": "ok",
+            "durationMs": 13,
+            "error": null
+          },
+          {
+            "runAtMs": 1775515884696,
+            "status": "ok",
+            "durationMs": 18,
+            "error": null
+          },
+          {
+            "runAtMs": 1775523084716,
+            "status": "ok",
+            "durationMs": 21,
+            "error": null
+          },
+          {
+            "runAtMs": 1775530284753,
+            "status": "ok",
+            "durationMs": 48036,
+            "error": null
+          },
+          {
+            "runAtMs": 1775537532795,
+            "status": "ok",
+            "durationMs": 19,
+            "error": null
+          },
+          {
+            "runAtMs": 1775544732820,
+            "status": "ok",
+            "durationMs": 23,
+            "error": null
+          },
+          {
+            "runAtMs": 1775551932846,
+            "status": "ok",
+            "durationMs": 24,
+            "error": null
+          },
+          {
+            "runAtMs": 1775559132871,
+            "status": "ok",
+            "durationMs": 4,
+            "error": null
+          }
+        ]
+      },
+      "createdAtMs": 1775494284668,
+      "updatedAtMs": 1775559132875,
       "deleteAfterRun": false
     }
   ]

@@ -15,7 +15,7 @@ echo "$(date '+%Y-%m-%d %H:%M:%S') — Starting LED scraper" >> "$LOG_FILE"
 cd "$SCRIPT_DIR"
 
 # Run scraper, save JSON to data directory, skip DB (use --save-to json)
-python main.py \
+python3 main.py \
   --save-to json \
   --max-pages 500 \
   --concurrent 10 \

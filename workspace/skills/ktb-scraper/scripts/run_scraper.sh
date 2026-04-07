@@ -7,7 +7,7 @@ cd "$SCRIPT_DIR"
 
 echo "=== KTB scraper starting at $(date) ==="
 
-python scraper.py \
+python3 scraper.py \
     --province \
     กรุงเทพมหานคร \
     ชลบุรี \

@@ -15,6 +15,12 @@ class Source(str, Enum):
     JAM = "JAM"
     KTB = "KTB"
     KBANK = "KBANK"
+    SCB = "SCB"
+    GSB = "GSB"
+    TTB = "TTB"
+    BAY = "BAY"
+    LH = "LH"
+    GHB = "GHB"
 
 
 class NpaProperty(BaseModel):

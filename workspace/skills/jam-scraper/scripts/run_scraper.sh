@@ -8,4 +8,4 @@ cd "$SCRIPT_DIR"
 echo "=== JAM Scraper ==="
 echo "Time: $(date)"
 
-python scraper.py "$@"
+python3 scraper.py "$@"
