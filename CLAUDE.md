@@ -67,48 +67,29 @@ PostgreSQL: `postgresql://arsapolm@localhost:5432/npa_kb`
 
 ## Skills
 
+> Scraper data is ingested by the Collector agent at `~/.nanobot-npa-collector/`. The skills below are symlinked from Collector for read/query access.
+
+### Analysis Skills
+
 | Skill | Purpose | How to Run |
 |-------|---------|------------|
-| `led-scraper` | Scrape court auction properties from LED.go.th | `python main.py --agency "..." --max-pages 500` |
-| `sam-scraper` | Scrape SAM NPA properties (4,700+) | `./run_scraper.sh` or individual scripts |
-| `bam-scraper` | Scrape BAM NPA properties (15,900+) | `python scraper.py` or `--province กรุงเทพมหานคร` |
-| `jam-scraper` | Scrape JAM NPA properties | `python scraper.py` or `--limit 100` |
-| `scb-scraper` | Scrape SCB NPA properties | `python scraper.py` or `--limit 10` |
-| `gsb-scraper` | Scrape GSB (ออมสิน) NPA properties | `python scraper.py` or `--limit 5` |
-| `ttb-scraper` | Scrape TTB/PAMCO NPA properties | `python scraper.py` or `--limit 10` |
-| `bay-scraper` | Scrape BAY/Krungsri NPA properties | `python scraper.py` or `--limit 10` |
-| `lh-scraper` | Scrape LH Bank NPA properties (HTML) | `python scraper.py` or `--limit 5` |
-| `ghb-scraper` | Scrape GHB (ธอส.) NPA properties | `python scraper.py` or `--limit 5` |
-| `npa-adapter` | Unified query across all 12 providers | `python query.py search --province "กรุงเทพ" --sources LED,BAM,SCB` |
-| `led-query` | Query LED properties by location/price/date | `python query.py search --province "กรุงเทพ"` |
 | `kb` | Temporal knowledge base (LightRAG + PostgreSQL) | `insert_document(content, desc, category, area, source)` |
 | `flood-check` | Flood risk assessment (HIGH/MEDIUM/LOW) | `python flood_check.py --lat 13.95 --lon 100.62` |
 | `location-intel` | BTS/MRT proximity, nearby amenities | `python location.py --lat 13.73 --lon 100.56` |
 | `property-calc` | Acquisition cost, rental yield, break-even | `python calc.py --price 1.8M --sqm 35 ...` |
 | `zoning-check` | Bangkok zoning rules (ผังเมือง พ.ศ. 2556) | `python zoning.py --lat 13.73 --lon 100.56` |
-| `market-checker` | Verify NPA prices against 4 market sources + bulk scrape all listings | See below |
+| `market-checker` | Verify NPA prices against 4 market sources (single lookup) | `python market_checker.py "project name" --no-ddproperty` |
 | `npa-screener` | Screen NPA condos against investment criteria framework | See `SKILL.md` for scoring pipeline |
 | `web-search` | Market research query patterns | Templates only, no scripts |
 | `npa-journal` | Daily analysis journal & reflections | Write to `thoughts/YYYY-MM-DD.md` |
 | `agent-comm` | Message other agents (Ada, Sentinel, Reviewer) | `bash ask_agent.sh "<msg>" "<workspace>"` |
 
-### market-checker sub-commands
+### Query Tools (symlinked from Collector)
 
-```bash
-# Single project lookup (existing)
-python market_checker.py "15 sukhumvit residences" --no-ddproperty
-
-# Bulk scrape all listings (NEW)
-python propertyhub_scraper.py                          # GraphQL bulk, ~30min
-python hipflat_scraper.py --discover                   # Province directory crawl, ~12min
-python zmyhome_scraper.py --discover --discover-rent   # Browse pages, ~2min
-python ddproperty_scraper.py --discover                # JSON API + Camoufox, ~6min
-
-# Resume after crash
-python hipflat_scraper.py --discover --force           # Re-scrape everything
-python zmyhome_scraper.py --discover --start-page 100  # Resume from page 100
-python ddproperty_scraper.py --discover --start-page 50
-```
+| Skill | Purpose | How to Run |
+|-------|---------|------------|
+| `npa-adapter` | Unified query across all 12 providers | `python query.py search --province "กรุงเทพ" --sources LED,BAM,SCB` |
+| `led-query` | Query LED properties by location/price/date | `python query.py search --province "กรุงเทพ"` |
 
 ## Scheduled Jobs (launchd)
 
