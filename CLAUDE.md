@@ -91,13 +91,6 @@ PostgreSQL: `postgresql://arsapolm@localhost:5432/npa_kb`
 | `npa-adapter` | Unified query across all 12 providers | `python query.py search --province "กรุงเทพ" --sources LED,BAM,SCB` |
 | `led-query` | Query LED properties by location/price/date | `python query.py search --province "กรุงเทพ"` |
 
-## Scheduled Jobs (launchd)
-
-| Job | Schedule | Script |
-|-----|----------|--------|
-| LED scraper | Daily 06:00 | `com.npa-guy.led-scraper` |
-| SAM scraper | Daily 07:40 | `com.npa-guy.sam-scraper` |
-
 ## Core Rules
 
 1. **Location first** — cheap property in bad location = not a deal
