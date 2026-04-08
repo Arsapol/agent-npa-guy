@@ -153,50 +153,16 @@ def analyze_area(conn, lat: float, lon: float, name: str, radius_m: int = RADIUS
         result.ph_total_for_sale = sum(r.get("listing_count_sale") or 0 for r in ph_rows)
         result.ph_total_for_rent = sum(r.get("listing_count_rent") or 0 for r in ph_rows)
 
-    # --- 3. NPA concentration (all providers with GPS) ---
-    npa_queries = [
-        ("SAM", """
-            SELECT 'SAM' as src, sam_id::text as id, price_baht as price
-            FROM sam_properties
-            WHERE type_name = 'ห้องชุดพักอาศัย'
-              AND lat BETWEEN %s AND %s AND lng BETWEEN %s AND %s
-        """, "lat", "lng"),
-        ("BAM", """
-            SELECT 'BAM' as src, asset_no::text as id, COALESCE(discount_price, sell_price) as price
-            FROM bam_properties
-            WHERE asset_type = 'ห้องชุดพักอาศัย'
-              AND lat BETWEEN %s AND %s AND lon BETWEEN %s AND %s
-        """, "lat", "lon"),
-        ("JAM", """
-            SELECT 'JAM' as src, asset_id::text as id, COALESCE(discount, selling) as price
-            FROM jam_properties
-            WHERE type_asset_th = 'คอนโดมิเนียม'
-              AND lat BETWEEN %s AND %s AND lon BETWEEN %s AND %s
-        """, "lat", "lon"),
-        ("KTB", """
-            SELECT 'KTB' as src, coll_grp_id::text as id, COALESCE(nml_price, price) as price
-            FROM ktb_properties
-            WHERE coll_type_name = 'คอนโดมีเนียม/ห้องชุด'
-              AND lat BETWEEN %s AND %s AND lon BETWEEN %s AND %s
-        """, "lat", "lon"),
-        ("KBANK", """
-            SELECT 'KBANK' as src, property_id::text as id, COALESCE(promotion_price, sell_price) as price
-            FROM kbank_properties
-            WHERE property_type_code = '05'
-              AND lat BETWEEN %s AND %s AND lon BETWEEN %s AND %s
-        """, "lat", "lon"),
-    ]
+    # --- 3. NPA concentration (all GPS providers via adapter) ---
+    from adapter_bridge import search_bbox, PropertyCategory
 
-    npa_nearby = []
-    for provider, query, lat_col, lon_col in npa_queries:
-        cur.execute(query, (min_lat, max_lat, min_lon, max_lon))
-        for row in cur.fetchall():
-            npa_nearby.append(dict(row))
+    npa_results = search_bbox(lat, lon, radius_m)
+    npa_condos = [r for r in npa_results if r.category == PropertyCategory.CONDO]
 
-    result.npa_condos_nearby = len(npa_nearby)
-    result.npa_total_value = sum(float(r.get("price") or 0) for r in npa_nearby)
-    for r in npa_nearby:
-        src = r["src"]
+    result.npa_condos_nearby = len(npa_condos)
+    result.npa_total_value = sum(r.best_price_baht or 0 for r in npa_condos)
+    for r in npa_condos:
+        src = r.source.value
         result.npa_by_provider[src] = result.npa_by_provider.get(src, 0) + 1
 
     # --- 4. Compute area metrics ---

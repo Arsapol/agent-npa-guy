@@ -191,64 +191,7 @@ def find_demand_buildings(
 # Step 2: Find NPA properties near demand buildings
 # ---------------------------------------------------------------------------
 
-NPA_QUERIES = [
-    ("KBANK", """
-        SELECT property_id::text as id,
-               COALESCE(building_th, village_th, '') as project,
-               COALESCE(promotion_price, sell_price) as price,
-               useable_area as sqm, bedroom, bathroom, building_age,
-               lat, lon
-        FROM kbank_properties
-        WHERE property_type_code = '05'
-          AND lat BETWEEN %s AND %s AND lon BETWEEN %s AND %s
-          AND COALESCE(promotion_price, sell_price) > 0
-          AND useable_area > 0
-    """),
-    ("BAM", """
-        SELECT asset_no::text as id, COALESCE(project_th, '') as project,
-               COALESCE(discount_price, sell_price) as price,
-               usable_area as sqm, bedroom, bathroom, NULL as building_age,
-               lat, lon
-        FROM bam_properties
-        WHERE asset_type = 'ห้องชุดพักอาศัย'
-          AND lat BETWEEN %s AND %s AND lon BETWEEN %s AND %s
-          AND COALESCE(discount_price, sell_price) > 0
-          AND usable_area > 0
-    """),
-    ("SAM", """
-        SELECT sam_id::text as id, COALESCE(project_name, '') as project,
-               price_baht as price, size_sqm as sqm,
-               NULL as bedroom, NULL as bathroom, NULL as building_age,
-               lat, lng as lon
-        FROM sam_properties
-        WHERE type_name = 'ห้องชุดพักอาศัย'
-          AND lat BETWEEN %s AND %s AND lng BETWEEN %s AND %s
-          AND price_baht > 0 AND size_sqm > 0
-    """),
-    ("JAM", """
-        SELECT asset_id::text as id, COALESCE(project_th, '') as project,
-               COALESCE(discount, selling) as price,
-               meter as sqm, bedroom, bathroom, NULL as building_age,
-               lat, lon
-        FROM jam_properties
-        WHERE type_asset_th = 'คอนโดมิเนียม'
-          AND lat BETWEEN %s AND %s AND lon BETWEEN %s AND %s
-          AND COALESCE(discount, selling) > 0
-          AND meter > 0
-    """),
-    ("KTB", """
-        SELECT coll_grp_id::text as id, '' as project,
-               COALESCE(nml_price, price) as price,
-               sum_area_num as sqm,
-               bedroom_num as bedroom, bathroom_num as bathroom,
-               NULL as building_age, lat, lon
-        FROM ktb_properties
-        WHERE coll_type_name LIKE '%%คอนโด%%'
-          AND lat BETWEEN %s AND %s AND lon BETWEEN %s AND %s
-          AND COALESCE(nml_price, price) > 0
-          AND sum_area_num > 0
-    """),
-]
+from adapter_bridge import search_bbox, PropertyCategory
 
 
 def estimate_rent_by_size(
@@ -302,7 +245,6 @@ def find_npa_near_demand(
     radius_m: int = 300,
     min_discount: float = 15.0,
 ) -> list[NpaInDemandArea]:
-    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     results = []
     seen = set()
 
@@ -311,71 +253,70 @@ def find_npa_near_demand(
         if not market_sqm or market_sqm <= 0:
             continue
 
-        min_lat, max_lat, min_lon, max_lon = bbox(bld.lat, bld.lng, radius_m)
+        # Query all GPS-enabled providers via adapter
+        npa_props = search_bbox(bld.lat, bld.lng, radius_m)
+        condos = [p for p in npa_props if p.category == PropertyCategory.CONDO]
 
-        for src, query in NPA_QUERIES:
-            cur.execute(query, (min_lat, max_lat, min_lon, max_lon))
+        for p in condos:
+            key = f"{p.source.value}-{p.source_id}"
+            if key in seen:
+                continue
+            if not p.lat or not p.lon:
+                continue
 
-            for row in cur.fetchall():
-                key = f"{src}-{row['id']}"
-                if key in seen:
-                    continue
+            dist = haversine_m(bld.lat, bld.lng, p.lat, p.lon)
+            if dist > radius_m:
+                continue
 
-                rlat = float(row["lat"])
-                rlon = float(row["lon"])
-                dist = haversine_m(bld.lat, bld.lng, rlat, rlon)
-                if dist > radius_m:
-                    continue
+            price = p.best_price_baht or 0
+            sqm = p.size_sqm or 0
+            if sqm <= 0 or sqm > 300 or price <= 0:
+                continue
 
-                price = float(row["price"])
-                sqm = float(row["sqm"])
-                if sqm <= 0 or sqm > 300:
-                    continue
+            npa_sqm = price / sqm
+            verified_market = market_sqm * VERIFIED_SALE_MULTIPLIER
+            discount = (verified_market - npa_sqm) / verified_market * 100
 
-                npa_sqm = price / sqm
-                verified_market = market_sqm * VERIFIED_SALE_MULTIPLIER
-                discount = (verified_market - npa_sqm) / verified_market * 100
+            if discount < min_discount:
+                continue
 
-                if discount < min_discount:
-                    continue
+            rent_est = estimate_rent_by_size(sqm, bld.rent_min, bld.rent_max)
+            if rent_est <= 0:
+                continue
 
-                rent_est = estimate_rent_by_size(sqm, bld.rent_min, bld.rent_max)
-                if rent_est <= 0:
-                    continue
+            rent_verified = rent_est * VERIFIED_RENT_BARE
+            gry = rent_verified * 12 / price * 100
+            annual_net, nry = compute_net_yield(price, sqm, rent_verified)
 
-                rent_verified = rent_est * VERIFIED_RENT_BARE
-                gry = rent_verified * 12 / price * 100
-                annual_net, nry = compute_net_yield(price, sqm, rent_verified)
+            building_age = p.extra.get("building_age")
+            seen.add(key)
+            results.append(NpaInDemandArea(
+                source=p.source.value,
+                source_id=p.source_id,
+                npa_project=p.project_name or "",
+                price=price,
+                sqm=sqm,
+                bedroom=p.bedroom,
+                bathroom=p.bathroom,
+                building_age=int(building_age) if building_age else None,
+                lat=p.lat,
+                lon=p.lon,
+                demand_building=bld,
+                distance_m=dist,
+                npa_sqm=npa_sqm,
+                market_sqm=market_sqm,
+                verified_market_sqm=verified_market,
+                discount_pct=discount,
+                rent_estimate=rent_est,
+                rent_verified=rent_verified,
+                gry_pct=gry,
+                annual_net=annual_net,
+                nry_pct=nry,
+                rent_sale_ratio=bld.rent_sale_ratio,
+                supply_pressure_pct=bld.supply_pressure_pct,
+                yoy_pct=bld.yoy_change_pct,
+            ))
 
-                seen.add(key)
-                results.append(NpaInDemandArea(
-                    source=src,
-                    source_id=row["id"],
-                    npa_project=row.get("project") or "",
-                    price=price,
-                    sqm=sqm,
-                    bedroom=int(row["bedroom"]) if row.get("bedroom") else None,
-                    bathroom=int(row["bathroom"]) if row.get("bathroom") else None,
-                    building_age=int(row["building_age"]) if row.get("building_age") else None,
-                    lat=rlat,
-                    lon=rlon,
-                    demand_building=bld,
-                    distance_m=dist,
-                    npa_sqm=npa_sqm,
-                    market_sqm=market_sqm,
-                    verified_market_sqm=verified_market,
-                    discount_pct=discount,
-                    rent_estimate=rent_est,
-                    rent_verified=rent_verified,
-                    gry_pct=gry,
-                    annual_net=annual_net,
-                    nry_pct=nry,
-                    rent_sale_ratio=bld.rent_sale_ratio,
-                    supply_pressure_pct=bld.supply_pressure_pct,
-                    yoy_pct=bld.yoy_change_pct,
-                ))
-
-    cur.close()
     return results
 
 

@@ -243,15 +243,17 @@ def find_hot_districts(
 # ---------------------------------------------------------------------------
 
 
-# Property type mapping per provider
-TYPE_MAP_BAM = {
-    "ห้องชุดพักอาศัย": "condo", "บ้านเดี่ยว": "house",
-    "ทาวน์เฮ้าส์": "townhouse", "ที่ดินเปล่า": "land",
-    "อาคารพาณิชย์": "commercial",
-}
-TYPE_MAP_KBANK = {
-    "05": "condo", "01": "house", "02": "townhouse",
-    "03": "townhouse", "04": "commercial", "09": "land",
+from adapter_bridge import search_district as _adapter_search_district, PropertyCategory, ALL_SOURCES
+
+# PropertyCategory → screener type string mapping
+_CAT_TO_TYPE = {
+    PropertyCategory.CONDO: "condo",
+    PropertyCategory.HOUSE: "house",
+    PropertyCategory.TOWNHOUSE: "townhouse",
+    PropertyCategory.LAND: "land",
+    PropertyCategory.COMMERCIAL: "commercial",
+    PropertyCategory.FACTORY: "commercial",
+    PropertyCategory.OTHER: "other",
 }
 
 
@@ -261,200 +263,62 @@ def find_npa_in_hot_districts(
     max_price: Optional[float] = None,
     property_types: Optional[list[str]] = None,
 ) -> list[NpaInHotDistrict]:
-    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     results = []
 
     district_map = {}
     for d in districts:
         district_map[d.district] = d
 
-    district_names = list(district_map.keys())
+    # Query adapter per district (typically 10-20 hot districts)
+    seen = set()
+    for district_name, hd in district_map.items():
+        npa_props = _adapter_search_district(
+            district=district_name,
+            max_price=max_price,
+            sources=ALL_SOURCES,
+        )
 
-    # --- BAM ---
-    pc = ""
-    pp: list = []
-    if max_price:
-        pc = " AND COALESCE(b.discount_price, b.sell_price) <= %s"
-        pp = [max_price]
+        for p in npa_props:
+            ptype = _CAT_TO_TYPE.get(p.category, "other")
+            if property_types and ptype not in property_types:
+                continue
 
-    cur.execute(
-        f"""
-        SELECT 'BAM' as source, b.asset_no::text as source_id,
-               b.asset_type as ptype, COALESCE(b.project_th, '') as project,
-               COALESCE(b.discount_price, b.sell_price) as price,
-               b.usable_area as sqm, b.area_meter as land_sqm,
-               b.bedroom, b.bathroom, b.lat, b.lon,
-               b.province, b.district, COALESCE(b.sub_district, '') as subdistrict
-        FROM bam_properties b
-        WHERE b.district = ANY(%s)
-          AND COALESCE(b.discount_price, b.sell_price) > 0
-          {pc}
-        """,
-        [district_names] + pp,
-    )
-    for row in cur.fetchall():
-        ptype = TYPE_MAP_BAM.get(row["ptype"], "other")
-        if property_types and ptype not in property_types:
-            continue
-        hd = _match_district(row["district"], district_map)
-        if not hd:
-            continue
-        results.append(_build_result(row, ptype, hd))
+            key = f"{p.source.value}-{p.source_id}"
+            if key in seen:
+                continue
+            seen.add(key)
 
-    # --- KBANK ---
-    pc = ""
-    pp = []
-    if max_price:
-        pc = " AND COALESCE(kb.promotion_price, kb.sell_price) <= %s"
-        pp = [max_price]
+            price = p.best_price_baht or 0
+            if price <= 0:
+                continue
 
-    cur.execute(
-        f"""
-        SELECT 'KBANK' as source, kb.property_id::text as source_id,
-               kb.property_type_code as ptype_code,
-               COALESCE(kb.building_th, kb.village_th, '') as project,
-               COALESCE(kb.promotion_price, kb.sell_price) as price,
-               kb.useable_area as sqm, NULL as land_sqm,
-               kb.bedroom, kb.bathroom, kb.lat, kb.lon,
-               kb.province_name as province, kb.amphur_name as district,
-               COALESCE(kb.tambon_name, '') as subdistrict
-        FROM kbank_properties kb
-        WHERE kb.amphur_name = ANY(%s)
-          AND COALESCE(kb.promotion_price, kb.sell_price) > 0
-          {pc}
-        """,
-        [district_names] + pp,
-    )
-    for row in cur.fetchall():
-        ptype = TYPE_MAP_KBANK.get(row.get("ptype_code", ""), "other")
-        if property_types and ptype not in property_types:
-            continue
-        hd = _match_district(row["district"], district_map)
-        if not hd:
-            continue
-        results.append(_build_result(row, ptype, hd))
+            sqm = p.size_sqm
+            price_sqm = price / sqm if sqm and sqm > 0 else None
 
-    # --- JAM ---
-    pc = ""
-    pp = []
-    if max_price:
-        pc = " AND COALESCE(j.discount, j.selling) <= %s"
-        pp = [max_price]
+            r = NpaInHotDistrict(
+                source=p.source.value,
+                source_id=p.source_id,
+                property_type=ptype,
+                project_name=p.project_name or "",
+                price=price,
+                size_sqm=sqm,
+                size_wa=p.size_wa,
+                bedroom=p.bedroom,
+                bathroom=p.bathroom,
+                lat=p.lat,
+                lon=p.lon,
+                province=p.province or "",
+                district=p.district or "",
+                subdistrict=p.subdistrict or "",
+                hot_district=hd,
+                price_sqm=price_sqm,
+            )
+            # Compute price per wa if land size available
+            if p.size_wa and p.size_wa > 0:
+                r.price_wa = price / p.size_wa
+            results.append(r)
 
-    cur.execute(
-        f"""
-        SELECT 'JAM' as source, j.asset_id::text as source_id,
-               j.type_asset_th as ptype_th,
-               COALESCE(j.project_th, '') as project,
-               COALESCE(j.discount, j.selling) as price,
-               j.meter as sqm, j.wah as land_wa,
-               j.bedroom, j.bathroom, j.lat, j.lon,
-               j.province_name as province, j.amphur_name as district,
-               COALESCE(j.district_name, '') as subdistrict
-        FROM jam_properties j
-        WHERE j.amphur_name = ANY(%s)
-          AND COALESCE(j.discount, j.selling) > 0
-          {pc}
-        """,
-        [district_names] + pp,
-    )
-    JAM_TYPE = {
-        "คอนโดมิเนียม": "condo", "บ้านเดี่ยว": "house",
-        "ทาวน์เฮาส์": "townhouse", "ที่ดิน": "land",
-    }
-    for row in cur.fetchall():
-        ptype = JAM_TYPE.get(row.get("ptype_th", ""), "other")
-        if property_types and ptype not in property_types:
-            continue
-        hd = _match_district(row["district"], district_map)
-        if not hd:
-            continue
-        r = _build_result(row, ptype, hd)
-        if row.get("land_wa") and float(row["land_wa"]) > 0:
-            r.size_wa = float(row["land_wa"])
-            r.price_wa = r.price / r.size_wa if r.size_wa > 0 else None
-        results.append(r)
-
-    # --- SAM ---
-    pc = ""
-    pp = []
-    if max_price:
-        pc = " AND s.price_baht <= %s"
-        pp = [max_price]
-
-    cur.execute(
-        f"""
-        SELECT 'SAM' as source, s.sam_id::text as source_id,
-               s.type_name as ptype_th,
-               COALESCE(s.project_name, '') as project,
-               s.price_baht as price, s.size_sqm as sqm,
-               NULL as land_sqm,
-               NULL as bedroom, NULL as bathroom,
-               s.lat, s.lng as lon,
-               s.province, s.district,
-               COALESCE(s.subdistrict, '') as subdistrict
-        FROM sam_properties s
-        WHERE s.district = ANY(%s)
-          AND s.price_baht > 0
-          {pc}
-        """,
-        [district_names] + pp,
-    )
-    SAM_TYPE = {
-        "ห้องชุดพักอาศัย": "condo", "บ้านเดี่ยว": "house",
-        "ทาวน์เฮาส์": "townhouse", "ที่ดินเปล่า": "land",
-        "บ้านพร้อมที่ดิน": "house",
-    }
-    for row in cur.fetchall():
-        ptype = SAM_TYPE.get(row.get("ptype_th", ""), "other")
-        if property_types and ptype not in property_types:
-            continue
-        hd = _match_district(row["district"], district_map)
-        if not hd:
-            continue
-        results.append(_build_result(row, ptype, hd))
-
-    cur.close()
     return results
-
-
-def _match_district(name: str, district_map: dict) -> Optional[HotDistrict]:
-    if name in district_map:
-        return district_map[name]
-    # Fuzzy: strip เขต prefix
-    clean = name.replace("เขต", "").strip()
-    for k, v in district_map.items():
-        k_clean = k.replace("เขต", "").strip()
-        if clean == k_clean or clean in k or k_clean in clean:
-            return v
-    return None
-
-
-def _build_result(row: dict, ptype: str, hd: HotDistrict) -> NpaInHotDistrict:
-    price = float(row["price"]) if row.get("price") else 0
-    sqm = float(row["sqm"]) if row.get("sqm") and float(row["sqm"]) > 0 else None
-    price_sqm = price / sqm if sqm and sqm > 0 else None
-    lat = float(row["lat"]) if row.get("lat") else None
-    lon = float(row["lon"]) if row.get("lon") else None
-
-    return NpaInHotDistrict(
-        source=row["source"],
-        source_id=str(row["source_id"]),
-        property_type=ptype,
-        project_name=row.get("project") or "",
-        price=price,
-        size_sqm=sqm,
-        size_wa=None,
-        bedroom=int(row["bedroom"]) if row.get("bedroom") else None,
-        bathroom=int(row["bathroom"]) if row.get("bathroom") else None,
-        lat=lat,
-        lon=lon,
-        province=row.get("province") or "",
-        district=row.get("district") or "",
-        subdistrict=row.get("subdistrict") or "",
-        hot_district=hd,
-        price_sqm=price_sqm,
-    )
 
 
 # ---------------------------------------------------------------------------

@@ -274,199 +274,37 @@ class NpaCandidate:
 def extract_all_condos(
     conn, provinces: list[str], max_price: Optional[float] = None
 ) -> list[NpaCandidate]:
+    """Extract condo NPA properties from all providers via adapter bridge."""
+    from adapter_bridge import extract_candidates, ALL_SOURCES
+
+    v2_candidates = extract_candidates(
+        provinces=provinces,
+        max_price=max_price,
+        property_types=["condo"],
+        sources=ALL_SOURCES,
+    )
+
+    # Convert v2 NpaCandidate (Pydantic) to v1 NpaCandidate (dataclass)
     candidates = []
-    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-
-    price_clause = ""
-    price_params: list = []
-
-    # --- SAM ---
-    pc = ""
-    pp: list = []
-    if max_price:
-        pc = " AND s.price_baht <= %s"
-        pp = [max_price]
-    cur.execute(
-        f"""
-        SELECT 'SAM' as source, s.sam_id::text as source_id,
-               s.project_name, s.province, s.district,
-               COALESCE(s.subdistrict, '') as subdistrict,
-               s.price_baht, s.size_sqm, s.lat as latitude, s.lng as longitude,
-               NULL as bedroom, NULL as bathroom, s.floor::text as floor,
-               s.address_full as address, NULL as building_age
-        FROM sam_properties s
-        WHERE s.type_name = 'ห้องชุดพักอาศัย'
-          AND s.province = ANY(%s)
-          AND s.price_baht > 0
-          {pc}
-        """,
-        [provinces] + pp,
-    )
-    for row in cur.fetchall():
-        candidates.append(_row_to_candidate(row))
-
-    # --- BAM ---
-    pc = ""
-    pp = []
-    if max_price:
-        pc = " AND COALESCE(b.discount_price, b.sell_price) <= %s"
-        pp = [max_price]
-    cur.execute(
-        f"""
-        SELECT 'BAM' as source, b.asset_no::text as source_id,
-               b.project_th as project_name, b.province, b.district,
-               COALESCE(b.sub_district, '') as subdistrict,
-               COALESCE(b.discount_price, b.sell_price) as price_baht,
-               b.usable_area as size_sqm, b.lat as latitude, b.lon as longitude,
-               b.bedroom, b.bathroom, NULL as floor,
-               NULL as address, NULL as building_age
-        FROM bam_properties b
-        WHERE b.asset_type = 'ห้องชุดพักอาศัย'
-          AND b.province = ANY(%s)
-          AND COALESCE(b.discount_price, b.sell_price) > 0
-          {pc}
-        """,
-        [provinces] + pp,
-    )
-    for row in cur.fetchall():
-        candidates.append(_row_to_candidate(row))
-
-    # --- JAM ---
-    pc = ""
-    pp = []
-    if max_price:
-        pc = " AND COALESCE(j.discount, j.selling) <= %s"
-        pp = [max_price]
-    cur.execute(
-        f"""
-        SELECT 'JAM' as source, j.asset_id::text as source_id,
-               j.project_th as project_name, j.province_name as province,
-               j.amphur_name as district,
-               COALESCE(j.district_name, '') as subdistrict,
-               COALESCE(j.discount, j.selling) as price_baht,
-               j.meter as size_sqm, j.lat as latitude, j.lon as longitude,
-               j.bedroom, j.bathroom, j.floor,
-               NULL as address, NULL as building_age
-        FROM jam_properties j
-        WHERE j.type_asset_th = 'คอนโดมิเนียม'
-          AND j.province_name = ANY(%s)
-          AND COALESCE(j.discount, j.selling) > 0
-          {pc}
-        """,
-        [provinces] + pp,
-    )
-    for row in cur.fetchall():
-        candidates.append(_row_to_candidate(row))
-
-    # --- KTB ---
-    pc = ""
-    pp = []
-    if max_price:
-        pc = " AND COALESCE(k.nml_price, k.price) <= %s"
-        pp = [max_price]
-    cur.execute(
-        f"""
-        SELECT 'KTB' as source, k.coll_grp_id::text as source_id,
-               NULL as project_name, k.province, k.amphur as district,
-               COALESCE(k.tambon, '') as subdistrict,
-               COALESCE(k.nml_price, k.price) as price_baht,
-               k.sum_area_num as size_sqm, k.lat as latitude, k.lon as longitude,
-               k.bedroom_num as bedroom, k.bathroom_num as bathroom,
-               NULL as floor, NULL as address, NULL as building_age
-        FROM ktb_properties k
-        WHERE k.coll_type_name = 'คอนโดมีเนียม/ห้องชุด'
-          AND k.province = ANY(%s)
-          AND COALESCE(k.nml_price, k.price) > 0
-          {pc}
-        """,
-        [provinces] + pp,
-    )
-    for row in cur.fetchall():
-        candidates.append(_row_to_candidate(row))
-
-    # --- KBank ---
-    pc = ""
-    pp = []
-    if max_price:
-        pc = " AND COALESCE(kb.promotion_price, kb.sell_price) <= %s"
-        pp = [max_price]
-    cur.execute(
-        f"""
-        SELECT 'KBANK' as source, kb.property_id::text as source_id,
-               COALESCE(kb.building_th, kb.village_th) as project_name,
-               kb.province_name as province, kb.amphur_name as district,
-               COALESCE(kb.tambon_name, '') as subdistrict,
-               COALESCE(kb.promotion_price, kb.sell_price) as price_baht,
-               kb.useable_area as size_sqm, kb.lat as latitude, kb.lon as longitude,
-               kb.bedroom, kb.bathroom, NULL as floor,
-               kb.full_address as address, kb.building_age
-        FROM kbank_properties kb
-        WHERE kb.property_type_code = '05'
-          AND kb.province_name = ANY(%s)
-          AND COALESCE(kb.promotion_price, kb.sell_price) > 0
-          {pc}
-        """,
-        [provinces] + pp,
-    )
-    for row in cur.fetchall():
-        candidates.append(_row_to_candidate(row))
-
-    # --- LED ---
-    pc = ""
-    pp = []
-    if max_price:
-        pc = " AND p.primary_price_satang <= %s"
-        pp = [max_price * 100]  # satang
-    cur.execute(
-        f"""
-        SELECT 'LED' as source, p.asset_id::text as source_id,
-               NULL as project_name, p.province, p.ampur as district,
-               COALESCE(p.tumbol, '') as subdistrict,
-               p.primary_price_satang / 100.0 as price_baht,
-               NULL as size_sqm, NULL as latitude, NULL as longitude,
-               NULL as bedroom, NULL as bathroom, NULL as floor,
-               p.address, NULL as building_age
-        FROM properties p
-        JOIN led_properties lp ON p.asset_id = lp.asset_id
-        WHERE p.property_type LIKE '%%ห้องชุด%%'
-          AND p.province = ANY(%s)
-          AND p.primary_price_satang > 0
-          {pc}
-        """,
-        [provinces] + pp,
-    )
-    for row in cur.fetchall():
-        candidates.append(_row_to_candidate(row))
-
-    cur.close()
+    for c in v2_candidates:
+        candidates.append(NpaCandidate(
+            source=c.source,
+            source_id=c.source_id,
+            project_name=c.project_name,
+            province=c.province,
+            district=c.district,
+            subdistrict=c.subdistrict,
+            price_baht=c.price_baht,
+            size_sqm=c.size_sqm,
+            lat=c.lat,
+            lon=c.lon,
+            bedroom=c.bedroom,
+            bathroom=c.bathroom,
+            floor=c.floor,
+            building_age=c.building_age,
+            price_sqm=c.price_sqm,
+        ))
     return candidates
-
-
-def _row_to_candidate(row: dict) -> NpaCandidate:
-    price = float(row["price_baht"]) if row["price_baht"] else 0
-    sqm = float(row["size_sqm"]) if row.get("size_sqm") else None
-    lat = float(row["latitude"]) if row.get("latitude") else None
-    lon = float(row["longitude"]) if row.get("longitude") else None
-    price_sqm = price / sqm if (sqm and sqm > 0 and price > 0) else None
-
-    return NpaCandidate(
-        source=row["source"],
-        source_id=str(row["source_id"]),
-        project_name=row.get("project_name") or "",
-        province=row.get("province") or "",
-        district=row.get("district") or "",
-        subdistrict=row.get("subdistrict") or "",
-        price_baht=price,
-        size_sqm=sqm,
-        lat=lat,
-        lon=lon,
-        bedroom=int(row["bedroom"]) if row.get("bedroom") else None,
-        bathroom=int(row["bathroom"]) if row.get("bathroom") else None,
-        floor=str(row["floor"]) if row.get("floor") else None,
-        address=row.get("address") or "",
-        building_age=int(row["building_age"]) if row.get("building_age") else None,
-        price_sqm=price_sqm,
-    )
 
 
 # ---------------------------------------------------------------------------
@@ -477,19 +315,13 @@ def _row_to_candidate(row: dict) -> NpaCandidate:
 def enrich_with_market_data(conn, candidates: list[NpaCandidate]) -> None:
     """Batch-match NPA project names to market sources using trigram similarity.
 
-    Strategy: collect unique project names, do ONE bulk query per market source
-    using LATERAL join, then distribute results back to candidates.
+    Delegates to market_adapter.batch_match_market (via adapter_bridge) which
+    manages its own DB connection. The conn parameter is retained for API
+    compatibility but is no longer used for market queries.
     """
-    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    from adapter_bridge import batch_match_market
 
-    # Ensure pg_trgm extension
-    try:
-        cur.execute("CREATE EXTENSION IF NOT EXISTS pg_trgm")
-        conn.commit()
-    except Exception:
-        conn.rollback()
-
-    # Collect unique non-empty project names
+    # Collect unique non-empty project names, preserving name→candidates mapping
     name_to_candidates: dict[str, list[NpaCandidate]] = {}
     for c in candidates:
         if c.project_name and len(c.project_name.strip()) >= 3:
@@ -498,197 +330,53 @@ def enrich_with_market_data(conn, candidates: list[NpaCandidate]) -> None:
 
     unique_names = list(name_to_candidates.keys())
     if not unique_names:
-        cur.close()
         return
 
     print(f"       Matching {len(unique_names)} unique project names...", flush=True)
 
-    # --- Batch match: Hipflat ---
-    hipflat_matches: dict[str, dict] = {}
-    # Use a temp table for fast join
-    cur.execute("DROP TABLE IF EXISTS _npa_names")
-    cur.execute("CREATE TEMP TABLE _npa_names (name text)")
-    cur.execute("CREATE INDEX ON _npa_names USING gin (name gin_trgm_ops)")
-    psycopg2.extras.execute_values(
-        cur, "INSERT INTO _npa_names (name) VALUES %s",
-        [(n,) for n in unique_names],
+    market_results = batch_match_market(unique_names)
+
+    print(
+        f"       Market matches: {sum(1 for m in market_results.values() if m.market_matches)} "
+        f"of {len(unique_names)} names matched",
+        flush=True,
     )
 
-    # Use % operator (leverages GIN index) + similarity for ranking
-    cur.execute("""
-        SELECT DISTINCT ON (nn.name)
-               nn.name as npa_name,
-               h.name_th, h.name_en, h.avg_sale_sqm, h.avg_sold_sqm,
-               h.rent_price_min, h.rent_price_max,
-               h.year_completed, h.total_units,
-               h.units_for_sale, h.units_for_rent,
-               h.lat, h.lng,
-               GREATEST(
-                   similarity(COALESCE(h.name_th, ''), nn.name),
-                   similarity(COALESCE(h.name_en, ''), nn.name)
-               ) as sim
-        FROM _npa_names nn
-        CROSS JOIN LATERAL (
-            SELECT *
-            FROM hipflat_projects hp
-            WHERE hp.name_th % nn.name OR hp.name_en % nn.name
-            ORDER BY GREATEST(
-                similarity(COALESCE(hp.name_th, ''), nn.name),
-                similarity(COALESCE(hp.name_en, ''), nn.name)
-            ) DESC
-            LIMIT 1
-        ) h
-        ORDER BY nn.name, sim DESC
-    """)
-    for row in cur.fetchall():
-        hipflat_matches[row["npa_name"]] = dict(row)
-
-    print(f"       Hipflat: {len(hipflat_matches)} matches", flush=True)
-
-    # --- Batch match: PropertyHub ---
-    ph_matches: dict[str, dict] = {}
-    cur.execute("""
-        SELECT DISTINCT ON (nn.name)
-               nn.name as npa_name,
-               p.id as ph_id, p.name as ph_name, p.name_en,
-               p.completed_year, p.total_units, p.developer,
-               p.lat, p.lng,
-               p.listing_count_sale, p.listing_count_rent,
-               GREATEST(
-                   similarity(COALESCE(p.name, ''), nn.name),
-                   similarity(COALESCE(p.name_en, ''), nn.name)
-               ) as sim
-        FROM _npa_names nn
-        CROSS JOIN LATERAL (
-            SELECT *
-            FROM propertyhub_projects pp
-            WHERE pp.name % nn.name OR pp.name_en % nn.name
-            ORDER BY GREATEST(
-                similarity(COALESCE(pp.name, ''), nn.name),
-                similarity(COALESCE(pp.name_en, ''), nn.name)
-            ) DESC
-            LIMIT 1
-        ) p
-        ORDER BY nn.name, sim DESC
-    """)
-    for row in cur.fetchall():
-        ph_matches[row["npa_name"]] = dict(row)
-
-    print(f"       PropertyHub: {len(ph_matches)} matches", flush=True)
-
-    # Get PropertyHub listing medians for matched projects (batch)
-    ph_prices: dict[str, dict] = {}
-    if ph_matches:
-        ph_ids = list(set(r["ph_id"] for r in ph_matches.values() if r.get("ph_id")))
-        if ph_ids:
-            cur.execute("""
-                SELECT project_id,
-                       percentile_cont(0.5) WITHIN GROUP (ORDER BY price_per_sqm)
-                           FILTER (WHERE price_per_sqm > 0) as med_sqm,
-                       percentile_cont(0.5) WITHIN GROUP (ORDER BY rent_monthly)
-                           FILTER (WHERE rent_monthly > 0) as med_rent
-                FROM propertyhub_listings
-                WHERE project_id = ANY(%s)
-                GROUP BY project_id
-            """, [ph_ids])
-            for row in cur.fetchall():
-                ph_prices[row["project_id"]] = dict(row)
-
-    # --- Batch match: ZMyHome ---
-    zm_matches: dict[str, dict] = {}
-    cur.execute("""
-        SELECT DISTINCT ON (nn.name)
-               nn.name as npa_name,
-               z.id as zm_id, z.name as zm_name,
-               z.year_built, z.total_units, z.developer,
-               z.lat, z.lng,
-               similarity(COALESCE(z.name, ''), nn.name) as sim
-        FROM _npa_names nn
-        CROSS JOIN LATERAL (
-            SELECT *
-            FROM zmyhome_projects zp
-            WHERE zp.name % nn.name
-            ORDER BY similarity(COALESCE(zp.name, ''), nn.name) DESC
-            LIMIT 1
-        ) z
-        ORDER BY nn.name, sim DESC
-    """)
-    for row in cur.fetchall():
-        zm_matches[row["npa_name"]] = dict(row)
-
-    print(f"       ZMyHome: {len(zm_matches)} matches", flush=True)
-
-    # Drop temp table
-    cur.execute("DROP TABLE IF EXISTS _npa_names")
-    conn.commit()
-
-    # --- Distribute results to candidates ---
+    # Distribute results to candidates
     for name, cands in name_to_candidates.items():
-        h = hipflat_matches.get(name)
-        p = ph_matches.get(name)
-        z = zm_matches.get(name)
+        match = market_results.get(name)
+        if not match or not match.market_matches:
+            continue
 
-        # Build merged market data
-        market_price_sqm = None
-        year_built = None
-        total_units = None
-        developer = None
-        rent_median = None
-        units_for_sale = None
-        units_for_rent = None
-        project_name = None
-        sources_found = 0
+        # Pick best match (first in list — highest similarity)
+        best = match.market_matches[0]
 
-        # Hipflat
-        if h:
-            hprice = h.get("avg_sale_sqm") or h.get("avg_sold_sqm")
-            if hprice:
-                market_price_sqm = int(hprice)
-                sources_found += 1
-            year_built = h.get("year_completed")
-            total_units = h.get("total_units")
-            units_for_sale = h.get("units_for_sale")
-            units_for_rent = h.get("units_for_rent")
-            project_name = h.get("name_th") or h.get("name_en")
-            if h.get("rent_price_min") and h.get("rent_price_max"):
-                rent_median = (int(h["rent_price_min"]) + int(h["rent_price_max"])) // 2
-            elif h.get("rent_price_min"):
-                rent_median = int(h["rent_price_min"])
+        market_price_sqm = int(match.median_price_sqm) if match.median_price_sqm else None
+        if market_price_sqm is None and best.avg_price_sqm:
+            market_price_sqm = int(best.avg_price_sqm)
 
-        # PropertyHub (fill gaps)
-        if p:
-            ph_price_data = ph_prices.get(p.get("ph_id"), {})
-            if not market_price_sqm and ph_price_data.get("med_sqm"):
-                market_price_sqm = int(ph_price_data["med_sqm"])
-                sources_found += 1
-            elif ph_price_data.get("med_sqm"):
-                sources_found += 1  # second source confirms
-            if not year_built and p.get("completed_year"):
-                year_built = p["completed_year"]
-            if not total_units and p.get("total_units"):
-                total_units = p["total_units"]
-            if not developer and p.get("developer"):
-                developer = p["developer"]
-            if not rent_median and ph_price_data.get("med_rent"):
-                rent_median = int(ph_price_data["med_rent"])
-            if not units_for_sale and p.get("listing_count_sale"):
-                units_for_sale = p["listing_count_sale"]
-            if not units_for_rent and p.get("listing_count_rent"):
-                units_for_rent = p["listing_count_rent"]
-            if not project_name:
-                project_name = p.get("ph_name") or p.get("name_en")
+        year_built: Optional[int] = None
+        total_units: Optional[int] = None
+        units_for_sale: Optional[int] = None
+        units_for_rent: Optional[int] = None
+        ref_lat: Optional[float] = None
+        ref_lng: Optional[float] = None
 
-        # ZMyHome (fill remaining gaps)
-        if z:
-            sources_found += 1
-            if not year_built and z.get("year_built"):
-                year_built = z["year_built"]
-            if not total_units and z.get("total_units"):
-                total_units = z["total_units"]
-            if not developer and z.get("developer"):
-                developer = z["developer"]
+        for mp in match.market_matches:
+            if year_built is None and mp.completion_year:
+                year_built = mp.completion_year
+            if total_units is None and mp.units_total:
+                total_units = mp.units_total
+            if units_for_sale is None and mp.units_for_sale:
+                units_for_sale = mp.units_for_sale
+            if units_for_rent is None and mp.units_for_rent:
+                units_for_rent = mp.units_for_rent
+            if ref_lat is None and mp.lat and mp.lon:
+                ref_lat, ref_lng = mp.lat, mp.lon
 
-        # Confidence
+        project_name = best.project_name or None
+
+        sources_found = len(match.market_matches)
         if sources_found >= 3:
             confidence = "high"
         elif sources_found >= 2:
@@ -698,21 +386,11 @@ def enrich_with_market_data(conn, candidates: list[NpaCandidate]) -> None:
         else:
             confidence = "none"
 
-        # Apply to all candidates with this project name
         for c in cands:
-            # Geo-verify if possible
-            if market_price_sqm and c.lat and c.lon:
-                skip = False
-                ref_lat, ref_lng = None, None
-                if h and h.get("lat") and h.get("lng"):
-                    ref_lat, ref_lng = float(h["lat"]), float(h["lng"])
-                elif p and p.get("lat") and p.get("lng"):
-                    ref_lat, ref_lng = float(p["lat"]), float(p["lng"])
-                if ref_lat and ref_lng:
-                    dist = haversine_m(c.lat, c.lon, ref_lat, ref_lng)
-                    if dist > 2000:
-                        skip = True
-                if skip:
+            # Geo-verify: skip if candidate GPS is >2km from market project GPS
+            if market_price_sqm and c.lat and c.lon and ref_lat and ref_lng:
+                dist = haversine_m(c.lat, c.lon, ref_lat, ref_lng)
+                if dist > 2000:
                     continue
 
             c.market_price_sqm = market_price_sqm
@@ -727,13 +405,11 @@ def enrich_with_market_data(conn, candidates: list[NpaCandidate]) -> None:
                     c.market_total_units = int(total_units)
                 except (ValueError, TypeError):
                     pass
-            c.market_developer = developer
-            c.market_rent_median = rent_median
+            c.market_developer = None
+            c.market_rent_median = None
             c.market_units_for_sale = int(units_for_sale) if units_for_sale else None
             c.market_units_for_rent = int(units_for_rent) if units_for_rent else None
             c.market_project_name = project_name
-
-    cur.close()
 
 
 # ---------------------------------------------------------------------------

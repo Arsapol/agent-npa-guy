@@ -181,18 +181,15 @@ def _enrich_candidates(conn, candidates: list[NpaCandidate]) -> list[NpaCandidat
     """
     Batch-match NPA project names to market sources using trigram similarity.
     Returns a new list of NpaCandidate with market_* fields populated.
-    Since NpaCandidate is frozen Pydantic, we collect enrichment dicts and
-    rebuild candidates via model_copy(update=...).
+    Since NpaCandidate is frozen Pydantic, enrichment is applied via model_copy(update=...).
+
+    Delegates to market_adapter.batch_match_market (via adapter_bridge) which
+    manages its own DB connection. The conn parameter is retained for API
+    compatibility but is no longer used for market queries.
     """
-    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    from adapter_bridge import batch_match_market
 
-    try:
-        cur.execute("CREATE EXTENSION IF NOT EXISTS pg_trgm")
-        conn.commit()
-    except Exception:
-        conn.rollback()
-
-    # Group by project name
+    # Group by project name, preserving index mapping for frozen model rebuild
     name_to_indices: dict[str, list[int]] = {}
     for i, c in enumerate(candidates):
         key = (c.project_name or "").strip()
@@ -201,196 +198,55 @@ def _enrich_candidates(conn, candidates: list[NpaCandidate]) -> list[NpaCandidat
 
     unique_names = list(name_to_indices.keys())
     if not unique_names:
-        cur.close()
         return list(candidates)
 
     print(f"   Matching {len(unique_names)} unique project names against market sources...", flush=True)
 
-    # Temp table for batch trigram matching
-    cur.execute("DROP TABLE IF EXISTS _npa_names_v2")
-    cur.execute("CREATE TEMP TABLE _npa_names_v2 (name text)")
-    cur.execute("CREATE INDEX ON _npa_names_v2 USING gin (name gin_trgm_ops)")
-    psycopg2.extras.execute_values(
-        cur, "INSERT INTO _npa_names_v2 (name) VALUES %s",
-        [(n,) for n in unique_names],
+    market_results = batch_match_market(unique_names)
+
+    print(
+        f"   Market matches: {sum(1 for m in market_results.values() if m.market_matches)} "
+        f"of {len(unique_names)} names matched",
+        flush=True,
     )
-
-    # Hipflat batch match
-    hipflat_matches: dict[str, dict] = {}
-    cur.execute("""
-        SELECT DISTINCT ON (nn.name)
-               nn.name as npa_name,
-               h.name_th, h.name_en, h.avg_sale_sqm, h.avg_sold_sqm,
-               h.rent_price_min, h.rent_price_max,
-               h.year_completed, h.total_units,
-               h.units_for_sale, h.units_for_rent,
-               h.lat, h.lng,
-               GREATEST(
-                   similarity(COALESCE(h.name_th, ''), nn.name),
-                   similarity(COALESCE(h.name_en, ''), nn.name)
-               ) as sim
-        FROM _npa_names_v2 nn
-        CROSS JOIN LATERAL (
-            SELECT *
-            FROM hipflat_projects hp
-            WHERE hp.name_th % nn.name OR hp.name_en % nn.name
-            ORDER BY GREATEST(
-                similarity(COALESCE(hp.name_th, ''), nn.name),
-                similarity(COALESCE(hp.name_en, ''), nn.name)
-            ) DESC
-            LIMIT 1
-        ) h
-        ORDER BY nn.name, sim DESC
-    """)
-    for row in cur.fetchall():
-        hipflat_matches[row["npa_name"]] = dict(row)
-    print(f"   Hipflat: {len(hipflat_matches)} matches", flush=True)
-
-    # PropertyHub batch match
-    ph_matches: dict[str, dict] = {}
-    cur.execute("""
-        SELECT DISTINCT ON (nn.name)
-               nn.name as npa_name,
-               p.id as ph_id, p.name as ph_name, p.name_en,
-               p.completed_year, p.total_units, p.developer,
-               p.lat, p.lng,
-               p.listing_count_sale, p.listing_count_rent,
-               GREATEST(
-                   similarity(COALESCE(p.name, ''), nn.name),
-                   similarity(COALESCE(p.name_en, ''), nn.name)
-               ) as sim
-        FROM _npa_names_v2 nn
-        CROSS JOIN LATERAL (
-            SELECT *
-            FROM propertyhub_projects pp
-            WHERE pp.name % nn.name OR pp.name_en % nn.name
-            ORDER BY GREATEST(
-                similarity(COALESCE(pp.name, ''), nn.name),
-                similarity(COALESCE(pp.name_en, ''), nn.name)
-            ) DESC
-            LIMIT 1
-        ) p
-        ORDER BY nn.name, sim DESC
-    """)
-    for row in cur.fetchall():
-        ph_matches[row["npa_name"]] = dict(row)
-    print(f"   PropertyHub: {len(ph_matches)} matches", flush=True)
-
-    # PropertyHub listing medians
-    ph_prices: dict[str, dict] = {}
-    if ph_matches:
-        ph_ids = list(set(r["ph_id"] for r in ph_matches.values() if r.get("ph_id")))
-        if ph_ids:
-            cur.execute("""
-                SELECT project_id,
-                       percentile_cont(0.5) WITHIN GROUP (ORDER BY price_per_sqm)
-                           FILTER (WHERE price_per_sqm > 0) as med_sqm,
-                       percentile_cont(0.5) WITHIN GROUP (ORDER BY rent_monthly)
-                           FILTER (WHERE rent_monthly > 0) as med_rent
-                FROM propertyhub_listings
-                WHERE project_id = ANY(%s)
-                GROUP BY project_id
-            """, [ph_ids])
-            for row in cur.fetchall():
-                ph_prices[row["project_id"]] = dict(row)
-
-    # ZMyHome batch match
-    zm_matches: dict[str, dict] = {}
-    cur.execute("""
-        SELECT DISTINCT ON (nn.name)
-               nn.name as npa_name,
-               z.id as zm_id, z.name as zm_name,
-               z.year_built, z.total_units, z.developer,
-               z.lat, z.lng,
-               similarity(COALESCE(z.name, ''), nn.name) as sim
-        FROM _npa_names_v2 nn
-        CROSS JOIN LATERAL (
-            SELECT *
-            FROM zmyhome_projects zp
-            WHERE zp.name % nn.name
-            ORDER BY similarity(COALESCE(zp.name, ''), nn.name) DESC
-            LIMIT 1
-        ) z
-        ORDER BY nn.name, sim DESC
-    """)
-    for row in cur.fetchall():
-        zm_matches[row["npa_name"]] = dict(row)
-    print(f"   ZMyHome: {len(zm_matches)} matches", flush=True)
-
-    cur.execute("DROP TABLE IF EXISTS _npa_names_v2")
-    conn.commit()
-    cur.close()
 
     # Build enrichment map: index → update dict
     enrichment: dict[int, dict] = {}
 
     for name, indices in name_to_indices.items():
-        h = hipflat_matches.get(name)
-        p = ph_matches.get(name)
-        z = zm_matches.get(name)
+        match = market_results.get(name)
+        if not match or not match.market_matches:
+            continue
 
-        market_price_sqm: Optional[int] = None
+        best = match.market_matches[0]
+
+        market_price_sqm: Optional[int] = (
+            int(match.median_price_sqm) if match.median_price_sqm
+            else (int(best.avg_price_sqm) if best.avg_price_sqm else None)
+        )
+
         year_built: Optional[int] = None
         total_units: Optional[int] = None
-        developer: Optional[str] = None
-        rent_median: Optional[int] = None
         units_for_sale: Optional[int] = None
         units_for_rent: Optional[int] = None
-        project_name: Optional[str] = None
-        sources_found = 0
         ref_lat: Optional[float] = None
         ref_lng: Optional[float] = None
 
-        if h:
-            hprice = h.get("avg_sale_sqm") or h.get("avg_sold_sqm")
-            if hprice:
-                market_price_sqm = int(hprice)
-                sources_found += 1
-            year_built = h.get("year_completed")
-            total_units = h.get("total_units")
-            units_for_sale = h.get("units_for_sale")
-            units_for_rent = h.get("units_for_rent")
-            project_name = h.get("name_th") or h.get("name_en")
-            if h.get("rent_price_min") and h.get("rent_price_max"):
-                rent_median = (int(h["rent_price_min"]) + int(h["rent_price_max"])) // 2
-            elif h.get("rent_price_min"):
-                rent_median = int(h["rent_price_min"])
-            if h.get("lat") and h.get("lng"):
-                ref_lat, ref_lng = float(h["lat"]), float(h["lng"])
+        for mp in match.market_matches:
+            if year_built is None and mp.completion_year:
+                year_built = mp.completion_year
+            if total_units is None and mp.units_total:
+                total_units = mp.units_total
+            if units_for_sale is None and mp.units_for_sale:
+                units_for_sale = mp.units_for_sale
+            if units_for_rent is None and mp.units_for_rent:
+                units_for_rent = mp.units_for_rent
+            if ref_lat is None and mp.lat and mp.lon:
+                ref_lat, ref_lng = mp.lat, mp.lon
 
-        if p:
-            ph_price_data = ph_prices.get(p.get("ph_id"), {})
-            if not market_price_sqm and ph_price_data.get("med_sqm"):
-                market_price_sqm = int(ph_price_data["med_sqm"])
-                sources_found += 1
-            elif ph_price_data.get("med_sqm"):
-                sources_found += 1
-            if not year_built and p.get("completed_year"):
-                year_built = p["completed_year"]
-            if not total_units and p.get("total_units"):
-                total_units = p["total_units"]
-            if not developer and p.get("developer"):
-                developer = p["developer"]
-            if not rent_median and ph_price_data.get("med_rent"):
-                rent_median = int(ph_price_data["med_rent"])
-            if not units_for_sale and p.get("listing_count_sale"):
-                units_for_sale = p["listing_count_sale"]
-            if not units_for_rent and p.get("listing_count_rent"):
-                units_for_rent = p["listing_count_rent"]
-            if not project_name:
-                project_name = p.get("ph_name") or p.get("name_en")
-            if not ref_lat and p.get("lat") and p.get("lng"):
-                ref_lat, ref_lng = float(p["lat"]), float(p["lng"])
+        project_name: Optional[str] = best.project_name or None
 
-        if z:
-            sources_found += 1
-            if not year_built and z.get("year_built"):
-                year_built = z["year_built"]
-            if not total_units and z.get("total_units"):
-                total_units = z["total_units"]
-            if not developer and z.get("developer"):
-                developer = z["developer"]
-
+        sources_found = len(match.market_matches)
         confidence = (
             "high" if sources_found >= 3
             else "medium" if sources_found >= 2
@@ -419,10 +275,6 @@ def _enrich_candidates(conn, candidates: list[NpaCandidate]) -> list[NpaCandidat
                     update["market_total_units"] = int(total_units)
                 except (ValueError, TypeError):
                     pass
-            if developer is not None:
-                update["market_developer"] = developer
-            if rent_median is not None:
-                update["market_rent_median"] = rent_median
             if units_for_sale is not None:
                 update["market_units_for_sale"] = int(units_for_sale)
             if units_for_rent is not None:
