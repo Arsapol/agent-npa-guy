@@ -25,6 +25,9 @@ _ADAPTER_DIR = os.path.abspath(os.path.join(_SCRIPT_DIR, "..", "..", "npa-adapte
 sys.path.insert(0, _ADAPTER_DIR)
 
 import models as _adapter_models  # noqa: E402 — adapter's models.py
+# Sibling scripts (proximity, benchmarks) need _SCRIPT_DIR in path.
+# Insert AFTER adapter models import so 'models' cache already points to adapter's copy.
+sys.path.insert(0, _SCRIPT_DIR)
 
 NpaProperty = _adapter_models.NpaProperty
 SearchFilters = _adapter_models.SearchFilters
