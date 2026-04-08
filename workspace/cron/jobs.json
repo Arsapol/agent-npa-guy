@@ -20,8 +20,8 @@
         "to": "1372818654"
       },
       "state": {
-        "nextRunAtMs": 1775610000000,
-        "lastRunAtMs": 1775523600001,
+        "nextRunAtMs": 1775696400000,
+        "lastRunAtMs": 1775610000001,
         "lastStatus": "ok",
         "lastError": null,
         "runHistory": [
@@ -48,11 +48,17 @@
             "status": "ok",
             "durationMs": 39570,
             "error": null
+          },
+          {
+            "runAtMs": 1775610000001,
+            "status": "ok",
+            "durationMs": 49713,
+            "error": null
           }
         ]
       },
       "createdAtMs": 1775234757687,
-      "updatedAtMs": 1775523639571,
+      "updatedAtMs": 1775610049714,
       "deleteAfterRun": false
     },
     {
@@ -74,8 +80,8 @@
         "to": "1372818654"
       },
       "state": {
-        "nextRunAtMs": 1775613600000,
-        "lastRunAtMs": 1775527200008,
+        "nextRunAtMs": 1775700000000,
+        "lastRunAtMs": 1775613600032,
         "lastStatus": "ok",
         "lastError": null,
         "runHistory": [
@@ -96,11 +102,17 @@
             "status": "ok",
             "durationMs": 10825,
             "error": null
+          },
+          {
+            "runAtMs": 1775613600032,
+            "status": "ok",
+            "durationMs": 31104,
+            "error": null
           }
         ]
       },
       "createdAtMs": 1775284843818,
-      "updatedAtMs": 1775527210833,
+      "updatedAtMs": 1775613631136,
       "deleteAfterRun": false
     },
     {
@@ -122,14 +134,39 @@
         "to": null
       },
       "state": {
-        "nextRunAtMs": 1775586691890,
-        "lastRunAtMs": null,
-        "lastStatus": null,
+        "nextRunAtMs": 1775615565073,
+        "lastRunAtMs": 1775608365051,
+        "lastStatus": "ok",
         "lastError": null,
-        "runHistory": []
+        "runHistory": [
+          {
+            "runAtMs": 1775586691896,
+            "status": "ok",
+            "durationMs": 73124,
+            "error": null
+          },
+          {
+            "runAtMs": 1775593965023,
+            "status": "ok",
+            "durationMs": 19,
+            "error": null
+          },
+          {
+            "runAtMs": 1775601165044,
+            "status": "ok",
+            "durationMs": 6,
+            "error": null
+          },
+          {
+            "runAtMs": 1775608365051,
+            "status": "ok",
+            "durationMs": 22,
+            "error": null
+          }
+        ]
       },
       "createdAtMs": 1775579491890,
-      "updatedAtMs": 1775579491890,
+      "updatedAtMs": 1775608365073,
       "deleteAfterRun": false
     }
   ]

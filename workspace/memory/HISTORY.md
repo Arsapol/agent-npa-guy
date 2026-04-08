@@ -1,1 +1,2 @@
 [2026-04-07 08:00] Daily NPA alert: 0 new, 0 drops, 0 increases. Flat day. Same watchlist. Songkhla auctions today. 5-day quiet stretch continues — last significant update was BAM drop on Apr 6.
+[2026-04-08 08:00] Daily NPA alert: 0 new, 0 drops, 0 increases. Third flat day. Stale data warning — scraper health may need checking. Upcoming auctions shifted to Sriracha/Banglamung today. Watchlist unchanged 5th day.
