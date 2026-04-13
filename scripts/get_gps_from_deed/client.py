@@ -6,7 +6,9 @@ import httpx
 
 from models import ApiResponse, DeedQuery, ParcelResult
 
-BASE_URL = "https://landsmaps.dol.go.th/apiService/LandsMaps"
+BASE_URL = "https://landsmaps.dol.go.th/apiService"
+PARCEL_URL = f"{BASE_URL}/LandsMaps"
+TOKEN_URL = f"{BASE_URL}/JWT/GetJWTAccessToken"
 
 COMMON_HEADERS = {
     "accept": "application/json, text/javascript, */*; q=0.01",
@@ -20,6 +22,19 @@ COMMON_HEADERS = {
 }
 
 
+async def acquire_token() -> str:
+    """Acquire a guest JWT from the DOL API (no credentials needed, ~24h expiry)."""
+    async with httpx.AsyncClient(timeout=15.0) as client:
+        resp = await client.get(TOKEN_URL, headers=COMMON_HEADERS)
+        resp.raise_for_status()
+
+    data = resp.json()
+    if data.get("status") != 200 or not data.get("result"):
+        raise RuntimeError(f"Failed to acquire token: {data}")
+
+    return data["result"][0]["access_token"]
+
+
 class LandsMapsClient:
     """Client for the DOL LandsMaps parcel API."""
 
@@ -30,10 +45,17 @@ class LandsMapsClient:
             "authorization": f"Bearer {token}",
         }
 
+    @classmethod
+    async def create(cls, token: str | None = None) -> LandsMapsClient:
+        """Create client, auto-acquiring a guest token if none provided."""
+        if token is None:
+            token = await acquire_token()
+        return cls(token)
+
     async def get_parcel(self, query: DeedQuery) -> ParcelResult | None:
         """Fetch parcel info by deed number. Returns None if not found."""
         url = (
-            f"{BASE_URL}/GetParcelByParcelNo"
+            f"{PARCEL_URL}/GetParcelByParcelNo"
             f"/{query.province_code}/{query.amphur_code}/{query.parcel_no}"
         )
         async with httpx.AsyncClient(timeout=30.0) as client:
@@ -59,7 +81,7 @@ class LandsMapsClient:
         async with httpx.AsyncClient(timeout=30.0) as client:
             for query in queries:
                 url = (
-                    f"{BASE_URL}/GetParcelByParcelNo"
+                    f"{PARCEL_URL}/GetParcelByParcelNo"
                     f"/{query.province_code}/{query.amphur_code}/{query.parcel_no}"
                 )
                 try:

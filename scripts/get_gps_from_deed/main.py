@@ -139,9 +139,9 @@ def resolve_amphur_code(
     return matches[0].amcode
 
 
-def main() -> None:
+async def async_main() -> None:
     parser = argparse.ArgumentParser(description="Get GPS from Thai deed number")
-    parser.add_argument("--token", default=os.environ.get("LANDSMAPS_TOKEN"), help="Bearer JWT token (or set LANDSMAPS_TOKEN env var)")
+    parser.add_argument("--token", default=os.environ.get("LANDSMAPS_TOKEN"), help="Bearer JWT token (or set LANDSMAPS_TOKEN env var). Auto-acquired if omitted.")
     parser.add_argument("--simple", action="store_true", help="Output just lat,lon")
 
     # Single mode
@@ -155,14 +155,10 @@ def main() -> None:
 
     args = parser.parse_args()
 
-    if not args.token:
-        print("Token required: --token <JWT> or LANDSMAPS_TOKEN env var", file=sys.stderr)
-        sys.exit(1)
-
-    client = LandsMapsClient(args.token)
+    client = await LandsMapsClient.create(args.token)
 
     if args.batch:
-        asyncio.run(batch_lookup(client, args.batch, args.simple))
+        await batch_lookup(client, args.batch, args.simple)
         return
 
     if not args.pv or not args.parcel:
@@ -179,8 +175,8 @@ def main() -> None:
         am_code = resolve_amphur_code(registry, args.pv, args.amphur_name)
 
     query = DeedQuery(province_code=args.pv, amphur_code=am_code, parcel_no=args.parcel)
-    asyncio.run(single_lookup(client, query, args.simple))
+    await single_lookup(client, query, args.simple)
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(async_main())
