@@ -1,5 +1,7 @@
 # NPA-guy — Thai NPA Property Investment Agent
 
+A coding project. Read .claude/rules/ before starting.
+
 ## What This Project Is
 
 A specialized AI agent that analyzes Thai Non-Performing Asset (NPA) properties from government auctions (LED, SAM) and banks. Evaluates whether distressed properties are worth buying based on location, pricing, legal risks, and market comparables.
@@ -29,7 +31,7 @@ PostgreSQL: `postgresql://arsapolm@localhost:5432/npa_kb`
 
 | Table Group | Tables |
 |-------------|--------|
-| LED scraper | `properties`, `led_properties`, `bank_npa_properties`, `property_images`, `auction_history` |
+| LED scraper | `properties`, `led_properties`, `led_land_parcels`, `bank_npa_properties`, `property_images`, `auction_history` |
 | SAM scraper | `sam_properties`, `sam_property_images`, `sam_dropdown_cache`, `sam_scrape_logs` |
 | BAM scraper | `bam_properties`, `bam_price_history`, `bam_scrape_logs` |
 | JAM scraper | `jam_properties`, `jam_price_history`, `jam_scrape_logs` |
@@ -64,6 +66,14 @@ PostgreSQL: `postgresql://arsapolm@localhost:5432/npa_kb`
 - ZMyHome prices stored in **whole baht** (integer)
 - DDProperty prices stored in **whole baht** (integer)
 - **Use `npa-adapter` for cross-provider queries** — normalizes all prices to baht
+- LED `source_name` in `properties` table includes province: `LED_สงขลา`, `LED_ชลบุรี`, etc. — NOT just `LED`
+- **LED GPS coordinates** are in `led_land_parcels` (NOT in `properties` or `led_properties`):
+  - Join: `properties.asset_id → led_land_parcels.asset_id` for lat/lon
+  - Join: `properties.asset_id → property_images.asset_id` for image URLs
+  - Join: `properties.asset_id → led_properties.asset_id` for case_number, lot_number, deed info
+  - Join: `properties.asset_id → auction_history.asset_id` for auction rounds/status
+- Bank NPA tables (BAM, KBank, GHB, etc.) have lat/lon directly in their `*_properties` table
+- SAM uses `lng` (not `lon`) for longitude column
 
 ## Skills
 
