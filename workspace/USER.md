@@ -5,10 +5,34 @@
 - Language: English (Thai for location names)
 - Technical level: Expert
 - Communication: Technical, direct, adaptive response length
+- **"Status" means status of prior analysis/discussion** — NOT system/cron job status; never assume system check
 - Primary interest: NPA property investment in Thailand
 - Asset types: Condos, land, land+house — open to all; including hometown properties
 - Hometown / key interest area: Songkhla province — primarily Hat Yai (หาดใหญ่) & Songkhla City (เมืองสงขลา)
+- **Active condo shopping in Bangkok** — seeking deals/bargains, price-sensitive, drawn to undervalued listings
+- Wants due diligence help investigating why properties are priced cheaply
+- Strong preference for properties near BTS stations
 - Tools: Telegram, Python (anaconda 3.13 at `/opt/anaconda3/bin/python3`)
-- Infrastructure: 5 NPA scrapers (LED 06:00, KTB 08:00, SAM ~07:40, KBank 08:00, JAM 08:30) as macOS launchd agents → PostgreSQL `npa_kb`
+- Infrastructure: 11 providers (LED, SAM, BAM, JAM, KTB, KBANK, SCB, GSB, TTB, BAY, LH, GHB) → PostgreSQL `npa_kb` (~96K+ properties)
+- Cron jobs: Morning NPA daily (08:00), NPA Price Watch (09:00), Dream consolidation (every 2h)
+- **Wants all providers checked comprehensively** — no selective/sampled approach; analyze every provider fully
+- **Prefers pandas-based analysis** — team-based data analysis using DataFrames
+- **Wants deep investment analysis using current available data** across all providers, all asset types, including demand/supply analysis
+- **Wants maximum-scope single-pass workflow** — “รอบเดียวเต็มสุด”
+- **Prefers proactive workflow** — identify likely fixes/issues first, then consult with proposed solutions
+- **Prefers the assistant to continue working without asking permission to proceed**
+- **Nearby comparable assets**: focus on same-area properties on major/main roads, not sub roads
+- **Nearby-asset review output**: show the results found, not a ranked list
+- **Wants bank-NPA negotiation information retained and applied** when evaluating whether properties are worth buying
+- **Standing result limit rule** — top 200 for Bangkok, top 100 for other provinces
 - Dev patterns: launchd plists need `/opt/anaconda3/bin` in PATH; SQLAlchemy `DateTime(timezone=True)` needs `datetime.now(timezone.utc)`
 - Special instruction: **Always update KB after search/research** — this is non-negotiable
+- **Expects detailed justification** for why specific projects are or aren't recommended — brief dismissals without reasoning erode trust; always show full analysis
+- **Kensington Kaset Campus** (Origin Property, near Kasetsart U) — user-initiated investment candidate; previously dismissed, user pushed back — must evaluate properly — **OUTSTANDING: full analysis not yet delivered as of 2026-04-09**
+- **Premio Vetro** — user interested as potential investment target; research result: only exists in JAM as 5 rental listings (฿13K-16K/mo), no NPA foreclosure units for sale across all 12 providers
+- **Target provinces** — กรุงเทพ, ปทุมธานี, นนทบุรี, สงขลา, ภูเก็ต, เชียงใหม่
+- **Wants 3 separate tiered reports** to manage report size
+- **Wants deliverables in Thai DOCX format**
+- **Detailed property pages must include** images, location, GPS coordinates, provider, provider ID, clickable Google Maps links, yield, and required investment
+- **Wants recheck/validation work turned into reusable scripts** for future use
+- **Prefers cross-provider evaluation** using listing visibility and asking-price comparison, not single-provider-only analysis

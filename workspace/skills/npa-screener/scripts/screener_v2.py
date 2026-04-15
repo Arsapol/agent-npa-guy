@@ -22,6 +22,19 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
+BANGKOK_NAMES = {"กรุงเทพมหานคร", "bangkok", "bkk"}
+
+
+def _top_limit_for_provinces(provinces: list[str]) -> int:
+    """Province-aware top-N policy.
+
+    - Bangkok-only runs => top 200
+    - Any other province or mixed run => top 100 baseline unless explicitly overridden
+    """
+    normalized = {str(p or "").strip().lower() for p in provinces if str(p or "").strip()}
+    return 200 if normalized and normalized.issubset(BANGKOK_NAMES) else 100
+
+
 import psycopg2
 import psycopg2.extras
 
@@ -451,8 +464,8 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--top",
         type=int,
-        default=50,
-        help="Top N results in report (default: 50)",
+        default=None,
+        help="Top N results in report (default: auto — Bangkok 200, other provinces 100)",
     )
     parser.add_argument(
         "--json",
@@ -491,6 +504,7 @@ def main() -> None:
     )
 
     provinces = [args.province] if args.province else list(DEFAULT_PROVINCES)
+    effective_top_n = args.top if args.top is not None else _top_limit_for_provinces(provinces)
     property_types = (
         [pt.strip() for pt in args.property_types.split(",")]
         if args.property_types
@@ -506,6 +520,7 @@ def main() -> None:
         print(f"Max price: {args.max_price:,.0f} THB", flush=True)
     if property_types:
         print(f"Property types: {property_types}", flush=True)
+    print(f"Top-N policy: {effective_top_n}", flush=True)
     print("", flush=True)
 
     # --- Connect to DB ---
@@ -572,7 +587,7 @@ def main() -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
 
     report_path = output_dir / f"npa-screening-v2-{date_str}.md"
-    report_text = format_report_v2(final_results, profile, top_n=args.top)
+    report_text = format_report_v2(final_results, profile, top_n=effective_top_n)
     report_path.write_text(report_text, encoding="utf-8")
     print(f"Report written: {report_path}", flush=True)
 
